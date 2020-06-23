@@ -1,0 +1,524 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: mark.benson@nih.gov
+  description: This is the API for metamodel database
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: sts
+  version: 1.0.0
+externalDocs:
+  description: See github.com/CBIIT/bento-sts
+  url: https://github.com/CBIIT/bento-sts/blob/master/README.md
+servers:
+- url: http://petstore.swagger.io/v2
+tags:
+- description: models in mdb
+  externalDocs:
+    description: Find out more
+    url: http://swagger.io
+  name: model
+- description: nodes in mdb
+  name: node
+- description: node properties
+  externalDocs:
+    description: Find out more about node properties
+    url: http://swagger.io
+  name: property
+- description: value sets are controlled list of terms
+  name: valueset
+- description: terms in mdb
+  name: term
+paths:
+  /models:
+    get:
+      description: |
+        Returns a collection of models
+      operationId: get_list_of_models
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+      summary: List all models
+      tags:
+      - model
+      x-openapi-router-controller: openapi_server.controllers.model_controller
+  /models/{modelId}:
+    get:
+      description: Returns a single model
+      operationId: get_model_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: modelId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Model not found
+      summary: find model by ID
+      tags:
+      - model
+      x-openapi-router-controller: openapi_server.controllers.model_controller
+  /nodes:
+    get:
+      description: Returns a collection of nodes
+      operationId: get_list_of_nodes
+      parameters:
+      - description: |
+          limit to nodes belonging to this model
+        explode: true
+        in: query
+        name: modelId
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+      summary: 'List all nodes '
+      tags:
+      - node
+      x-openapi-router-controller: openapi_server.controllers.node_controller
+  /nodes/{nodeId}:
+    get:
+      description: Returns a single node
+      operationId: get_node_by_id
+      parameters:
+      - description: ID of node to return
+        explode: false
+        in: path
+        name: nodeId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+      summary: Find node by ID
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /properties:
+    get:
+      description: |
+        Returns a collection of properties
+      operationId: get_list_of_properties
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+      summary: List all properties
+      tags:
+      - property
+      x-openapi-router-controller: openapi_server.controllers.property_controller
+  /properties/{propertyId}:
+    get:
+      description: Returns a single property
+      operationId: get_property_by_id
+      parameters:
+      - description: ID of property to return
+        explode: false
+        in: path
+        name: propertyId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Property not found
+      summary: Get a property using ID
+      tags:
+      - property
+      x-openapi-router-controller: openapi_server.controllers.property_controller
+  /terms:
+    get:
+      description: Returns a collection of terms
+      operationId: get_list_of_terms
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Term'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+      summary: List all terms
+      tags:
+      - term
+      x-openapi-router-controller: openapi_server.controllers.term_controller
+  /terms/{termId}:
+    get:
+      description: Returns a single property
+      operationId: get_termy_by_id
+      parameters:
+      - description: ID of term to return
+        explode: false
+        in: path
+        name: termId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+          description: successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Term not found
+      summary: Get a property using ID
+      tags:
+      - term
+      x-openapi-router-controller: openapi_server.controllers.term_controller
+  /valuesets:
+    get:
+      description: Returns a collection of value sets
+      operationId: get_list_of_value_sets
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValueSet'
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Text'
+          description: successful operation
+      summary: List all Value Sets
+      tags:
+      - valueset
+      x-openapi-router-controller: openapi_server.controllers.valueset_controller
+  /valuesets/{valuesetId}:
+    get:
+      description: Returns a single value set
+      operationId: get_value_set_by_id
+      parameters:
+      - description: ID of value set to return
+        explode: false
+        in: path
+        name: valuesetId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Term'
+            application/json:
+              schema: {}
+          description: successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Value set not found
+      summary: Get a value set using ID
+      tags:
+      - valueset
+      x-openapi-router-controller: openapi_server.controllers.valueset_controller
+components:
+  callbacks: {}
+  links: {}
+  requestBodies:
+    Pet:
+      content:
+        application/json:
+          schema:
+            properties:
+              id:
+                format: int64
+                type: integer
+              category:
+                properties:
+                  id:
+                    format: int64
+                    type: integer
+                  name:
+                    type: string
+                type: object
+                xml:
+                  name: Category
+              name:
+                example: doggie
+                type: string
+              photoUrls:
+                items:
+                  type: string
+                type: array
+                xml:
+                  name: photoUrl
+                  wrapped: true
+              tags:
+                items:
+                  properties:
+                    id:
+                      format: int64
+                      type: integer
+                    name:
+                      type: string
+                  type: object
+                  xml:
+                    name: Tag
+                type: array
+                xml:
+                  name: tag
+                  wrapped: true
+              status:
+                description: pet status in the store
+                enum:
+                - available
+                - pending
+                - sold
+                type: string
+            required:
+            - name
+            - photoUrls
+            type: object
+            xml:
+              name: Pet
+        application/xml:
+          schema:
+            properties:
+              id:
+                format: int64
+                type: integer
+              category:
+                properties:
+                  id:
+                    format: int64
+                    type: integer
+                  name:
+                    type: string
+                type: object
+                xml:
+                  name: Category
+              name:
+                example: doggie
+                type: string
+              photoUrls:
+                items:
+                  type: string
+                type: array
+                xml:
+                  name: photoUrl
+                  wrapped: true
+              tags:
+                items:
+                  properties:
+                    id:
+                      format: int64
+                      type: integer
+                    name:
+                      type: string
+                  type: object
+                  xml:
+                    name: Tag
+                type: array
+                xml:
+                  name: tag
+                  wrapped: true
+              status:
+                description: pet status in the store
+                enum:
+                - available
+                - pending
+                - sold
+                type: string
+            required:
+            - name
+            - photoUrls
+            type: object
+            xml:
+              name: Pet
+      description: Pet object that needs to be added to the store
+      required: true
+    UserArray:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/User'
+            type: array
+      description: List of user object
+      required: true
+  schemas:
+    Model:
+      example:
+        model: model
+      properties:
+        model:
+          type: string
+      type: object
+    Property:
+      example:
+        value_domain: value_domain
+        is_required: ""
+        handle: handle
+        model: model
+        id: id
+      properties:
+        id:
+          type: string
+        handle:
+          type: string
+        value_domain:
+          type: string
+        model:
+          type: string
+        is_required:
+          type: auto
+      type: object
+    Term:
+      example:
+        origin_id: origin_id
+        id: id
+        value: value
+        origin_definition: origin_definition
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+        origin_definition:
+          type: string
+        origin_id:
+          type: string
+      type: object
+    Node:
+      example:
+        handle: handle
+        model: model
+        id: id
+      properties:
+        id:
+          type: string
+        handle:
+          type: string
+        model:
+          type: string
+      type: object
+    ApiResponse:
+      type: object
+    ValueSet:
+      example:
+        id: id
+        url: url
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+      type: object
+    Text:
+      type: string
+    inline_response_200:
+      example:
+        model: model
+      properties:
+        model:
+          type: string
+    inline_response_200_1:
+      example:
+        origin_id: origin_id
+        id: id
+        value: value
+        origin_definition: origin_definition
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+        origin_definition:
+          type: string
+        origin_id:
+          type: string
+  securitySchemes:
+    petstore_auth:
+      flows:
+        implicit:
+          authorizationUrl: http://petstore.swagger.io/oauth/dialog
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+      type: oauth2
+      x-tokenInfoFunc: openapi_server.controllers.security_controller_.info_from_petstore_auth
+      x-scopeValidateFunc: openapi_server.controllers.security_controller_.validate_scope_petstore_auth
+    api_key:
+      in: header
+      name: api_key
+      type: apiKey
+      x-apikeyInfoFunc: openapi_server.controllers.security_controller_.info_from_api_key
