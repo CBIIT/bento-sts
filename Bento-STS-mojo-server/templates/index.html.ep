@@ -1,0 +1,13 @@
+% layout 'default';
+% title 'Welcome';
+<h2><%= $header %></h2>
+
+<p><%= $msg %></p>
+
+% if (my $l = stash 'list') {
+
+  %  for my $d (@$l) {
+       <%= link_to $d => "/models/$d" %> </br>
+  %  } 
+% }
+

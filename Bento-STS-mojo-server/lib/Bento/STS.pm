@@ -1,5 +1,7 @@
 package Bento::STS;
 use Mojo::Base 'Mojolicious';
+use Bento::STS::Datastore qw(setup_mdb);
+use Bento::STS::helpers qw(setup_sanitizer);
 
 our $VERSION = '0.3.0';
 
@@ -18,7 +20,22 @@ sub startup {
   my $r = $self->routes;
 
   # Normal route to controller
-  $r->get('/')->to('example#welcome');
+  $r->get('/')->to('Actions#welcome');
+  $r->get('/about')->to('Actions#about');
+  #$r->get('/healthcheck')->to('actions#healthcheck');
+
+  $r->get('/models')->to('Actions#getListOfModels');
+  $r->get('/models/:modelName')->to('Actions#getModelByName');
+
+  #$r->get('/nodes')->to('getListOfNodes"');
+  #$r->get('/nodes/:nodeId')->to('getNodeById');
+
+  ## initial simple sanitization helper (sanitize_input)
+  setup_sanitizer($self);
+
+  # setup db interface
+  setup_mdb($self);
+
 }
 
 1;
