@@ -26,6 +26,7 @@ Q
         RETURN count(n) as count
 Q
 
+    ## -----------------------------------##
 
     ## 
     get_list_of_models => <<Q,
@@ -33,19 +34,61 @@ Q
         RETURN DISTINCT n.model
 Q
 
-	##
+    ##
 	get_model_by_name => <<'Q',
         MATCH (n:node)
         WHERE n.model = $param 
 		RETURN DISTINCT n.model
 Q
 
-
-    #// node - list
+    ## 
     get_list_of_nodes => <<Q,
 	    MATCH (n:node)
-    	RETURN DISTINCT n.id, n.handle, n.model;
+    	RETURN DISTINCT n.nanoid6, n.handle, n.model
 Q
+
+
+    ## 
+	#// idea: n3 -> n1 --> n2
+    get_node_by_id => <<'Q',
+	    MATCH (n1:node)				
+		WHERE n1.nanoid6 = $param
+    	OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
+	    OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
+    	OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
+    	OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
+    	OPTIONAL MATCH (ct:term)-[:represents]->(c1)
+    	OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
+    	RETURN DISTINCT n1.nanoid6 as `node-id`,
+						n1.handle as `node-handle`, 
+            			n1.model as `node-model`, 
+            			r12.handle as `to-relationship`,
+						n2.nanoid6 as `to-node`, 
+            			n2.handle, 
+						n2.model,
+            			r31.handle,
+						n3.nanoid6, 
+            			n3.handle,
+						n3.model, 
+            			p1.nanoid6,
+						p1.handle,
+						p1.value_domain,
+						p1.model
+						//c1.id, 
+            			//ct.nanoid6,
+						//ct.value, 
+            			//ct.origin_id, 
+            			//ct.origin_definition, 
+						//ct.comments, 
+            			//ct.notes,
+            			//o.name
+                        ;
+Q
+   
+
+
+
+
 
     get_all_node_details => <<'Q',
 	    MATCH (n1:node)				

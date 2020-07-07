@@ -27,9 +27,21 @@ sub startup {
   $r->get('/models')->to('Actions#getListOfModels');
   $r->get('/models/:modelName')->to('Actions#getModelByName');
 
-  #$r->get('/nodes')->to('getListOfNodes"');
-  #$r->get('/nodes/:nodeId')->to('getNodeById');
+  $r->get('/nodes')->to('Actions#getListOfNodes');
+  $r->get('/nodes/:nodeId')->to('Actions#getNodeById');
 
+  $r->get('/properties')->to('Actions#getListOfProperties');
+  $r->get('/properties/:propertyId')->to('Actions#getPropertyById');
+  
+  $r->get('/valuesets')->to('Actions#getListOfValuesets');
+  $r->get('/valuesets/:valuesetId')->to('Actions#getValuesetById');
+
+  $r->get('/terms')->to('Actions#getListOfTerms');
+  $r->get('/terms/:termId')->to('Actions#getTermById');
+
+  #$r->get('/origin')->to('getListOfOrigins"');
+  #$r->get('/origin/:originId')->to('getOriginById');
+  
   ## initial simple sanitization helper (sanitize_input)
   setup_sanitizer($self);
 
