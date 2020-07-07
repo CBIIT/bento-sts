@@ -1,0 +1,33 @@
+% layout 'default';
+% title 'Properties';
+
+% if (my $header = stash 'header') {
+    <h2><%= $header %></h2>
+% }
+
+% if (my $msg = stash 'msg') {
+    <p><%= $msg %></p>
+% }
+
+% if (my $p = stash 'list') {
+<div>
+<h3> PROPERTY DETAILS </h3>
+<ul>
+  <li> handle: <%= link_to $p->{'property'}->{'property-handle'} => "/properties/$p->{'property'}->{'property-id'}" %>
+    <ul>
+      <li> id:        <%= link_to $p->{'property'}->{'property-id'} => "/properties/$p->{'property'}->{'property-id'}" %>
+      <li> model:     <%= link_to $p->{'property'}->{'property-model'} => "/models/$p->{'property'}->{'property-model'}" %>
+      <li> value domain: <%= $p->{'property'}->{'property-value_domain'} %> </li>
+      <li> is_required: <%= $p->{'property'}->{'property-is_required'} %> </li>
+      <li> value set id: <%= link_to $p->{'property'}->{'value_set-id'} => "/valuesets/$p->{'property'}->{'value_set-id'}" %> </li>
+      <li> value set url: <%= $p->{'property'}->{'value_set-url'} %> </li>
+      <li> value set size: <%= $p->{'property'}->{'value_set-size'} %> </li>
+    </ul>
+  </li>
+</ul>
+
+  </div>
+  <%# end to_nodes %>
+
+
+% }

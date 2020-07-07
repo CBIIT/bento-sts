@@ -325,6 +325,7 @@ sub getNodeById {
             }
 
 
+
     print "\n\n\nnode is $row[0] ";
     print "\n\t1  n1.handle is " . $row[1] || "n/a";
     print "\n\t2  n1.model " . $row[2] || 'n/a';
@@ -350,9 +351,13 @@ sub getNodeById {
     print "\n\t22 o.name " .  ( $row[22] || 'n/a' ) ;
   }
 
+                  print "\n\n yes! \n\n";
+                  use Data::Dumper;
+                  print Dumper($node->{'node'}->{'has-property'});
+
   my $msg;
   if ($node) { 
-      $msg = 'Single Node Details';
+      $msg = 'Details for a Single Node';
   } else {
       $msg = 'Node Not Found';
   }
@@ -364,4 +369,406 @@ sub getNodeById {
   $self->render(template => 'nodes');
 
 }
+
+
+sub getListOfValuesets {
+  my $self = shift;
+
+  # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  # $h is empty (no parameters is being passed)
+  my $h = {};
+  my $run_query_sref = $self->get_list_of_valuesets_sref;
+  my $stream = $run_query_sref->($h);
+
+  # handle returned data
+  my $results = [];
+  my %list_of_seen_vs = ();
+  while ( my @row = $stream->fetch_next ) {
+
+    # see if we want terms handled
+    # need to see if the exist before we can test
+    my $terms_exist = -1;
+    if ( defined ($row[5]) || defined ($row[6]) ) {
+            $terms_exist = 1;
+    }else{
+        $terms_exist = 0;
+    }
+
+    # capture basic value_set data
+    my $vs = { 'value_set' => { 'id'  => $row[3],
+                                'url' => $row[4] },
+               'property-id' => $row[0],
+               'property-handle' => $row[1],
+               'property-model'  => $row[2] };
+    # only add the 'terms' if terms were found
+    if ($terms_exist){
+        $vs->{'terms'} = [];
+    }
+
+    # check to see if this is a new value set or not
+    unless ( exists ($list_of_seen_vs{$row[3]})) {
+        push @$results, $vs;
+        $list_of_seen_vs{$row[3]} = 1;
+    }
+
+    # now only if there are terms, add them under the 'terms' array
+    # for the appropriate vs
+    if ($terms_exist) {
+        my $term_ = { 'term' => {'id' => $row[5], 'value' => $row[6]} };
+
+        ## find which element in big data array has value set
+        ## and add the term to it
+        my $id_ = $row[3];          # this is the current rows id
+        my $size = scalar (@$results); # how many rows in data it iterate over
+        my $i = 0;
+        for (0..$size-1) {
+            if ( $results->[$i]->{'value_set'}->{'id'} eq $id_) {
+                # ah-ha, now I know which one to add to...
+                push @{$results->[$i]->{'terms'}}, $term_;
+                last; # all done, stop loop
+            }
+            $i++;
+        }
+    }
+
+
+  }
+
+  if (0) {
+      # JSON
+      $self->render( json => $results );
+  }
+  elsif (1) {
+     
+     # HTML 
+
+      my $msg;
+      if ($results) {
+          $msg = 'List of All Value Sets';
+      } else {
+          $msg = 'Value Sets Not Found';
+      } 
+
+      $self->stash(list => $results );
+      $self->stash(header => 'VALUE SETS');
+      $self->stash(msg => $msg);
+      $self->render(template => 'valuesets');
+    }
+}
+
+
+sub getValuesetById {
+  my $self = shift;
+
+  my $vs_id = $self->stash('valuesetId');
+  my $sanitizer = $self->sanitize_input_sref;
+  $vs_id = $sanitizer->($vs_id); # simple sanitization
+  $self->app->log->info("using value_set >$vs_id<");
+
+  # just make sure we have term to proceed, else return error 400
+  unless ($vs_id) {
+     $self->render(json => { errmsg => "Missing or non-existent value_set id"},
+                   status => 400);
+     return;
+  }
+
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  my $h = { param => $vs_id };
+
+  # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
+  my $run_query_sref = $self->get_valueset_by_id_sref;
+  my $stream = $run_query_sref->($h);
+
+  # handle returned data -- single hash here
+  my $results = [];
+  my %list_of_seen_vs = ();
+  while ( my @row = $stream->fetch_next ) {
+    # now format
+
+    # see if we want terms handled
+    # need to see if the exist before we can test
+    my $terms_exist = -1;
+    if ( defined ($row[5]) || defined ($row[6]) ) {
+            $terms_exist = 1;
+    }else{
+        $terms_exist = 0;
+    }
+
+    # capture basic value_set data
+    my $vs = { 'value_set' => { 'id'  => $row[3],
+                                    'url' => $row[4] },
+                   'property-id' => $row[0],
+                   'property-handle' => $row[1],
+                   'property-model'  => $row[2]
+    };
+    # only add the 'terms' if terms were found
+    if ($terms_exist){
+         $vs->{'terms'} = [];
+    }
+
+    # check to see if this is a new value set or not
+    unless ( exists ($list_of_seen_vs{$row[3]})) {
+        push @$results, $vs;
+        $list_of_seen_vs{$row[3]} = 1;
+    }
+
+    # now only if there are terms, add them under the 'terms' array
+    # for the appropriate vs
+    if ($terms_exist) {
+        my $term_ = { 'term' => {'id' => $row[5], 'value' => $row[6]} };
+
+        ## find which element in big data array has value set
+        ## and add the term to it
+        my $id_ = $row[3];          # this is the current rows id
+        my $size = scalar (@$results); # how many rows in data it iterate over
+        my $i = 0;
+        for (0..$size-1) {
+            if ( $results->[$i]->{'value_set'}->{'id'} eq $id_) {
+                # ah-ha, now I know which one to add to...
+                push @{$results->[$i]->{'terms'}}, $term_;
+                last; # all done, stop loop
+            }
+            $i++;
+        }
+    }
+
+  } # end while
+
+  if (0) {
+    # done - now return
+    $self->render( json => $results );
+  }
+  elsif (1) {
+     # HTML 
+      my $msg;
+      if ($results) {
+          $msg = 'Details of a Value Set';
+      } else {
+          $msg = 'Value Sets Not Found';
+      } 
+
+      $self->stash(list => $results );
+      $self->stash(header => 'VALUE SET');
+      $self->stash(msg => $msg);
+      $self->render(template => 'valuesets');
+    }
+
+}
+
+
+sub getPropertyById {
+  my $self = shift;
+
+  my $propertyId = $self->stash('propertyId');
+  my $sanitizer = $self->sanitize_input_sref;
+  $propertyId = $sanitizer->($propertyId); # simple sanitization
+  $self->app->log->info("using property id  >$propertyId<");
+
+  # just make sure we have term to proceed, else return error 400
+  unless ($propertyId) {
+     $self->render(json => { errmsg => "Missing or non-existent property Id"},
+                   status => 400);
+     return;
+  }
+
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  my $h = { param => $propertyId };
+
+  # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  # $h is empty (no parameters is being passed)
+  my $run_query_sref = $self->get_property_by_id_sref;
+  my $stream = $run_query_sref->($h);
+
+  # handle query result data
+  my $result = {};
+  while ( my @row = $stream->fetch_next ) {
+
+    # now format
+    $result = { 'property' => { 'property-id'           => $row[0], 
+                              'property-handle'       => $row[1],
+                              'property-model'        => $row[2],
+                              'property-value_domain' => $row[3],
+                              'property-is_required'  => $row[4],
+                              'value_set-id' => $row[5],
+                              'value_set-url' => $row[6],
+                              'value_set-size' => $row[7]
+                          } };
+  }
+
+  my $msg;
+  if ($result) {
+      $msg = 'Details for a Single Property';
+  } else {
+      $msg = 'Property Not Found';
+  }
+
+  if (0) {
+  # done - now return
+  #$self->render( json => $data );
+  }
+  elsif (1) {
+    # html return
+    $self->stash(list => $result );
+    $self->stash(header => 'PROPERTY');
+    $self->stash(msg => $msg);
+    $self->render(template => 'properties');
+  }
+}
+
+sub getListOfTerms {
+  my $self = shift;
+
+  $self->app->log->info("getting list of all terms");
+
+  # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  # $h is empty (no parameters is being passed)
+  my $h = {};
+  my $run_query_sref = $self->get_list_of_terms_sref;
+  my $stream = $run_query_sref->($h);
+
+  # handle query result data
+  my $result = [];
+  while ( my @row = $stream->fetch_next ) {
+    # now format
+    my $t = { 'term' => { 'value'  => $row[0],
+                          'id'   => $row[1] },
+              'term-origin' => $row[2] };
+
+    push @$result, $t;
+  }
+
+  if (0) {
+    # done, now return
+    $self->render( json => $result );
+  }
+  elsif (1) {
+    # html return
+    my $msg;
+      if ($result) {
+          $msg = 'List of all Terms';
+      } else {
+          $msg = 'Term Not Found';
+      }
+    $self->stash(list => $result );
+    $self->stash(header => 'TERMS');
+    $self->stash(msg => $msg);
+    $self->render(template => 'terms');
+  }
+}
+
+sub getTermById {
+  my $self = shift;
+
+  my $term = $self->stash('termId');
+  $self->app->log->info("using term $term");
+
+  # just make sure we have term to proceed, else return error 400
+  unless ($term) {
+     $self->render(json => { errmsg => "Missing or non-existent term id"},
+                   status => 400);
+     return;
+  }
+
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  my $h = { param => $term };
+
+  # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
+  my $run_query_sref = $self->get_term_by_id_sref;
+  my $stream = $run_query_sref->($h);
+
+  # capture data back from Neo4j::Bolt::ResultStream
+  my $result = [];
+  while ( my @row = $stream->fetch_next ) {
+    # now format
+    my $t = { 'term' => { 'value'  => $row[0],
+                          'id'   => $row[1] },
+              'term-origin' => $row[2] };
+
+    push @$result, $t;
+  }
+
+  unless (scalar @$result) {
+     $self->render(json => { errmsg => "Missing or non-existent term"},
+                   status => 400);
+     return;
+  }
+
+  if (0) {
+    # now return result
+    $self->render( json => $result );
+  }
+  elsif (1) {
+    # html return
+    my $msg;
+      if ($result) {
+          $msg = 'List of all Terms';
+      } else {
+          $msg = 'Term Not Found';
+      }
+    $self->stash(list => $result );
+    $self->stash(header => 'TERMS');
+    $self->stash(msg => $msg);
+    $self->render(template => 'terms');
+  }
+}
+
+sub getTermByName {
+  my $self = shift;
+
+  my $term = $self->stash('term');
+  $self->app->log->info("using term $term");
+
+  # just make sure we have term to proceed, else return error 400
+  unless ($term) {
+     $self->render(json => { errmsg => "Missing or non-existent term"},
+                   status => 400);
+     return;
+  }
+
+  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  my $h = { param => $term };
+
+  # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
+  my $run_query_sref = $self->get_term_detail_sref;
+  my $stream = $run_query_sref->($h);
+
+  # capture data back from Neo4j::Bolt::ResultStream
+  my $result = [];
+  while ( my @row = $stream->fetch_next ) {
+    # now format
+    my $t = { 'term' => { 'value'  => $row[0],
+                          'id'   => $row[1] },
+              'term-origin' => $row[2] };
+
+    push @$result, $t;
+  }
+
+  unless (scalar @$result) {
+     $self->render(json => { errmsg => "Missing or non-existent term"},
+                   status => 400);
+     return;
+  }
+
+  if(0) {
+    # now return result
+    $self->render( json => $result );
+  } 
+  elsif (1) {
+    # html return
+    my $msg;
+      if ($result) {
+          $msg = 'List of all Terms';
+      } else {
+          $msg = 'Term Not Found';
+      }
+    $self->stash(list => $result );
+    $self->stash(header => 'TERMS');
+    $self->stash(msg => $msg);
+    $self->render(template => 'terms');
+  }
+}
+
 1;

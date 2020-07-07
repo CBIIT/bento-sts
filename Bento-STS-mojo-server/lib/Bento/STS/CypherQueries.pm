@@ -87,8 +87,106 @@ Q
    
 
 
+    #// property - detail
+    get_property_by_id => <<'Q',
+	MATCH (p:property)
+    WHERE p.nanoid6 = $param
+	OPTIONAL MATCH (p)-[:has_value_set]->(vs)
+    OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+	RETURN DISTINCT 
+            p.nanoid6,
+            p.handle as `property-handle`, 
+			p.model as `property-model`, 
+			p.value_domain as `property-value_domain`, 
+			p.is_required ,  
+			vs.nanoid6,
+			vs.url as `property-value_set-url`,
+            COUNT(DISTINCT(t.nanoid6));
+Q
 
 
+    #// value_set - list
+    get_list_of_valuesets => <<'Q',
+    	MATCH (vs:value_set)
+    	MATCH (p:property)-[:has_value_set]->(vs)
+    	OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
+    	OPTIONAL MATCH (ct:term)-[:represents]->(cp)
+    	OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+    	OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
+    	OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
+    	RETURN DISTINCT 
+            p.nanoid6,
+            p.handle as `property-handle`, 
+			p.model as `property-model`,
+			vs.nanoid6 as `value_set-id`, 
+			vs.url as `value_set-url`, 
+			t.nanoid6 as `term-id`, 
+			t.value as `term-value` ;
+Q
+
+
+    #// value_set - detail
+    get_valueset_by_id => <<'Q',
+    	MATCH (vs:value_set)
+        WHERE vs.nanoid6 = $param
+    	OPTIONAL MATCH (p:property)-[:has_value_set]->(vs)
+    	OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
+    	OPTIONAL MATCH (ct:term)-[:represents]->(cp)
+    	OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+    	OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
+    	OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
+    	RETURN DISTINCT 
+            p.nanoid6, 
+            p.handle as `property-handle`, 
+			p.model as `property-model`,
+			vs.nanoid6 as `value_set-id`, 
+			vs.url as `value_set-url`, 
+			t.nanoid6 as `term-id`, 
+			t.value as `term-value`;
+Q
+
+
+    #// term - list
+    get_list_of_terms => <<Q,
+        MATCH (vs:value_set) -[:has_term]->(t:term)
+        OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
+        RETURN DISTINCT  
+                        t.value as `term-value`, 
+                        t.nanoid6 as `term-id`,  
+                        to.name as `origin`;
+Q
+
+
+    #// term - detail
+    get_term_by_id => <<'Q',
+        MATCH (vs:value_set)-[:has_term]->(t:term)
+        WHERE t.nanoid6 = $param 
+        OPTIONAL MATCH (t)-[:represents]->(cp:concept)
+        OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
+        RETURN DISTINCT t.value as `term-value`, 
+                        t.nanoid6 as `term-id`, 
+                        to.name as `origin-name`,
+                        cp.nanoid6 as `concept-id`,
+                        vs.url as `value_set-url`, 
+                        vs.id as `value_set-id`;
+Q
+
+
+    #// term - detail
+    get_term_by_name => <<'Q',
+        MATCH (vs:value_set)-[:has_term]->(t:term)
+        WHERE t.value = $param 
+        OPTIONAL MATCH (t)-[:represents]->(cp:concept)
+        OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
+        RETURN DISTINCT t.value as `term-value`, 
+                        t.nanoid6 as `term-id`, 
+                        to.name as `origin-name`,
+                        cp.nanoid6 as `concept-id`,
+                        vs.url as `value_set-url`, 
+                        vs.nanoid6 as `value_set-id`;
+Q
+
+    #// refactored above 
 
     get_all_node_details => <<'Q',
 	    MATCH (n1:node)				
@@ -178,46 +276,7 @@ Q
     	RETURN DISTINCT p.handle as `property-handle`, p.value_domain, p.model, p.is_required ;
 Q
 
-    #// property - detail
-    properties_list => <<Q,
-	MATCH (p:property)
-	OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-	OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
-	OPTIONAL MATCH (cpt:term)-[:represents]->(cp)
-	OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
-	OPTIONAL MATCH (r:relationship)-[:has_property]->(p)
-	OPTIONAL MATCH (n:node)-[:has_property]->(p)
-	RETURN DISTINCT p.handle as `property-handle`, 
-			p.model as `property-model`, 
-			p.value_domain as `property-value_domain`, 
-			p.is_required ,  
-			vs.id as `property-value_set-id`, 
-			vs.url as `property-value_set-url`,
-			cp.id as `property-concept-id`, 
-			cpt.value as `property-concept-term-value`, 
-			cpt.id as `property-concept-term-id`, 
-			cpt.origin_definition  as `property-concept-term-origin_definition`, 
-			cpt.origin_id  as `property-concept-term-origin_id`,
-			n.handle as `node-handle`, 
-			r.handle as `relationship-handle`;
-Q
 
-    #// value_set - list
-    get_value_sets_list => <<'Q',
-    	MATCH (vs:value_set)
-    	MATCH (p:property)-[:has_value_set]->(vs)
-    	OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
-    	OPTIONAL MATCH (ct:term)-[:represents]->(cp)
-    	OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-    	OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
-    	OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
-    	RETURN DISTINCT p.handle as `property-handle`, 
-			p.model as `property-model`,
-			vs.id as `value_set-id`, 
-			vs.url as `value_set-url`, 
-			t.id as `term-id`, 
-			t.value as `term-value`;
-Q
 
     #// value_set - list
     get_value_set_list => <<'Q',
@@ -236,23 +295,6 @@ Q
 			t.value as `term-value`;
 Q
 
-    #// value_set - detail
-    get_value_set_detail => <<'Q',
-    	MATCH (vs:value_set)
-    	MATCH (p:property)-[:has_value_set]->(vs)
-        WHERE vs.id = $param
-    	OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
-    	OPTIONAL MATCH (ct:term)-[:represents]->(cp)
-    	OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-    	OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
-    	OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
-    	RETURN DISTINCT p.handle as `property-handle`, 
-			p.model as `property-model`,
-			vs.id as `value_set-id`, 
-			vs.url as `value_set-url`, 
-			t.id as `term-id`, 
-			t.value as `term-value`;
-Q
 
     #// value_set - detail
     get_model_value_sets => <<'Q',
@@ -271,29 +313,6 @@ Q
 			th.value as `term-handle`;
 Q
 
-    #// term - list
-    get_terms_list => <<Q,
-        MATCH (vs:value_set) -[:has_term]->(t:term)
-        OPTIONAL MATCH (t)-[:represents]->(cp:concept)
-        OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
-        RETURN DISTINCT t.value as `term-value`, 
-                        t.id as `term-id`,  
-                        to.name as `origin`;
-Q
-
-    #// term - detail
-    get_term_detail => <<'Q',
-        MATCH (vs:value_set)-[:has_term]->(t:term)
-        WHERE t.value = $param 
-        OPTIONAL MATCH (t)-[:represents]->(cp:concept)
-        OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
-        RETURN DISTINCT t.value as `term-value`, 
-                        t.id as `term-id`, 
-                        to.name as `origin-name`,
-                        cp.id as `concept-id`,
-                        vs.url as `value_set-url`, 
-                        vs.id as `value_set-id`;
-Q
 
     #// concept - list
     concepts_list => <<Q,

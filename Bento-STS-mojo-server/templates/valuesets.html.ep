@@ -1,0 +1,44 @@
+% layout 'default';
+% title 'Value Sets';
+
+% if (my $header = stash 'header') {
+    <h2><%= $header %></h2>
+% }
+
+% if (my $msg = stash 'msg') {
+    <p><%= $msg %></p>
+% }
+
+% if (my $vs = stash 'list') {
+
+  <div class="container-fluid" id="value-sets">
+  <h3> <%= $header %> </h3>
+      <ul> 
+       % for my $vs_aref ( @{$vs}) { 
+          <li> value set id: <%= link_to $vs_aref->{'value_set'}->{'id'} => "/valuesets/$vs_aref->{'value_set'}->{'id'}" %> 
+          <ul>
+              <li> value set url: <%= $vs_aref->{'value_set'}->{'url'} %> </li>
+              <li> connected property: <%= link_to $vs_aref->{'property-handle'} => "/properties/$vs_aref->{'property-id'}" %> </li>
+              <li> connected property model: <%= link_to $vs_aref->{'property-model'} => "/models/$vs_aref->{'property-model'}" %> </li>
+
+              % if ($header eq 'VALUE SET') {
+                % if (defined $vs_aref->{'terms'}) {
+                  % if ( scalar @{$vs_aref->{'terms'}} > 0 ) {
+                    <li> TERMS </li>
+                      <ul>
+                        % for my $t ( @{$vs_aref->{'terms'}}) {
+                          <li> <%= link_to $t->{'term'}->{'value'} => "/terms/$t->{'term'}->{'id'}" %> </li>
+                        % }
+                     </ul>
+                   % }
+                 % }
+               % }
+
+
+          </ul>
+          </li>
+       % }
+      </ul>
+  </div>
+
+% }
