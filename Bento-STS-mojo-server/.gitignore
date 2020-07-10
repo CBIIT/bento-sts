@@ -1,1 +1,5 @@
-run
+# gitignore
+local
+vendor
+aws.ini
+RUN-README.md
