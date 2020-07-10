@@ -473,6 +473,25 @@ sub getValuesetById {
      return;
   }
 
+  # check requested format
+  my $format = $self->param('format');
+  if (defined ($format) ) {
+      $format = $sanitizer->($format); # simple sanitization
+      
+      my %accepted_formats = ( html => 1 ,
+                               json => 1 ,
+                               csv  => 1
+                              );
+
+      unless ($accepted_formats{$format}){
+          $self->render(json => { errmsg => "Missing or non-existent format, try ?format=json or ?format=csv"},
+                        status => 400);
+          return;
+      }
+   }
+
+
+
   # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
   my $h = { param => $vs_id };
 
@@ -482,7 +501,10 @@ sub getValuesetById {
 
   # handle returned data -- single hash here
   my $results = [];
+  my $csv_header = '';
+  my $csv_body = '';
   my %list_of_seen_vs = ();
+  
   while ( my @row = $stream->fetch_next ) {
     # now format
 
@@ -502,6 +524,10 @@ sub getValuesetById {
                    'property-handle' => $row[1],
                    'property-model'  => $row[2]
     };
+    
+    # create value set header if we want csv
+    $csv_header = "valueset: " . $row[1] . " , id: " . $row[3] . "\n";
+
     # only add the 'terms' if terms were found
     if ($terms_exist){
          $vs->{'terms'} = [];
@@ -517,6 +543,8 @@ sub getValuesetById {
     # for the appropriate vs
     if ($terms_exist) {
         my $term_ = { 'term' => {'id' => $row[5], 'value' => $row[6]} };
+
+        $csv_body .= $row[6] . ", " . $row[5] . "\n";
 
         ## find which element in big data array has value set
         ## and add the term to it
@@ -535,11 +563,20 @@ sub getValuesetById {
 
   } # end while
 
-  if (0) {
+
+
+  if (defined ($format) && ($format eq "json")) {
+    print "\n GO GO \n";
     # done - now return
     $self->render( json => $results );
   }
-  elsif (1) {
+  elsif (defined ($format) && ($format eq "csv")) {
+    print "\n GOBOTS STICNl GO \n";
+    # done - now return
+    my $csv = $csv_header . $csv_body;
+    $self->render( text => $csv, format => 'txt' );
+  }
+  else {
      # HTML 
       my $msg;
       if ($results) {
