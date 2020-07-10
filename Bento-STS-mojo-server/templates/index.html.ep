@@ -1,0 +1,27 @@
+% layout 'default';
+% title 'Welcome';
+<h2><%= $header %></h2>
+
+<p><%= $msg %></p>
+
+% if (my $l = stash 'list') {
+
+  %  for my $d (@$l) {
+       <%= link_to $d => "/models/$d" %> </br>
+  %  } 
+% }
+
+
+% if (my $organized_nodes = stash 'nodes') {
+  <div>
+  % for my $model (sort (keys %{$organized_nodes})) {
+
+    <h3> Model: <%= link_to $model => "/models/$model" %> </h3>
+      <ul>
+        % foreach my $node (@{$organized_nodes->{$model}}) {
+          <li> <%= link_to $node->[1] => "/nodes/$node->[0]" %>  </li>
+        % }
+     </ul>
+  %  } 
+  </div>
+% }

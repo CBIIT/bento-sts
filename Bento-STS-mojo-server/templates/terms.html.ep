@@ -1,0 +1,26 @@
+% layout 'default';
+% title 'Terms';
+
+% if (my $header = stash 'header') {
+    <h2><%= $header %></h2>
+% }
+
+% if (my $msg = stash 'msg') {
+    <p><%= $msg %></p>
+% }
+
+% if (my $term = stash 'list') {
+
+  <div class="container-fluid" id="terms">
+  <h3> <%= $header %> </h3>
+      <ul> 
+       % for my $t_href ( @{$term}) { 
+          <li> id: <%= link_to $t_href->{'term'}->{'value'} => "/terms/$t_href->{'term'}->{'id'}" %> 
+          <ul>
+              <li> origin: <%= $t_href->{'term-origin'} %> </li>
+          </ul>
+       % }
+      </ul>
+  </div>
+
+% }
