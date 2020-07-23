@@ -139,6 +139,9 @@ sub getModelByName {
 
 }
 
+
+# -------------------------------------------------------------------------------------------
+
 sub getListOfNodes {
   my $self = shift;
 
@@ -193,6 +196,7 @@ sub getListOfNodes {
 
 }
 
+# ------------------------------------------------------------------------
 sub getNodeById {
   my $self = shift;
 
@@ -371,8 +375,29 @@ sub getNodeById {
 }
 
 
+# -------------------------------------------------------------------------------------------
+
 sub getListOfValuesets {
   my $self = shift;
+
+  my $sanitizer = $self->sanitize_input_sref;
+  # check requested format is handled, else report error
+  my $format = $self->param('format');
+  if (defined ($format) ) {
+      $format = $sanitizer->($format); # simple sanitization
+      
+      my %accepted_formats = ( html => 1 ,
+                               json => 1 ,
+                               csv  => 1 ,
+                               txt  => 1
+                              );
+
+      unless ($accepted_formats{$format}){
+          $self->render(json => { errmsg => "Missing or non-existent format, try ?format=json or ?format=csv or ?format=txt"},
+                        status => 400);
+          return;
+      }
+   }
 
   # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
   # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
@@ -383,6 +408,10 @@ sub getListOfValuesets {
 
   # handle returned data
   my $results = [];
+  my $csv_header = '';
+  my $csv_body = '';
+  my $txt_header = '';
+  my $txt_body = '';
   my %list_of_seen_vs = ();
   while ( my @row = $stream->fetch_next ) {
 
@@ -395,12 +424,18 @@ sub getListOfValuesets {
         $terms_exist = 0;
     }
 
+    my $id_ = $row[3];
+    my $url_ = $row[4] || '-';
+
     # capture basic value_set data
-    my $vs = { 'value_set' => { 'id'  => $row[3],
-                                'url' => $row[4] },
+    my $vs = { 'value_set' => { 'id'  => $id_,
+                                'url' => $url_ },
                'property-id' => $row[0],
                'property-handle' => $row[1],
                'property-model'  => $row[2] };
+
+
+
     # only add the 'terms' if terms were found
     if ($terms_exist){
         $vs->{'terms'} = [];
@@ -410,6 +445,10 @@ sub getListOfValuesets {
     unless ( exists ($list_of_seen_vs{$row[3]})) {
         push @$results, $vs;
         $list_of_seen_vs{$row[3]} = 1;
+
+        # create value set header if we want csv
+        $csv_body .= "valueset: " . $id_ . ", id: " . $row[3] . ", url: " . $url_ . ", model: " . $row[2] . "\n";
+        $txt_body .= "valueset: " . $row[1] . "\n";
     }
 
     # now only if there are terms, add them under the 'terms' array
@@ -435,14 +474,22 @@ sub getListOfValuesets {
 
   }
 
-  if (0) {
-      # JSON
-      $self->render( json => $results );
-  }
-  elsif (1) {
-     
-     # HTML 
 
+  if (defined ($format) && ($format eq "json")) {
+    # done - now return
+    $self->render( json => $results );
+  }
+  elsif (defined ($format) && ($format eq "csv")) {
+    # done - now return
+    #my $csv = $csv_header . $csv_body;
+    $self->render( text => $csv_body, format => 'txt' );
+  }
+  elsif (defined ($format) && ($format eq "txt")) {
+    # done - now return
+    #my $txt = $txt_header . $txt_body;
+    $self->render( text => $txt_body, format => 'txt' );
+  }
+  else {
       my $msg;
       if ($results) {
           $msg = 'List of All Value Sets';
@@ -458,6 +505,7 @@ sub getListOfValuesets {
 }
 
 
+# -------------------------------------------------------------------------------------------
 sub getValuesetById {
   my $self = shift;
 
@@ -473,6 +521,25 @@ sub getValuesetById {
      return;
   }
 
+  # check requested format is handled, else report error
+  my $format = $self->param('format');
+  if (defined ($format) ) {
+      $format = $sanitizer->($format); # simple sanitization
+      
+      my %accepted_formats = ( html => 1 ,
+                               json => 1 ,
+                               csv  => 1 ,
+                               txt  => 1
+                              );
+
+      unless ($accepted_formats{$format}){
+          $self->render(json => { errmsg => "Missing or non-existent format, try ?format=json or ?format=csv or ?format=txt"},
+                        status => 400);
+          return;
+      }
+   }
+
+
   # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
   my $h = { param => $vs_id };
 
@@ -482,7 +549,12 @@ sub getValuesetById {
 
   # handle returned data -- single hash here
   my $results = [];
+  my $csv_header = '';
+  my $csv_body = '';
+  my $txt_header = '';
+  my $txt_body = '';
   my %list_of_seen_vs = ();
+  
   while ( my @row = $stream->fetch_next ) {
     # now format
 
@@ -502,6 +574,11 @@ sub getValuesetById {
                    'property-handle' => $row[1],
                    'property-model'  => $row[2]
     };
+    
+    # create value set header if we want csv
+    $csv_header = "valueset: " . $row[1] . " , id: " . $row[3] . "\n";
+    $txt_header = "valueset: " . $row[1] . "\n";
+
     # only add the 'terms' if terms were found
     if ($terms_exist){
          $vs->{'terms'} = [];
@@ -517,6 +594,10 @@ sub getValuesetById {
     # for the appropriate vs
     if ($terms_exist) {
         my $term_ = { 'term' => {'id' => $row[5], 'value' => $row[6]} };
+
+        # csv
+        $csv_body .= "term: $row[6]" . ", id: " . $row[5] . "\n";
+        $txt_body .= "$row[6]\n";
 
         ## find which element in big data array has value set
         ## and add the term to it
@@ -535,11 +616,23 @@ sub getValuesetById {
 
   } # end while
 
-  if (0) {
+
+
+  if (defined ($format) && ($format eq "json")) {
     # done - now return
     $self->render( json => $results );
   }
-  elsif (1) {
+  elsif (defined ($format) && ($format eq "csv")) {
+    # done - now return
+    my $csv = $csv_header . $csv_body;
+    $self->render( text => $csv, format => 'txt' );
+  }
+  elsif (defined ($format) && ($format eq "txt")) {
+    # done - now return
+    my $txt = $txt_header . $txt_body;
+    $self->render( text => $txt, format => 'txt' );
+  }
+  else {
      # HTML 
       my $msg;
       if ($results) {
@@ -617,10 +710,30 @@ sub getPropertyById {
   }
 }
 
+# ------------------------------------------------------------------------- #
 sub getListOfTerms {
   my $self = shift;
 
   $self->app->log->info("getting list of all terms");
+  my $sanitizer = $self->sanitize_input_sref;
+
+  # check requested format is handled, else report error
+  my $format = $self->param('format');
+  if (defined ($format) ) {
+      $format = $sanitizer->($format); # simple sanitization
+      
+      my %accepted_formats = ( html => 1 ,
+                               json => 1 ,
+                               csv  => 1 ,
+                               txt  => 1
+                              );
+
+      unless ($accepted_formats{$format}){
+          $self->render(json => { errmsg => "Missing or non-existent format, try ?format=json or ?format=csv or ?format=txt"},
+                        status => 400);
+          return;
+      }
+   }
 
   # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
   # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
@@ -631,6 +744,10 @@ sub getListOfTerms {
 
   # handle query result data
   my $result = [];
+  my $csv_header = '';
+  my $csv_body = '';
+  my $txt_header='';
+  my $txt_body = '';
   while ( my @row = $stream->fetch_next ) {
     # now format
     my $t = { 'term' => { 'value'  => $row[0],
@@ -638,13 +755,28 @@ sub getListOfTerms {
               'term-origin' => $row[2] };
 
     push @$result, $t;
+
+    # csv
+    $csv_body .= "term: $row[0], id: $row[1]\n";
+    $txt_body .= "term: $row[0]\n";
   }
 
-  if (0) {
-    # done, now return
+
+  if (defined ($format) && ($format eq "json")) {
+    # done - now return
     $self->render( json => $result );
   }
-  elsif (1) {
+  elsif (defined ($format) && ($format eq "csv")) {
+    # done - now return
+    #my $csv = $csv_header . $csv_body;
+    $self->render( text => $csv_body, format => 'txt' );
+  }
+  elsif (defined ($format) && ($format eq "txt")) {
+    # done - now return
+    #my $txt = $txt_header . $txt_body;
+    $self->render( text => $txt_body, format => 'txt' );
+  }
+  else {
     # html return
     my $msg;
       if ($result) {
@@ -659,11 +791,14 @@ sub getListOfTerms {
   }
 }
 
+
+ # --------------------------------------------------------------------------------
 sub getTermById {
   my $self = shift;
 
   my $term = $self->stash('termId');
   $self->app->log->info("using term $term");
+  my $sanitizer = $self->sanitize_input_sref;
 
   # just make sure we have term to proceed, else return error 400
   unless ($term) {
@@ -672,7 +807,25 @@ sub getTermById {
      return;
   }
 
-  # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
+  # check requested format is handled, else report error
+  my $format = $self->param('format');
+  if (defined ($format) ) {
+      $format = $sanitizer->($format); # simple sanitization
+      
+      my %accepted_formats = ( html => 1 ,
+                               json => 1 ,
+                               csv  => 1 ,
+                               txt  => 1
+                              );
+
+      unless ($accepted_formats{$format}){
+          $self->render(json => { errmsg => "Missing or non-existent format, try ?format=json or ?format=csv or ?format=txt"},
+                        status => 400);
+          return;
+      }
+   }
+  
+   # $h is anon hash, used for [$param_hash] in Neo4j::Bolt::Cxn
   my $h = { param => $term };
 
   # get subroutine_ref to exec Neo4j::Bolt's `run_query` (defined in sts.pm)
@@ -681,6 +834,8 @@ sub getTermById {
 
   # capture data back from Neo4j::Bolt::ResultStream
   my $result = [];
+  my $csv_header = '';
+  my $txt_header = '';
   while ( my @row = $stream->fetch_next ) {
     # now format
     my $t = { 'term' => { 'value'  => $row[0],
@@ -688,6 +843,10 @@ sub getTermById {
               'term-origin' => $row[2] };
 
     push @$result, $t;
+
+    # csv
+    $csv_header = "term: $row[0], id: $row[1]\n";
+    $txt_header = "term: $row[0]\n";
   }
 
   unless (scalar @$result) {
@@ -696,11 +855,21 @@ sub getTermById {
      return;
   }
 
-  if (0) {
-    # now return result
+  if (defined ($format) && ($format eq "json")) {
+    # done - now return
     $self->render( json => $result );
   }
-  elsif (1) {
+  elsif (defined ($format) && ($format eq "csv")) {
+    # done - now return
+    #my $csv = $csv_header . $csv_body;
+    $self->render( text => $csv_header, format => 'txt' );
+  }
+  elsif (defined ($format) && ($format eq "txt")) {
+    # done - now return
+    #my $txt = $txt_header . $txt_body;
+    $self->render( text => $txt_header, format => 'txt' );
+  }
+  else {
     # html return
     my $msg;
       if ($result) {
@@ -715,6 +884,8 @@ sub getTermById {
   }
 }
 
+
+ # --------------------------------------------------------------------------------
 sub getTermByName {
   my $self = shift;
 
