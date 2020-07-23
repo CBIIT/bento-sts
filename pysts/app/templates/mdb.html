@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    {% if display == 'list'  %}
+    <br><br>
+      <table >
+         <tr>
+             <th> Name </th>
+         </tr>
+         {% for dict_item in mdb %}
+         {% for key, value in dict_item.items() %}
+         <tr> <td> <a href="{{url_for( subtype, id=key) }}">{{ value }}</a> </td> </tr>
+         {% endfor %}
+         {% endfor %}
+       </table>
+       <br><br>
+    {% endif %}
+
+    {% if display == 'model'  %}
+    <br><br>
+      <table >
+         <tr>
+             <th> Name </th>
+         </tr>
+         {% for item in mdb %}
+         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
+         {% endfor %}
+       </table>
+       <br><br>
+    {% endif %}
+
+{% endblock %}
