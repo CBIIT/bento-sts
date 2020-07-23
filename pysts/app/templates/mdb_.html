@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    {% if display == 'list'  %}
+    <br><br>
+      <table >
+         <tr>
+             <th> Name </th>
+         </tr>
+         {% for dict_item in mdb %}
+         {% for key, value in dict_item.items() %}
+         <tr> <td> <a href="/{{subtype}}?id={{key}}">{{ value }}</a> </td> </tr>
+         {% endfor %}
+         {% endfor %}
+       </table>
+    {% endif %}
+
+{% endblock %}
