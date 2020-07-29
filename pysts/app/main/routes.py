@@ -1,6 +1,7 @@
+# route.py
+
 from datetime import datetime
-from flask import render_template, flash, redirect, url_for, request, g, \
-    jsonify, current_app
+from flask import render_template, flash, redirect, url_for, request, g, jsonify, current_app
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
@@ -10,6 +11,8 @@ from app.models import User, Post
 from app.translate import translate
 from app.main import bp
 import app.mdb
+#from app.mdb import get_node_by_id, get_list_of_nodes, get_list_of_models, get_list_of_terms, get_list_of_origins, get_list_of_terms
+
 
 
 @bp.before_app_request
@@ -48,12 +51,6 @@ def index():
                            prev_url=prev_url)
 
 
-@bp.route('/explore')
-@login_required
-def explore():
-    return render_template('explore.html', title=_('Explore'))
-
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -62,9 +59,12 @@ def explore():
 @login_required
 def models(name=None):
     m = app.mdb.mdb()
-    models_ =  m.get_list_of_models()
-    return render_template('mdb.html', title=_('Models'),
-                           mdb = models_, subtype = 'main.models', display='model' )
+    models_ = m.get_list_of_models()
+    return render_template('mdb.html', 
+                            title=_('Models'),
+                            mdb = models_, 
+                            subtype = 'main.models', 
+                            display='model')
 
 
 @bp.route('/nodes/<id>')
@@ -72,8 +72,16 @@ def models(name=None):
 @login_required
 def nodes(id=None):
     m = app.mdb.mdb()
-    nodes_ =  m.get_list_of_nodes()
-    return render_template('mdb.html', title=_('Nodes'),
+
+    if id is not None:
+        node_ = m.get_node_by_id(id)
+        # TODO check that id actually exists - handle error
+        return render_template('mdbnode.html', title=_('Node'),
+                           mdb = node_, subtype = 'main.nodes', display='detail' )
+    
+    else:
+        nodes_ =  m.get_list_of_nodes()
+        return render_template('mdb.html', title=_('Nodes'),
                            mdb = nodes_, subtype = 'main.nodes', display='list' )
 
 @bp.route('/valuesets/<id>')
