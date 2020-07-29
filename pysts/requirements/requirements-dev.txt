@@ -1,3 +1,5 @@
 -r ../requirements.txt
 
 ipykernel
+flake8
+black
