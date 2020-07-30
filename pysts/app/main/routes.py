@@ -14,7 +14,6 @@ import app.mdb
 #from app.mdb import get_node_by_id, get_list_of_nodes, get_list_of_models, get_list_of_terms, get_list_of_origins, get_list_of_terms
 
 
-
 @bp.before_app_request
 def before_request():
     if current_user.is_authenticated:
@@ -77,38 +76,54 @@ def nodes(id=None):
         node_ = m.get_node_by_id(id)
         # TODO check that id actually exists - handle error
         return render_template('mdbnode.html', title=_('Node'),
-                           mdb = node_, subtype = 'main.nodes', display='detail' )
-    
+                           mdb = node_, subtype = 'main.nodes', display='detail')
+
     else:
-        nodes_ =  m.get_list_of_nodes()
+        nodes_ = m.get_list_of_nodes()
         return render_template('mdb.html', title=_('Nodes'),
-                           mdb = nodes_, subtype = 'main.nodes', display='list' )
+                           mdb = nodes_, subtype = 'main.nodes', display='list')
 
 @bp.route('/valuesets/<id>')
 @bp.route('/valuesets')
 @login_required
 def valuesets(id=None):
+
     m = app.mdb.mdb()
-    vs_ =  m.get_list_of_valuesets()
-    return render_template('mdb.html', title=_('Value Sets'),
-                           mdb = vs_, subtype = 'main.valuesets', display='list' )
+
+    if id is not None:
+        vs_ = m.get_valueset_by_id(id)
+        # TODO check that id actually exists - handle error
+        return render_template('mdbvalueset.html', title=_('Value Set'),
+                           mdb = vs_, subtype = 'main.valuesets', display='detail')
+
+    else:
+        vs_ = m.get_list_of_valuesets()
+        return render_template('mdb.html', title=_('Value Sets'),
+                            mdb = vs_, subtype = 'main.valuesets', display='list')
+
 
 @bp.route('/terms/<id>')
-@login_required
-def term(id=None):
-    m = app.mdb.mdb()
-    term_ =  m.get_term_by_id(id)
-    return jsonify(term_)
-
 @bp.route('/terms')
 @login_required
 def terms(id=None):
+
+    format = request.args.get('format')    
     m = app.mdb.mdb()
-    terms_ =  m.get_list_of_terms()
-    import pprint
-    pprint.pprint(terms)
-    return render_template('mdb.html', title=_('Terms'),
-                           mdb = terms_, subtype = 'main.term', display='list' )
+
+    if id is not None:
+        term_ = m.get_term_by_id(id)
+        if format == 'json':
+            return jsonify(term_)
+        elif True:
+            return jsonify(term_)
+        else:
+            return render_template('mdb.html', title=_('Term'),
+                           mdb = term_, subtype = 'main.terms', display='list')            
+
+    else:
+        terms_ =  m.get_list_of_terms()
+        return render_template('mdb.html', title=_('Terms'),
+                           mdb = terms_, subtype = 'main.terms', display='list')
 
 @bp.route('/origins')
 @login_required
