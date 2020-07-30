@@ -373,7 +373,7 @@ class mdb():
                   'origin_definition': record['origin_definition'],
                   'origin_id': record['origin_id'],
                   'type': 'term',
-                  'link': url_for("main.terms" , id=record['id'] , _external=True),
+                  'link': url_for("main.terms" , id=record['id'] , _external=False),
                   'has_origin': { "id": record['originid'],
                                   "name": record['originname'],
                                   "type": 'origin',
