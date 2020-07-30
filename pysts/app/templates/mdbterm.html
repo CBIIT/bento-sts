@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    {% if display == 'detail'  %}
+    <br><br>
+    <div>
+      <h3> Details </h3>
+      <table >
+         <tr>
+            <th> value </th> <th> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.value}} </a>  </th>
+       </tr>
+         <tr>
+             <td> id </td> <td>{{mdb.id}} </td>
+        </tr>
+        <tr>
+            <td> model </td> <td>{{mdb.model}} </td>
+       </tr>
+       <tr>
+        <td> origin id </td> <td>{{mdb.origin_id}} </td>
+   </tr>
+   <tr>
+       <td> origin definition </td> <td>{{mdb.origin_definition}} </td>
+  </tr>
+      </table>
+    </div>
+
+    <br><br>
+
+    <div>
+        {% if mdb.has_origin %}
+        <h3> Origin  </h3>
+            
+            <table>
+                <tr> <th> name  </th>  
+                     <th> <a href="{{url_for( 'main.origins', id=mdb.has_origin.id ) }}"> {{ mdb.has_origin.name }}</a> </th>
+                </tr>
+                <tr> 
+                    <td>  id </td>  
+                    <td> {{ mdb.has_origin.id }} </td>
+                </tr>
+            </table>
+            <br>
+
+        {% endif %}
+    </div>
+
+    {% endif %}
+{% endblock %}

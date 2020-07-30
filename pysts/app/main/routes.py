@@ -11,7 +11,6 @@ from app.models import User, Post
 from app.translate import translate
 from app.main import bp
 import app.mdb
-#from app.mdb import get_node_by_id, get_list_of_nodes, get_list_of_models, get_list_of_terms, get_list_of_origins, get_list_of_terms
 
 
 @bp.before_app_request
@@ -57,6 +56,7 @@ def index():
 @bp.route('/models')
 @login_required
 def models(name=None):
+    format = request.args.get('format')    
     m = app.mdb.mdb()
     models_ = m.get_list_of_models()
     return render_template('mdb.html', 
@@ -70,17 +70,26 @@ def models(name=None):
 @bp.route('/nodes')
 @login_required
 def nodes(id=None):
+    
+    format = request.args.get('format')    
     m = app.mdb.mdb()
 
     if id is not None:
         node_ = m.get_node_by_id(id)
         # TODO check that id actually exists - handle error
-        return render_template('mdbnode.html', title=_('Node'),
+
+        if format == 'json':
+            return jsonify(node_)
+        else:
+            return render_template('mdbnode.html', title=_('Node'),
                            mdb = node_, subtype = 'main.nodes', display='detail')
 
     else:
         nodes_ = m.get_list_of_nodes()
-        return render_template('mdb.html', title=_('Nodes'),
+        if format == 'json':
+            return jsonify(nodes_)
+        else:
+            return render_template('mdb.html', title=_('Nodes'),
                            mdb = nodes_, subtype = 'main.nodes', display='list')
 
 @bp.route('/valuesets/<id>')
@@ -88,17 +97,24 @@ def nodes(id=None):
 @login_required
 def valuesets(id=None):
 
+    format = request.args.get('format')    
     m = app.mdb.mdb()
 
     if id is not None:
         vs_ = m.get_valueset_by_id(id)
         # TODO check that id actually exists - handle error
-        return render_template('mdbvalueset.html', title=_('Value Set'),
+        if format == 'json':
+            return jsonify(vs_)
+        else:
+            return render_template('mdbvalueset.html', title=_('Value Set'),
                            mdb = vs_, subtype = 'main.valuesets', display='detail')
 
     else:
         vs_ = m.get_list_of_valuesets()
-        return render_template('mdb.html', title=_('Value Sets'),
+        if format == 'json':
+            return jsonify(vs_)
+        else:
+            return render_template('mdb.html', title=_('Value Sets'),
                             mdb = vs_, subtype = 'main.valuesets', display='list')
 
 
@@ -114,24 +130,31 @@ def terms(id=None):
         term_ = m.get_term_by_id(id)
         if format == 'json':
             return jsonify(term_)
-        elif True:
-            return jsonify(term_)
         else:
-            return render_template('mdb.html', title=_('Term'),
-                           mdb = term_, subtype = 'main.terms', display='list')            
+            return render_template('mdbterm.html', title=_('Term'),
+                           mdb = term_, subtype = 'main.terms', display='detail')            
 
     else:
         terms_ =  m.get_list_of_terms()
-        return render_template('mdb.html', title=_('Terms'),
+        if format == 'json':
+            return jsonify(terms_)
+        else:
+            return render_template('mdb.html', title=_('Terms'),
                            mdb = terms_, subtype = 'main.terms', display='list')
 
+@bp.route('/origins/<id>')
 @bp.route('/origins')
 @login_required
 def origins(id=None):
+    format = request.args.get('format')    
     m = app.mdb.mdb()
+
+
+
     origins_ =  m.get_list_of_origins()
     return render_template('mdb.html', title=_('Origins'),
                            mdb = origins_, subtype = 'main.origins', display='list' )
+
 # ---------------------------------------------------------------------------
 @bp.route('/user/<username>')
 @login_required
