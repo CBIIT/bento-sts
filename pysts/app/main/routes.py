@@ -1,7 +1,16 @@
 # route.py
 
 from datetime import datetime
-from flask import render_template, flash, redirect, url_for, request, g, jsonify, current_app
+from flask import (
+    render_template,
+    flash,
+    redirect,
+    url_for,
+    request,
+    g,
+    jsonify,
+    current_app,
+)
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
@@ -22,157 +31,211 @@ def before_request():
     g.locale = str(get_locale())
 
 
-@bp.route('/', methods=['GET', 'POST'])
-@bp.route('/index', methods=['GET', 'POST'])
+@bp.route("/", methods=["GET", "POST"])
+@bp.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
     form = PostForm()
     if form.validate_on_submit():
         language = guess_language(form.post.data)
-        if language == 'UNKNOWN' or len(language) > 5:
-            language = ''
-        post = Post(body=form.post.data, author=current_user,
-                    language=language)
+        if language == "UNKNOWN" or len(language) > 5:
+            language = ""
+        post = Post(body=form.post.data, author=current_user, language=language)
         db.session.add(post)
         db.session.commit()
-        flash(_('Your post is now live!'))
-        return redirect(url_for('main.index'))
-    page = request.args.get('page', 1, type=int)
+        flash(_("Your post is now live!"))
+        return redirect(url_for("main.index"))
+    page = request.args.get("page", 1, type=int)
     posts = current_user.followed_posts().paginate(
-        page, current_app.config['POSTS_PER_PAGE'], False)
-    next_url = url_for('main.index', page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('main.index', page=posts.prev_num) \
-        if posts.has_prev else None
-    return render_template('index.html', title=_('Home'), form=form,
-                           posts=posts.items, next_url=next_url,
-                           prev_url=prev_url)
-
+        page, current_app.config["POSTS_PER_PAGE"], False
+    )
+    next_url = url_for("main.index", page=posts.next_num) if posts.has_next else None
+    prev_url = url_for("main.index", page=posts.prev_num) if posts.has_prev else None
+    return render_template(
+        "index.html",
+        title=_("Home"),
+        form=form,
+        posts=posts.items,
+        next_url=next_url,
+        prev_url=prev_url,
+    )
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-@bp.route('/models/<name>')
-@bp.route('/models')
+
+@bp.route("/models/<name>")
+@bp.route("/models")
 @login_required
 def models(name=None):
-    format = request.args.get('format')    
+    format = request.args.get("format")
     m = app.mdb.mdb()
     models_ = m.get_list_of_models()
-    return render_template('mdb.html', 
-                            title=_('Models'),
-                            mdb = models_, 
-                            subtype = 'main.models', 
-                            display='model')
+    return render_template(
+        "mdb.html",
+        title=_("Models"),
+        mdb=models_,
+        subtype="main.models",
+        display="model",
+    )
 
 
-@bp.route('/nodes/<id>')
-@bp.route('/nodes')
+@bp.route("/nodes/<id>")
+@bp.route("/nodes")
 @login_required
 def nodes(id=None):
-    
-    format = request.args.get('format')    
+
+    format = request.args.get("format")
     m = app.mdb.mdb()
 
     if id is not None:
         node_ = m.get_node_by_id(id)
         # TODO check that id actually exists - handle error
 
-        if format == 'json':
+        if format == "json":
             return jsonify(node_)
         else:
-            return render_template('mdbnode.html', title=_('Node'),
-                           mdb = node_, subtype = 'main.nodes', display='detail')
+            return render_template(
+                "mdbnode.html",
+                title=_("Node"),
+                mdb=node_,
+                subtype="main.nodes",
+                display="detail",
+            )
 
     else:
         nodes_ = m.get_list_of_nodes()
-        if format == 'json':
+        if format == "json":
             return jsonify(nodes_)
         else:
-            return render_template('mdb.html', title=_('Nodes'),
-                           mdb = nodes_, subtype = 'main.nodes', display='list')
+            return render_template(
+                "mdb.html",
+                title=_("Nodes"),
+                mdb=nodes_,
+                subtype="main.nodes",
+                display="list",
+            )
 
-@bp.route('/valuesets/<id>')
-@bp.route('/valuesets')
+
+@bp.route("/valuesets/<id>")
+@bp.route("/valuesets")
 @login_required
 def valuesets(id=None):
 
-    format = request.args.get('format')    
+    format = request.args.get("format")
     m = app.mdb.mdb()
 
     if id is not None:
         vs_ = m.get_valueset_by_id(id)
         # TODO check that id actually exists - handle error
-        if format == 'json':
+        if format == "json":
             return jsonify(vs_)
         else:
-            return render_template('mdbvalueset.html', title=_('Value Set'),
-                           mdb = vs_, subtype = 'main.valuesets', display='detail')
+            return render_template(
+                "mdbvalueset.html",
+                title=_("Value Set"),
+                mdb=vs_,
+                subtype="main.valuesets",
+                display="detail",
+            )
 
     else:
         vs_ = m.get_list_of_valuesets()
-        if format == 'json':
+        if format == "json":
             return jsonify(vs_)
         else:
-            return render_template('mdb.html', title=_('Value Sets'),
-                            mdb = vs_, subtype = 'main.valuesets', display='list')
+            return render_template(
+                "mdb.html",
+                title=_("Value Sets"),
+                mdb=vs_,
+                subtype="main.valuesets",
+                display="list",
+            )
 
 
-@bp.route('/terms/<id>')
-@bp.route('/terms')
+@bp.route("/terms/<id>")
+@bp.route("/terms")
 @login_required
 def terms(id=None):
 
-    format = request.args.get('format')    
+    format = request.args.get("format")
     m = app.mdb.mdb()
 
     if id is not None:
         term_ = m.get_term_by_id(id)
-        if format == 'json':
+        if format == "json":
             return jsonify(term_)
         else:
-            return render_template('mdbterm.html', title=_('Term'),
-                           mdb = term_, subtype = 'main.terms', display='detail')            
+            return render_template(
+                "mdbterm.html",
+                title=_("Term"),
+                mdb=term_,
+                subtype="main.terms",
+                display="detail",
+            )
 
     else:
-        terms_ =  m.get_list_of_terms()
-        if format == 'json':
+        terms_ = m.get_list_of_terms()
+        if format == "json":
             return jsonify(terms_)
         else:
-            return render_template('mdb.html', title=_('Terms'),
-                           mdb = terms_, subtype = 'main.terms', display='list')
+            return render_template(
+                "mdb.html",
+                title=_("Terms"),
+                mdb=terms_,
+                subtype="main.terms",
+                display="list",
+            )
 
-@bp.route('/origins/<id>')
-@bp.route('/origins')
+
+@bp.route("/origins/<id>")
+@bp.route("/origins")
 @login_required
 def origins(id=None):
-    format = request.args.get('format')    
+    format = request.args.get("format")
     m = app.mdb.mdb()
 
+    origins_ = m.get_list_of_origins()
+    return render_template(
+        "mdb.html",
+        title=_("Origins"),
+        mdb=origins_,
+        subtype="main.origins",
+        display="list",
+    )
 
-
-    origins_ =  m.get_list_of_origins()
-    return render_template('mdb.html', title=_('Origins'),
-                           mdb = origins_, subtype = 'main.origins', display='list' )
 
 # ---------------------------------------------------------------------------
-@bp.route('/user/<username>')
+@bp.route("/user/<username>")
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get("page", 1, type=int)
     posts = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, current_app.config['POSTS_PER_PAGE'], False)
-    next_url = url_for('main.user', username=user.username,
-                       page=posts.next_num) if posts.has_next else None
-    prev_url = url_for('main.user', username=user.username,
-                       page=posts.prev_num) if posts.has_prev else None
+        page, current_app.config["POSTS_PER_PAGE"], False
+    )
+    next_url = (
+        url_for("main.user", username=user.username, page=posts.next_num)
+        if posts.has_next
+        else None
+    )
+    prev_url = (
+        url_for("main.user", username=user.username, page=posts.prev_num)
+        if posts.has_prev
+        else None
+    )
     form = EmptyForm()
-    return render_template('user.html', user=user, posts=posts.items,
-                           next_url=next_url, prev_url=prev_url, form=form)
+    return render_template(
+        "user.html",
+        user=user,
+        posts=posts.items,
+        next_url=next_url,
+        prev_url=prev_url,
+        form=form,
+    )
 
 
-@bp.route('/edit_profile', methods=['GET', 'POST'])
+@bp.route("/edit_profile", methods=["GET", "POST"])
 @login_required
 def edit_profile():
     form = EditProfileForm(current_user.username)
@@ -180,74 +243,91 @@ def edit_profile():
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
         db.session.commit()
-        flash(_('Your changes have been saved.'))
-        return redirect(url_for('main.edit_profile'))
-    elif request.method == 'GET':
+        flash(_("Your changes have been saved."))
+        return redirect(url_for("main.edit_profile"))
+    elif request.method == "GET":
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', title=_('Edit Profile'),
-                           form=form)
+    return render_template("edit_profile.html", title=_("Edit Profile"), form=form)
 
 
-@bp.route('/follow/<username>', methods=['POST'])
+@bp.route("/follow/<username>", methods=["POST"])
 @login_required
 def follow(username):
     form = EmptyForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first()
         if user is None:
-            flash(_('User %(username)s not found.', username=username))
-            return redirect(url_for('main.index'))
+            flash(_("User %(username)s not found.", username=username))
+            return redirect(url_for("main.index"))
         if user == current_user:
-            flash(_('You cannot follow yourself!'))
-            return redirect(url_for('main.user', username=username))
+            flash(_("You cannot follow yourself!"))
+            return redirect(url_for("main.user", username=username))
         current_user.follow(user)
         db.session.commit()
-        flash(_('You are following %(username)s!', username=username))
-        return redirect(url_for('main.user', username=username))
+        flash(_("You are following %(username)s!", username=username))
+        return redirect(url_for("main.user", username=username))
     else:
-        return redirect(url_for('main.index'))
+        return redirect(url_for("main.index"))
 
 
-@bp.route('/unfollow/<username>', methods=['POST'])
+@bp.route("/unfollow/<username>", methods=["POST"])
 @login_required
 def unfollow(username):
     form = EmptyForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first()
         if user is None:
-            flash(_('User %(username)s not found.', username=username))
-            return redirect(url_for('main.index'))
+            flash(_("User %(username)s not found.", username=username))
+            return redirect(url_for("main.index"))
         if user == current_user:
-            flash(_('You cannot unfollow yourself!'))
-            return redirect(url_for('main.user', username=username))
+            flash(_("You cannot unfollow yourself!"))
+            return redirect(url_for("main.user", username=username))
         current_user.unfollow(user)
         db.session.commit()
-        flash(_('You are not following %(username)s.', username=username))
-        return redirect(url_for('main.user', username=username))
+        flash(_("You are not following %(username)s.", username=username))
+        return redirect(url_for("main.user", username=username))
     else:
-        return redirect(url_for('main.index'))
+        return redirect(url_for("main.index"))
 
 
-@bp.route('/translate', methods=['POST'])
+@bp.route("/translate", methods=["POST"])
 @login_required
 def translate_text():
-    return jsonify({'text': translate(request.form['text'],
-                                      request.form['source_language'],
-                                      request.form['dest_language'])})
+    return jsonify(
+        {
+            "text": translate(
+                request.form["text"],
+                request.form["source_language"],
+                request.form["dest_language"],
+            )
+        }
+    )
 
 
-@bp.route('/search')
+@bp.route("/search")
 @login_required
 def search():
     if not g.search_form.validate():
-        return redirect(url_for('main.explore'))
-    page = request.args.get('page', 1, type=int)
-    posts, total = Post.search(g.search_form.q.data, page,
-                               current_app.config['POSTS_PER_PAGE'])
-    next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
-        if total > page * current_app.config['POSTS_PER_PAGE'] else None
-    prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
-        if page > 1 else None
-    return render_template('search.html', title=_('Search'), posts=posts,
-                           next_url=next_url, prev_url=prev_url)
+        return redirect(url_for("main.explore"))
+    page = request.args.get("page", 1, type=int)
+    posts, total = Post.search(
+        g.search_form.q.data, page, current_app.config["POSTS_PER_PAGE"]
+    )
+    next_url = (
+        url_for("main.search", q=g.search_form.q.data, page=page + 1)
+        if total > page * current_app.config["POSTS_PER_PAGE"]
+        else None
+    )
+    prev_url = (
+        url_for("main.search", q=g.search_form.q.data, page=page - 1)
+        if page > 1
+        else None
+    )
+    return render_template(
+        "search.html",
+        title=_("Search"),
+        posts=posts,
+        next_url=next_url,
+        prev_url=prev_url,
+    )
