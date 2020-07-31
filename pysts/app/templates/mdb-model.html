@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    {% if display == 'list' %}
+    <br><br>
+      <table >
+         <tr>
+             <th> Name </th>
+         </tr>
+         {% for item in mdb %}
+         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
+         {% endfor %}
+       </table>
+       <br><br>
+    {% endif %} 
+
+    {% if display == 'detail' %}
+        {% if mdb.handle == 'ICDC' %} Yes, ICDC {% endif %}
+        {% if mdb.handle == 'CTDC' %} Yes, CTDC {% endif %}
+    {% endif %}
+
+
+{% endblock %}

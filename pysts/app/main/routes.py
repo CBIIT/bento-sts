@@ -31,7 +31,6 @@ def before_request():
     g.locale = str(get_locale())
 
 
-@bp.route("/", methods=["GET", "POST"])
 @bp.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
@@ -70,13 +69,25 @@ def index():
 def models(name=None):
     format = request.args.get("format")
     m = app.mdb.mdb()
-    models_ = m.get_list_of_models()
-    return render_template(
-        "mdb.html",
-        title=_("Models"),
-        mdb=models_,
-        subtype="main.models",
-        display="model",
+
+    if name is not None:
+        model_ = m.get_model_by_name(name)
+        return render_template(
+            "mdb-model.html",
+            title=_("Model - {}".format(model_.handle)),
+            mdb=model_,
+            subtype="main.models",
+            display="detail",
+    )
+
+    else:
+        models_ = m.get_list_of_models()
+        return render_template(
+            "mdb-model.html",
+            title=_("Models"),
+            mdb=models_,
+            subtype="main.models",
+            display="list",
     )
 
 
