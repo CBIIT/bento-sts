@@ -3,7 +3,7 @@ import pprint
 import json
 from flask import url_for
 from neo4j import GraphDatabase
-from bento_meta.entity import *
+import bento_meta.entity
 from bento_meta.objects import Node, Property, Edge, Term, ValueSet, Concept, Origin
 from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
@@ -127,7 +127,7 @@ class mdb:
 
         for record in answer:
 
-            ## A. if result{} is empty (first time through) then initialize
+            # A. if result{} is empty (first time through) then initialize
             if not bool(result):
                 result = {
                     "id": record["n1_id"],
@@ -138,7 +138,7 @@ class mdb:
                     "type": "node",
                 }
 
-            ## B. if "from node" exists
+            # B. if "from node" exists
             if bool(record["n3_id"]):
                 if "has_relationship_from_nodes" not in result.keys():
                     result["has_relationship_from_nodes"] = []
@@ -169,7 +169,7 @@ class mdb:
                 if unique:
                     result["has_relationship_from_nodes"].append(from_node)
 
-            ## C. if "to node" exists
+            # C. if "to node" exists
             if bool(record["n2_id"]):
                 if "has_relationship_to_nodes" not in result.keys():
                     result["has_relationship_to_nodes"] = []
@@ -198,7 +198,7 @@ class mdb:
                 if unique:
                     result["has_relationship_to_nodes"].append(to_node)
 
-            ## D. if there are properties
+            # D. if there are properties
             if record["p1_id"]:
                 pass
 
@@ -284,14 +284,14 @@ class mdb:
             vs.url as vs_url,
             vs.handle as vs_handle,
             t.nanoid6 as term_id,
-            t.value as term_value 
+            t.value as term_value
             """,
             vsid=vsid,
         )
 
         for record in answers:
 
-            ## A. if result{} is empty (first time through) then initialize
+            # A. if result{} is empty (first time through) then initialize
             if not bool(result):
                 result = {
                     "id": record["vs_id"],
@@ -302,7 +302,7 @@ class mdb:
                     "link": "link",
                 }
 
-            ## B. add property
+            # B. add property
             if record["property_id"]:
                 if "has_property" not in result.keys():
                     result["has_property"] = {
@@ -312,9 +312,9 @@ class mdb:
                         "link": "link",
                     }
 
-            ## C. skip origin
+            # C. skip origin
 
-            ## D. add terms
+            # D. add terms
             if record["term_id"]:
 
                 if "has_terms" not in result.keys():
@@ -548,7 +548,7 @@ class mdb:
 
         for record in answers:
 
-            ## A. if result{} is empty (first time through) then initialize
+            # A. if result{} is empty (first time through) then initialize
             if not bool(result):
                 result = {
                     "id": record["id"],
@@ -560,7 +560,7 @@ class mdb:
                     "link": "link",
                 }
 
-            ## B. add valueset
+            # B. add valueset
             if record["valueset_id"]:
                 if "has_valueset" not in result.keys():
                     result["has_valueset"] = {
@@ -569,9 +569,9 @@ class mdb:
                         "link": "link",
                     }
 
-            ## C. skip origin
+            # C. skip origin
 
-            ## D. add terms
+            # D. add terms
             if record["term_id"]:
 
                 if "has_terms" not in result.keys():
