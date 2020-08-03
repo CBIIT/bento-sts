@@ -3,7 +3,7 @@
 
 {% block app_content %}
     <br>
-    <h1> {{ title }} </h1>
+    <h1> {{ title }} {{ mdb.handle}} </h1>
     {% if display == 'detail'  %}
     <br><br>
     <div>
@@ -11,26 +11,26 @@
       <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
       <table class="table-striped">
          <tr>
-            <th style="width:300px"> handle </th> 
+            <th style="width:300px"> Handle </th> 
             <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
        </tr>
          <tr>
-             <td> id </td> <td>{{mdb.id}} </td>
+             <td> Id </td> <td>{{mdb.id}} </td>
         </tr>
         <tr>
-            <td> model </td> <td>{{mdb.model}} </td>
+            <td> Model </td> <td>{{mdb.model}} </td>
        </tr>
        <tr>
             <td> url </td> <td>{{mdb.url}} </td>
        </tr>
        <tr>
-         <td> desc </td> <td>{{mdb.desc}} </td>
+         <td> Desc </td> <td>{{mdb.desc}} </td>
        </tr>
       </table>
       </div>
     </div>
 
-    <br><br>
+    <br>    <br>
 
     <div>
         {% if mdb.has_terms %}
@@ -39,11 +39,11 @@
             {% for term_item in mdb.has_terms %}
             <div id="termList" name="termList" style="margin:20px; padding:20x">
             <table class="table-striped">
-                <tr> <th style="width:300px"> Value  </th>  
+                <tr> <th style="width:300px"> Term Value  </th>  
                      <th style="width:300px"> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </th>
                 </tr>
                 <tr> 
-                    <td>  id </td>  
+                    <td> Id </td>  
                     <td> {{ term_item.id }} </td>
                 </tr>
             </table>
