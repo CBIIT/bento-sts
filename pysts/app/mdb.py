@@ -327,7 +327,7 @@ class mdb:
             if not bool(result):
                 result = {
                     "id": record["vs_id"],
-                    "handle": record["vs_handle"],
+                    "handle": record["property_handle"],
                     "url": record["vs_url"],
                     "desc": "desc",
                     "type": "valueset",

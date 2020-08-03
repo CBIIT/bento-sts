@@ -164,7 +164,7 @@ def valuesets(id=None):
         else:
             return render_template(
                 "mdb-valueset.html",
-                title=_("Value Set"),
+                title=_("Value Set: "),
                 mdb=vs_,
                 subtype="main.valuesets",
                 display="detail",
@@ -198,7 +198,7 @@ def terms(id=None):
             return jsonify(term_)
         else:
             return render_template(
-                "mdbterm.html",
+                "mdb-term.html",
                 title=_("Term"),
                 mdb=term_,
                 subtype="main.terms",

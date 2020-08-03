@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    {% if display == 'detail'  %}
+    <br><br>
+    <div>
+      <h3> Details </h3>
+      <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
+      <table class="table-striped">
+          <thead>
+         <tr>
+            <th style="width:300px"> Term Value </th> 
+            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.value}} </a>  </th>
+       </tr>
+          </thead>
+          </tbody>
+         <tr>
+             <td> Id </td> <td>{{mdb.id}} </td>
+        </tr>
+        <tr>
+            <td> Model </td> <td>{{mdb.model}} </td>
+       </tr>
+       <tr>
+        <td> Origin Id </td> <td>{{mdb.origin_id}} </td>
+   </tr>
+   <tr>
+       <td> Origin Definition </td> <td>{{mdb.origin_definition}} </td>
+  </tr>
+  </tbody>
+      </table>
+      </div>
+    </div>
+
+    <br><br>
+
+    <div>
+        {% if mdb.has_origin %}
+        <h3> Origin  </h3>
+        <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
+
+            <table  class="table-striped">
+                <thead>
+                <tr> <th style="width:300px"> Origin Name  </th>  
+                     <th style="width:300px"> <a href="{{url_for( 'main.origins', id=mdb.has_origin.id ) }}"> {{ mdb.has_origin.name }}</a> </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr> 
+                    <td>  Id </td>  
+                    <td> {{ mdb.has_origin.id }} </td>
+                </tr>
+                </tbody>
+            </table>
+            <br>
+            </div>
+        {% endif %}
+    </div>
+
+    {% endif %}
+{% endblock %}
