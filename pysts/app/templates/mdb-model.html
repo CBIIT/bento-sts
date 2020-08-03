@@ -20,7 +20,7 @@
     {% if display == 'detail' %}
         {% if mdb.handle == 'ICDC' %}
         <br>
-        ICDC Nodes: <a href="{{url_for( 'main.nodes' ) }}"> link </a>
+        ICDC Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
         <br>
         View model in <a href="https://cbiit.github.io/icdc-model-tool/">Github</a>
         <br>
@@ -30,7 +30,7 @@
 
         {% if mdb.handle == 'CTDC' %}
         <br>
-        CTDC Nodes: <a href="{{url_for( 'main.nodes' ) }}"> link </a>
+        CTDC Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
         <br>
         View model in <a href="https://cbiit.github.io/ctdc-model/">Github</a>
         <br>

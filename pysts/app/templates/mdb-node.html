@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }}: {{mdb.handle}} </h1>
+    {% if display == 'detail'  %}
+    <br><br>
+    <div>
+      <h3> Node Details </h3>
+      <div id="fromNodes" name="fromNodes" style="margin:20px; padding:20x">
+      <table class="table-striped">
+         <tr>
+            <th style="width:300px"> Name </th> 
+            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+       </tr>
+         <tr>
+             <td> Id </td> <td>{{mdb.id}} </td>
+        </tr>
+        <tr>
+            <td> Model </td> <td>{{mdb.model}} </td>
+       </tr>
+      </table>
+      </div>
+    </div>
+    <br>
+
+    <div>
+        {% if mdb.has_relationship_from_nodes %}
+        <h3> From Nodes </h3>
+        <div id="fromNodes" name="fromNodes" style="margin:20px; padding:20x">
+            {% for node_item in mdb.has_relationship_from_nodes %}
+
+            <table class="table-striped" >
+                <tr> <th style="width:300px"> Node Name </th>  
+                     <th style="width:300px"> <a href="{{url_for( subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </th>
+                </tr>
+                <tr> 
+                    <td>  Id </td>  
+                    <td> {{ node_item.id }} </td>
+                </tr>
+                <tr> 
+                    <td> With Relationship </td>  
+                    <td> {{node_item.relationship.handle }}</td>
+                </tr>
+            </table>
+            <br>
+            {% endfor %}
+        </div>    
+        <br>
+        {% endif %}
+    </div>
+
+
+
+    <div>
+        {% if mdb.has_relationship_to_nodes %}
+        <h3> To Nodes </h3>
+        <div id="fromNodes" name="fromNodes" style="margin:20px; padding:20x">
+            
+            {% for node_item in mdb.has_relationship_to_nodes %}
+
+            <table class="table-striped" >
+                <tr> <th style="width:300px"> Node Name </th>  
+                     <th style="width:300px"> <a href="{{url_for( subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </th>
+                </tr>
+                <tr> 
+                    <td>  Id </td>  
+                    <td> {{ node_item.id }} </td>
+                </tr>
+                <tr> 
+                    <td>  With Relationship </td>  
+                    <td> {{node_item.relationship.handle }}</td>
+                </tr>
+            </table>
+            <br>
+            {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+
+    {% endif %}
+{% endblock %}

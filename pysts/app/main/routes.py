@@ -110,7 +110,7 @@ def nodes(id=None):
             return jsonify(node_)
         else:
             return render_template(
-                "mdbnode.html",
+                "mdb-node.html",
                 title=_("Node"),
                 mdb=node_,
                 subtype="main.nodes",
@@ -121,7 +121,7 @@ def nodes(id=None):
     if modelarg is not None:
         # TODO check that id actually exists - handle error
         nodes_ = m.get_list_of_nodes_by_model(modelarg)
-        
+
         if format == "json":
             return jsonify(nodes_)
         else: 
@@ -163,7 +163,7 @@ def valuesets(id=None):
             return jsonify(vs_)
         else:
             return render_template(
-                "mdbvalueset.html",
+                "mdb-valueset.html",
                 title=_("Value Set"),
                 mdb=vs_,
                 subtype="main.valuesets",
