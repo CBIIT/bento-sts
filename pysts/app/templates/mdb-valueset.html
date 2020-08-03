@@ -8,9 +8,11 @@
     <br><br>
     <div>
       <h3> Details </h3>
-      <table >
+      <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
+      <table class="table-striped">
          <tr>
-            <th> handle </th> <th> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+            <th style="width:300px"> handle </th> 
+            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
        </tr>
          <tr>
              <td> id </td> <td>{{mdb.id}} </td>
@@ -25,6 +27,7 @@
          <td> desc </td> <td>{{mdb.desc}} </td>
        </tr>
       </table>
+      </div>
     </div>
 
     <br><br>
@@ -34,21 +37,21 @@
         <h3> Terms in Value Set</h3>
             
             {% for term_item in mdb.has_terms %}
-            <h4>Term</h4>
-            <table>
-                <tr> <th> Value  </th>  
-                     <th> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </th>
+            <div id="termList" name="termList" style="margin:20px; padding:20x">
+            <table class="table-striped">
+                <tr> <th style="width:300px"> Value  </th>  
+                     <th style="width:300px"> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </th>
                 </tr>
                 <tr> 
                     <td>  id </td>  
                     <td> {{ term_item.id }} </td>
                 </tr>
             </table>
-            <br>
+            </div>
             {% endfor %}
-            
         {% endif %}
     </div>
 
     {% endif %}
+
 {% endblock %}
