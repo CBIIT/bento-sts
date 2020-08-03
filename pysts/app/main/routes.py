@@ -31,6 +31,7 @@ def before_request():
     g.locale = str(get_locale())
 
 
+@bp.route('/', methods=['GET', 'POST'])
 @bp.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
