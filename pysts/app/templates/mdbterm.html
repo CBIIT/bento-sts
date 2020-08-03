@@ -8,10 +8,13 @@
     <br><br>
     <div>
       <h3> Details </h3>
-      <table >
+      <table class="table">
+          <thead>
          <tr>
             <th> value </th> <th> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.value}} </a>  </th>
        </tr>
+          </thead>
+          </tbody>
          <tr>
              <td> id </td> <td>{{mdb.id}} </td>
         </tr>
@@ -24,6 +27,7 @@
    <tr>
        <td> origin definition </td> <td>{{mdb.origin_definition}} </td>
   </tr>
+  </tbody>
       </table>
     </div>
 
@@ -33,14 +37,18 @@
         {% if mdb.has_origin %}
         <h3> Origin  </h3>
             
-            <table>
+            <table  class="table">
+                <thead>
                 <tr> <th> name  </th>  
                      <th> <a href="{{url_for( 'main.origins', id=mdb.has_origin.id ) }}"> {{ mdb.has_origin.name }}</a> </th>
                 </tr>
+                </thead>
+                <tbody>
                 <tr> 
                     <td>  id </td>  
                     <td> {{ mdb.has_origin.id }} </td>
                 </tr>
+                </tbody>
             </table>
             <br>
 

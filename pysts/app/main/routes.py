@@ -74,7 +74,7 @@ def models(name=None):
         model_ = m.get_model_by_name(name)
         return render_template(
             "mdb-model.html",
-            title=_("Model - {}".format(model_.handle)),
+            title=_("Model: {}".format(model_.handle)),
             mdb=model_,
             subtype="main.models",
             display="detail",
@@ -97,8 +97,11 @@ def models(name=None):
 def nodes(id=None):
 
     format = request.args.get("format")
+    modelarg = request.args.get("model")
+
     m = app.mdb.mdb()
 
+    # A: single node
     if id is not None:
         node_ = m.get_node_by_id(id)
         # TODO check that id actually exists - handle error
@@ -114,18 +117,35 @@ def nodes(id=None):
                 display="detail",
             )
 
-    else:
-        nodes_ = m.get_list_of_nodes()
+    # B: filter by model
+    if modelarg is not None:
+        # TODO check that id actually exists - handle error
+        nodes_ = m.get_list_of_nodes_by_model(modelarg)
+        
         if format == "json":
             return jsonify(nodes_)
-        else:
+        else: 
             return render_template(
-                "mdb.html",
-                title=_("Nodes"),
+                "mdb-node-list.html",
+                title=_("Nodes in Model {}".format(modelarg)),
                 mdb=nodes_,
                 subtype="main.nodes",
-                display="list",
+                display="list-by-model",
             )
+
+
+    # C: plain list
+    nodes_ = m.get_list_of_nodes()
+    if format == "json":
+        return jsonify(nodes_)
+    else:
+        return render_template(
+            "mdb.html",
+            title=_("Nodes"),
+            mdb=nodes_,
+            subtype="main.nodes",
+            display="list",
+        )
 
 
 @bp.route("/valuesets/<id>")

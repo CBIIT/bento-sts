@@ -8,7 +8,7 @@
     <br><br>
       <table >
          <tr>
-             <th> Name </th>
+             <th> List of all Models </th>
          </tr>
          {% for item in mdb %}
          <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
@@ -18,8 +18,26 @@
     {% endif %} 
 
     {% if display == 'detail' %}
-        {% if mdb.handle == 'ICDC' %} Yes, ICDC {% endif %}
-        {% if mdb.handle == 'CTDC' %} Yes, CTDC {% endif %}
+        {% if mdb.handle == 'ICDC' %}
+        <br>
+        ICDC Nodes: <a href="{{url_for( 'main.nodes' ) }}"> link </a>
+        <br>
+        View model in <a href="https://cbiit.github.io/icdc-model-tool/">Github</a>
+        <br>
+        <br>
+        <img src="/static/icdc-model.svg" alt="icdc-model" class="img-fluid" width="900">
+        {% endif %}
+
+        {% if mdb.handle == 'CTDC' %}
+        <br>
+        CTDC Nodes: <a href="{{url_for( 'main.nodes' ) }}"> link </a>
+        <br>
+        View model in <a href="https://cbiit.github.io/ctdc-model/">Github</a>
+        <br>
+        <br>
+        <img src="/static/ctdc-model.svg" alt="ctdc-model" class="img-fluid" width="900">
+        
+        {% endif %}
     {% endif %}
 
 

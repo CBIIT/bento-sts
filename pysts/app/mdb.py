@@ -209,6 +209,38 @@ class mdb:
             node_ = session.read_transaction(self._get_node_by_id_query, nid)
         return node_
 
+    @staticmethod
+    def _get_list_of_nodes_by_model_query(tx, modelarg):
+        result = []
+        # todo: add version controls
+        # swap handle to property.handle (vs.handle is null)
+
+        answers = tx.run(
+            """
+            MATCH (n:node) 
+            WHERE n.model = $modelarg
+            RETURN DISTINCT n.nanoid6 as id, n.handle as handle
+            """, modelarg=modelarg,
+        )
+        for record in answers:
+            row = {record["id"]: record["handle"]}
+            result.append(row)
+
+        return result
+
+    """
+    In [3]: m.get_list_of_nodes()
+    Out[3]:
+    [{'yXWr0Y': 'study_site'},
+     {'N0Qx7Z': 'off_study'},
+     {'nUoHJH': 'diagnosis
+    """
+
+    def get_list_of_nodes_by_model(self, modelarg):
+        with self.driver.session() as session:
+            list_o_dicts = session.read_transaction(self._get_list_of_nodes_by_model_query, modelarg)
+        return list_o_dicts
+
     # ------------------------------------------------------------------------- #
     """
     In [3]: m.get_list_of_nodes()
