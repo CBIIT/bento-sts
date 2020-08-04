@@ -3,8 +3,6 @@ import pprint
 import json
 from flask import url_for
 from neo4j import GraphDatabase
-import bento_meta.entity
-from bento_meta.objects import Node, Property, Edge, Term, ValueSet, Concept, Origin
 from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
 
@@ -53,58 +51,26 @@ class mdb:
         model.dget()
         return model
 
-    # ------------------------------------------------------------------------- #
-    """
-    Out[3]:
-    {'id': '9dym0d',
-     'handle': 'case',
-     'model': 'CTDC',
-     'desc': 'desc',
-     'link': 'link',
-     'type': 'node',
-     'from_node_relationships': [{'id': 'N35xdV',
-       'handle': 'specimen',
-       'link': 'link',
-       'type': 'node',
-       'relationship': {'id': 'P4thwp',
-        'handle': 'of_case',
-        'link': 'link',
-        'type': 'relationship'}},
-      {'id': '2r539C',
-       'handle': 'metastatic_site',
-       'link': 'link',
-       'type': 'node',
-       'relationship': {
-           'id': 'A4F5eU',
-           'handle': 'met_site_of',
-           'link': 'link',
-           'type': 'relationship'}
-        }],
-     'to_node_relationships': [{'id': 'pJRvE7',
-       'handle': 'arm',
-       'link': 'link',
-       'type': 'node',
-       'relationship': {'id': '6oPmpo',
-        'handle': 'of_arm',
-        'link': 'link',
-        'type': 'relationship'}}]}
-    """
-
+    # ########################################################################################### #
     @staticmethod
-    def _get_node_by_id_query(tx, nid):
+    def _get_node_by_id_query(tx, nid, model=None):
+        
         # // idea: n3 -> n1 --> n2
         result = {}
-        answer = tx.run(
-            """
-        MATCH (n1:node)
-        WHERE n1.nanoid6 = $nid
-        OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
-        OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
-        OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
-        OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
-        OPTIONAL MATCH (ct:term)-[:represents]->(c1)
-        OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-        RETURN DISTINCT n1.nanoid6 as n1_id,
+        query = ""
+
+        if model is not None:
+            query = """
+            MATCH (n1:node)
+            WHERE n1.nanoid6 = $nid
+            WHERE n1.model = $model
+            OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
+            OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
+            OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
+            OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
+            OPTIONAL MATCH (ct:term)-[:represents]->(c1)
+            OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
+            RETURN DISTINCT n1.nanoid6 as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
                         r12.nanoid6 as r12_id,
@@ -121,9 +87,37 @@ class mdb:
                         p1.handle  as p1_handle,
                         p1.value_domain as p1_valuedomain,
                         p1.model as p1_model
-                        """,
-            nid=nid,
-        )
+                        """
+        else:
+            query = """
+            MATCH (n1:node)
+            WHERE n1.nanoid6 = $nid
+            OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
+            OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
+            OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
+            OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
+            OPTIONAL MATCH (ct:term)-[:represents]->(c1)
+            OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
+            RETURN DISTINCT n1.nanoid6 as n1_id,
+                        n1.handle as n1_handle,
+                        n1.model as n1_model,
+                        r12.nanoid6 as r12_id,
+                        r12.handle as r12_handle,
+                        n2.nanoid6 as n2_id,
+                        n2.handle  as n2_handle,
+                        n2.model   as n2_model,
+                        r31.nanoid6    as r31_id,
+                        r31.handle as r31_handle,
+                        n3.nanoid6 as n3_id,
+                        n3.handle  as n3_handle,
+                        n3.model   as n3_model,
+                        p1.nanoid6 as p1_id,
+                        p1.handle  as p1_handle,
+                        p1.value_domain as p1_valuedomain,
+                        p1.model as p1_model
+                        """
+
+        answer = tx.run(query, nid=nid, model=model)
 
         for record in answer:
 
@@ -204,58 +198,25 @@ class mdb:
 
         return result
 
-    def get_node_by_id(self, nid):
+    def get_node_by_id(self, nid, model=None):
         with self.driver.session() as session:
-            node_ = session.read_transaction(self._get_node_by_id_query, nid)
+            node_ = session.read_transaction(self._get_node_by_id_query, nid, model)
         return node_
 
-    @staticmethod
-    def _get_list_of_nodes_by_model_query(tx, modelarg):
-        result = []
-        # todo: add version controls
-        # swap handle to property.handle (vs.handle is null)
-
-        answers = tx.run(
-            """
-            MATCH (n:node) 
-            WHERE n.model = $modelarg
-            RETURN DISTINCT n.nanoid6 as id, n.handle as handle
-            """, modelarg=modelarg,
-        )
-        for record in answers:
-            row = {record["id"]: record["handle"]}
-            result.append(row)
-
-        return result
-
-    """
-    In [3]: m.get_list_of_nodes()
-    Out[3]:
-    [{'yXWr0Y': 'study_site'},
-     {'N0Qx7Z': 'off_study'},
-     {'nUoHJH': 'diagnosis
-    """
-
-    def get_list_of_nodes_by_model(self, modelarg):
-        with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_nodes_by_model_query, modelarg)
-        return list_o_dicts
-
     # ------------------------------------------------------------------------- #
-    """
-    In [3]: m.get_list_of_nodes()
-    {'ICDC': {'case': <bento_meta.objects.Node at 0x110226bd0>,
-      'off_study': <bento_meta.objects.Node at 0x110194b10>,
-      'file': <bento_meta.objects.Node at 0x1101fb1d0>,
-      'diagnosis': <bento_meta.objects.Node at 0x1101f91d0>,
-      'image': <bento_meta.objects.Node at 0x110194690>,
-      'assay': <bento_meta.objects.Node at 0x1101f7f90>,
-      'prior_surgery': <bento_meta.objects.Node at 0x1102>},
-    'CTDC': {'sequencing_assay': <bento_meta.objects.Node at 0x1102e8350>,
-      'nucleic_acid': <bento_meta.objects.Node at 0x1102eb650>,
-    """
-
     def get_list_of_nodes_bento(self):
+        """
+        In [3]: m.get_list_of_nodes()
+        {'ICDC': {'case': <bento_meta.objects.Node at 0x110226bd0>,
+        'off_study': <bento_meta.objects.Node at 0x110194b10>,
+        'file': <bento_meta.objects.Node at 0x1101fb1d0>,
+        'diagnosis': <bento_meta.objects.Node at 0x1101f91d0>,
+        'image': <bento_meta.objects.Node at 0x110194690>,
+        'assay': <bento_meta.objects.Node at 0x1101f7f90>,
+        'prior_surgery': <bento_meta.objects.Node at 0x1102>},
+        'CTDC': {'sequencing_assay': <bento_meta.objects.Node at 0x1102e8350>,
+        'nucleic_acid': <bento_meta.objects.Node at 0x1102eb650>,
+        """
         result = {}
         ObjectMap.clear_cache()
         models = self.get_list_of_models()
@@ -265,61 +226,94 @@ class mdb:
         return result
 
     @staticmethod
-    def _get_list_of_nodes_query(tx):
+    def _get_list_of_nodes_query(tx, model=None):
         result = []
         # todo: add version controls
         # swap handle to property.handle (vs.handle is null)
-        answers = tx.run(
-            "MATCH (n:node) RETURN DISTINCT n.nanoid6 as id, n.handle as handle"
-        )
+        if model is None:
+            answers = tx.run(
+                "MATCH (n:node) RETURN DISTINCT n.nanoid6 as id, n.handle as handle"
+            )
+        else:
+            answers = tx.run(
+                """
+                MATCH (n:node) 
+                WHERE n.model = $model 
+                RETURN DISTINCT n.nanoid6 as id, n.handle as handle
+                """, model=model,
+            )
+
         for record in answers:
             row = {record["id"]: record["handle"]}
             result.append(row)
         return result
 
-    """
-    In [3]: m.get_list_of_nodes()
-    Out[3]:
-    [{'yXWr0Y': 'study_site'},
-     {'N0Qx7Z': 'off_study'},
-     {'nUoHJH': 'diagnosis
-    """
-
-    def get_list_of_nodes(self):
+    def get_list_of_nodes(self, model=None):
+        """
+        In [3]: m.get_list_of_nodes()
+        Out[3]:
+        [{'yXWr0Y': 'study_site'},
+         {'N0Qx7Z': 'off_study'},
+         {'nUoHJH': 'diagnosis
+        """
         with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_nodes_query)
+            list_o_dicts = session.read_transaction(self._get_list_of_nodes_query, model)
         return list_o_dicts
 
-    # ------------------------------------------------------------------------- #
-    @staticmethod
-    def _get_valueset_by_id_query(tx, vsid):
-        result = {}
-        _seen_terms = []  # for convenience tracking
+    # ############################################################################################### #
+    def get_query_for_valueset_by_id(self, model=None):
+        querystring = ""
 
         # todo: add version controls
-        # swap handle to property.handle (vs.handle is null)
-        answers = tx.run(
-            """
+        if model is None:
+            querystring = """
             MATCH (vs:value_set)
             WHERE vs.nanoid6 = $vsid
-            OPTIONAL MATCH (p:property)-[:has_value_set]->(vs)
+            MATCH (p:property)-[:has_value_set]->(vs)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(cp)
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
             RETURN DISTINCT
-            p.nanoid6 as property_id,
-            p.handle as property_handle,
-            p.model as property_model,
-            vs.nanoid6 as vs_id,
-            vs.url as vs_url,
-            vs.handle as vs_handle,
-            t.nanoid6 as term_id,
-            t.value as term_value
-            """,
-            vsid=vsid,
-        )
+                p.nanoid6 as property_id,
+                p.handle as property_handle,
+                p.model as property_model,
+                vs.nanoid6 as vs_id,
+                vs.url as vs_url,
+                vs.handle as vs_handle,
+                t.nanoid6 as term_id,
+                t.value as term_value
+            """
+        else:
+            querystring = """
+            MATCH (vs:value_set)
+            WHERE vs.nanoid6 = $vsid
+            MATCH (p:property)-[:has_value_set]->(vs)
+            WHERE toLower(p.model) = toLower($model)
+            OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
+            OPTIONAL MATCH (ct:term)-[:represents]->(cp)
+            OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+            OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
+            OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
+            RETURN DISTINCT
+                p.nanoid6 as property_id,
+                p.handle as property_handle,
+                p.model as property_model,
+                vs.nanoid6 as vs_id,
+                vs.url as vs_url,
+                vs.handle as vs_handle,
+                t.nanoid6 as term_id,
+                t.value as term_value
+            """
+        return querystring
+
+    @staticmethod
+    def _do_query_for_valueset_by_id(tx, neo4jquery, vsid, model=None):
+        result = {}
+        _seen_terms = []  # for convenience tracking
+
+        answers = tx.run(neo4jquery, vsid=vsid, model=model)
 
         for record in answers:
 
@@ -328,6 +322,7 @@ class mdb:
                 result = {
                     "id": record["vs_id"],
                     "handle": record["property_handle"],
+                    "model": record["property_model"],
                     "url": record["vs_url"],
                     "desc": "desc",
                     "type": "valueset",
@@ -364,44 +359,39 @@ class mdb:
 
         return result
 
-    """
-    In [4]: m.get_list_of_valuesets()
-    Out[4]:
-    [{'ZFd7TW': 'ae_agent_name'},
-     {'9AojKa': 'sex'},
-     {'KyCrRy': 'respiration_pattern'},
-    """
-
-    def get_valueset_by_id(self, vsid):
+    def get_valueset_by_id(self, vsid, model=None):
         with self.driver.session() as session:
-            vs = session.read_transaction(self._get_valueset_by_id_query, vsid)
+            query = self.get_query_for_valueset_by_id(model)
+            vs = session.read_transaction(self._do_query_for_valueset_by_id, query, vsid, model)
         return vs
 
     # ------------------------------------------------------------------------- #
     @staticmethod
-    def _get_list_of_valuesets_query(tx):
+    def _do_query_for_list_of_valuesets(tx, neo4jquery, model):
         result = []
-        # todo: add version controls
-        # swap handle to property.handle (vs.handle is null)
-        answers = tx.run(
-            "MATCH (vs:value_set)<-[:has_value_set]-(p:property) RETURN DISTINCT vs.nanoid6 as id, p.handle as handle"
-        )
+
+        answers = tx.run(neo4jquery, model=model)
+
         for record in answers:
             row = {record["id"]: record["handle"]}
             result.append(row)
+
         return result
 
-    """
-    In [4]: m.get_list_of_valuesets()
-    Out[4]:
-    [{'ZFd7TW': 'ae_agent_name'},
-     {'9AojKa': 'sex'},
-     {'KyCrRy': 'respiration_pattern'},
-    """
+    def get_query_for_list_of_valuesets(self, model):
+        # todo: add version controls
+        if model is None:
+            return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
+                      RETURN DISTINCT vs.nanoid6 as id, p.handle as handle"""
+        else:
+            return """MATCH (vs:value_set)<-[:has_value_set]-(p:property) 
+                      WHERE toLower(p.model) = toLower($model)
+                      RETURN DISTINCT vs.nanoid6 as id, p.handle as handle"""
 
-    def get_list_of_valuesets(self):
+    def get_list_of_valuesets(self, model=None):
         with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_valuesets_query)
+            query = self.get_query_for_list_of_valuesets(model)
+            list_o_dicts = session.read_transaction(self._do_query_for_list_of_valuesets, query, model)
         return list_o_dicts
 
     # ------------------------------------------------------------------------- #
@@ -451,43 +441,31 @@ class mdb:
     # ------------------------------------------------------------------------- #
 
     @staticmethod
-    def _get_list_of_terms_query(tx):
+    def _get_list_of_terms_query(tx, neo4jquery):
         result = []
-        # only get those terms associated with valuesets (some terms assoc w/ concepts)
-        answers = tx.run(
-            "MATCH (t:term)"
-            "MATCH (t)-[:has_origin]->(to:origin)"
-            "MATCH (vs:value_set) -[:has_term]->(t)"
-            "RETURN DISTINCT"
-            "    t.nanoid6 as id, "
-            "    t.value as value,"
-            "    to.name as origin "
-        )
+        
+        answers = tx.run(neo4jquery)
+        
         for record in answers:
-            # pprint.pprint("---")
-            # pprint.pprint(record['id'])
-            # pprint.pprint(record['value'])
             row = {record["id"]: record["value"]}
             result.append(row)
         return result
 
-    """
-    In [3]: m.get_list_of_terms()
-    Out[3]:
-    [{'vcrMmK': 'study_site'},
-     {'KdiAjr': 'off_study'},
-     {'sTbMXd': 'diagnosis'},
-     {'dtiUsM': 'assay'},
-     {'PzWXXv': 'prior_surgery'},
-     {'bC0xsk': 'vital_signs'},
-     {'M77JUv': 'study'},
-     {'UkiHev': 'demographic'},
-     {'77Hd69': 'cycle'},
-    """
+    def get_query_for_list_of_terms(self):
+        return """
+                MATCH (t:term)
+                MATCH (t)-[:has_origin]->(to:origin)
+                MATCH (vs:value_set) -[:has_term]->(t)
+                RETURN DISTINCT
+                    t.nanoid6 as id, 
+                    t.value as value,
+                    to.name as origin
+                """
 
     def get_list_of_terms(self):
         with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_terms_query)
+            query = self.get_query_for_list_of_terms()
+            list_o_dicts = session.read_transaction(self._get_list_of_terms_query, query)
         return list_o_dicts
 
     # ------------------------------------------------------------------------- #
