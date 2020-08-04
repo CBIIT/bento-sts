@@ -16,10 +16,9 @@ from flask_babel import _, get_locale
 from guess_language import guess_language
 from app import db
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
-from app.models import User, Post
+from app.models import User, Post, Entity
 from app.translate import translate
 from app.main import bp
-from app.errors import handlers
 import app.mdb
 
 
@@ -291,67 +290,17 @@ def edit_profile():
     return render_template("edit_profile.html", title=_("Edit Profile"), form=form)
 
 
-@bp.route("/follow/<username>", methods=["POST"])
-@login_required
-def follow(username):
-    form = EmptyForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=username).first()
-        if user is None:
-            flash(_("User %(username)s not found.", username=username))
-            return redirect(url_for("main.index"))
-        if user == current_user:
-            flash(_("You cannot follow yourself!"))
-            return redirect(url_for("main.user", username=username))
-        current_user.follow(user)
-        db.session.commit()
-        flash(_("You are following %(username)s!", username=username))
-        return redirect(url_for("main.user", username=username))
-    else:
-        return redirect(url_for("main.index"))
-
-
-@bp.route("/unfollow/<username>", methods=["POST"])
-@login_required
-def unfollow(username):
-    form = EmptyForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=username).first()
-        if user is None:
-            flash(_("User %(username)s not found.", username=username))
-            return redirect(url_for("main.index"))
-        if user == current_user:
-            flash(_("You cannot unfollow yourself!"))
-            return redirect(url_for("main.user", username=username))
-        current_user.unfollow(user)
-        db.session.commit()
-        flash(_("You are not following %(username)s.", username=username))
-        return redirect(url_for("main.user", username=username))
-    else:
-        return redirect(url_for("main.index"))
-
-
-@bp.route("/translate", methods=["POST"])
-@login_required
-def translate_text():
-    return jsonify(
-        {
-            "text": translate(
-                request.form["text"],
-                request.form["source_language"],
-                request.form["dest_language"],
-            )
-        }
-    )
-
-
 @bp.route("/search")
 @login_required
 def search():
+    #Entity.scrub()
+    Entity.reindex()
+
     if not g.search_form.validate():
-        return redirect(url_for("main.explore"))
+        return redirect(url_for("main.index"))
     page = request.args.get("page", 1, type=int)
-    posts, total = Post.search(
+
+    hits, total = Entity.search(
         g.search_form.q.data, page, current_app.config["POSTS_PER_PAGE"]
     )
     next_url = (
@@ -367,7 +316,7 @@ def search():
     return render_template(
         "search.html",
         title=_("Search"),
-        posts=posts,
+        hits=hits,
         next_url=next_url,
         prev_url=prev_url,
     )

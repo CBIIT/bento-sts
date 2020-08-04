@@ -6,6 +6,7 @@
     <h1> {{ title }} </h1>
     {% if display == 'list'  %}
     <br><br>
+    <div id="listall" name="listall" style="margin:20px; padding:20x">
       <table >
          <tr>
              <th> Name </th>
@@ -15,12 +16,14 @@
          <tr> <td> <a href="{{url_for( subtype, id=key) }}">{{ value }}</a> </td> </tr>
          {% endfor %}
          {% endfor %}
-       </table>
+       </table>      
+      </div> 
        <br><br>
     {% endif %}
 
     {% if display == 'model'  %}
     <br><br>
+    <div id="allModel" name="allModel" style="margin:20px; padding:20x">
       <table >
          <tr>
              <th> Name </th>
@@ -29,6 +32,7 @@
          <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
          {% endfor %}
        </table>
+       </div>
        <br><br>
     {% endif %}
 
