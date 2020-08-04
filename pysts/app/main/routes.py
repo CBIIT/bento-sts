@@ -19,6 +19,7 @@ from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
 from app.models import User, Post
 from app.translate import translate
 from app.main import bp
+from app.errors import handlers
 import app.mdb
 
 
@@ -98,7 +99,7 @@ def models(name=None):
 def nodes(id=None):
 
     format = request.args.get("format")
-    modelarg = request.args.get("model")
+    model = request.args.get("model")
 
     m = app.mdb.mdb()
 
@@ -119,21 +120,20 @@ def nodes(id=None):
             )
 
     # B: filter by model
-    if modelarg is not None:
+    if model is not None:
         # TODO check that id actually exists - handle error
-        nodes_ = m.get_list_of_nodes_by_model(modelarg)
+        nodes_ = m.get_list_of_nodes(model)
 
         if format == "json":
             return jsonify(nodes_)
         else: 
             return render_template(
                 "mdb-node-list.html",
-                title=_("Nodes in Model {}".format(modelarg)),
+                title=_("Nodes in Model {}".format(model)),
                 mdb=nodes_,
                 subtype="main.nodes",
                 display="list-by-model",
             )
-
 
     # C: plain list
     nodes_ = m.get_list_of_nodes()
@@ -155,10 +155,18 @@ def nodes(id=None):
 def valuesets(id=None):
 
     format = request.args.get("format")
+    model = request.args.get("model")
+    print("ya, got model".format(model))
     m = app.mdb.mdb()
 
     if id is not None:
-        vs_ = m.get_valueset_by_id(id)
+        print("in routes model is {}".format(model))
+
+        vs_ = m.get_valueset_by_id(id, model)
+
+        if vs_ is None or not bool(vs_):
+            return render_template('/errors/400.html'), 400
+
         # TODO check that id actually exists - handle error
         if format == "json":
             return jsonify(vs_)
@@ -172,7 +180,7 @@ def valuesets(id=None):
             )
 
     else:
-        vs_ = m.get_list_of_valuesets()
+        vs_ = m.get_list_of_valuesets(model)
         if format == "json":
             return jsonify(vs_)
         else:
