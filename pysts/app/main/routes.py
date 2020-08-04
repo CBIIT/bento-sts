@@ -159,8 +159,6 @@ def valuesets(id=None):
     m = app.mdb.mdb()
 
     if id is not None:
-        print("in routes model is {}".format(model))
-
         vs_ = m.get_valueset_by_id(id, model)
 
         if vs_ is None or not bool(vs_):
@@ -235,6 +233,9 @@ def origins(id=None):
     m = app.mdb.mdb()
 
     origins_ = m.get_list_of_origins()
+    if format == "json":
+        return jsonify(origins_)
+
     return render_template(
         "mdb.html",
         title=_("Origins"),
@@ -293,7 +294,7 @@ def edit_profile():
 @bp.route("/search")
 @login_required
 def search():
-    #Entity.scrub()
+
     Entity.reindex()
 
     if not g.search_form.validate():
@@ -320,3 +321,15 @@ def search():
         next_url=next_url,
         prev_url=prev_url,
     )
+
+@bp.route("/about-mdb")
+@login_required
+def about_mdb():
+    return render_template("about-mdb.html", title=_("About MDB"))
+
+
+@bp.route("/about-sts")
+@login_required
+def about_sts():
+    return render_template("about-sts.html", title=_("About STS"))
+

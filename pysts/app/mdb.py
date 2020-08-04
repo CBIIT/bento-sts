@@ -128,7 +128,7 @@ class mdb:
                     "handle": record["n1_handle"],
                     "model": record["n1_model"],
                     "desc": "desc",
-                    "link": "link",
+                    "link": url_for('main.nodes', id=record["n1_id"]),
                     "type": "node",
                 }
 
@@ -140,12 +140,12 @@ class mdb:
                 from_node = {
                     "id": record["n3_id"],
                     "handle": record["n3_handle"],
-                    "link": "link",
+                    "link": url_for('main.nodes', id=record["n3_id"]),
                     "type": "node",
                     "relationship": {
                         "id": record["r31_id"],
                         "handle": record["r31_handle"],
-                        "link": "link",
+                        "link": "/relationships/" + record["r31_id"],
                         "type": "relationship",
                     },
                 }
@@ -171,12 +171,12 @@ class mdb:
                 to_node = {
                     "id": record["n2_id"],
                     "handle": record["n2_handle"],
-                    "link": "link",
+                    "link": url_for('main.nodes', id=record["n2_id"]),
                     "type": "node",
                     "relationship": {
                         "id": record["r12_id"],
                         "handle": record["r12_handle"],
-                        "link": "link",
+                        "link": "/relationships/" + record["r12_id"],
                         "type": "relationship",
                     },
                 }
@@ -326,7 +326,7 @@ class mdb:
                     "url": record["vs_url"],
                     "desc": "desc",
                     "type": "valueset",
-                    "link": "link",
+                    "link": url_for('main.valuesets', id=record["vs_id"])
                 }
 
             # B. add property
@@ -336,7 +336,7 @@ class mdb:
                         "id": record["property_id"],
                         "handle": record["property_handle"],
                         "type": "property",
-                        "link": "link",
+                        "link": "/properties/" + record["property_id"],
                     }
 
             # C. skip origin
@@ -352,7 +352,7 @@ class mdb:
                         "id": record["term_id"],
                         "value": record["term_value"],
                         "type": "term",
-                        "link": "link",
+                        "link": url_for('main.terms', id=record["term_id"]),
                     }
                     _seen_terms.append(record["term_id"])
                     result["has_terms"].append(term_)
@@ -567,7 +567,7 @@ class mdb:
                     "value_domain": record["valuedomain"],
                     "is_required": record["isrequired"],
                     "type": "property",
-                    "link": "link",
+                    "link": "/properties/" + record["id"],
                 }
 
             # B. add valueset
@@ -576,7 +576,7 @@ class mdb:
                     result["has_valueset"] = {
                         "id": record["valueset_id"],
                         "type": "valueset",
-                        "link": "link",
+                        "link": url_for("main.valuesets", id=record["valueset_id"]),
                     }
 
             # C. skip origin
@@ -592,7 +592,7 @@ class mdb:
                         "id": record["term_id"],
                         "value": record["term_value"],
                         "type": "term",
-                        "link": "link",
+                        "link": url_for("main.terms", id=record["term_id"]),
                     }
                     _seen_terms.append(record["term_id"])
                     result["has_terms"].append(term_)

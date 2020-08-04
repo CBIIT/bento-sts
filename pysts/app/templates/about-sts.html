@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <br>
+
+    <h2> Filtering </h2>
+    Use url parameter <code> ?model= </code> to filter on model.
+
+    <p>
+    For example: <code> http://localhost:5000/terms?model=ICDC </code>
+
+
+    <h2> JSON </h2>
+    Use url parameter <code> ?format=json </code> to get JSON-formatted output.
+
+    <p>
+    For example: <code> http://localhost:5000/nodes/Romy6Z?format=json </code>
+
+
+{% endblock %}
