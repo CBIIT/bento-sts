@@ -6,7 +6,8 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
-from app.search import add_to_index, remove_from_index, query_index
+from app.search import add_to_index, remove_from_index, query_index, totally_scrub_index
+import pprint
 
 
 class SearchableMixin(object):
@@ -144,3 +145,61 @@ class Post(SearchableMixin, db.Model):
 
     def __repr__(self):
         return "<Post {}>".format(self.body)
+
+
+class Entity():
+
+    @classmethod
+    def search(cls, expression, page, per_page):
+        #cls.reindex()
+
+        pprint.pprint("expression is {}".format(expression))
+
+        ids, total = query_index(cls, expression, page, per_page)
+        return (ids, total)
+        #if total == 0:
+        #    return cls.query.filter_by(id=0), 0
+        #when = []
+        #for i in range(len(ids)):
+        #    when.append((ids[i], i))
+        #return (
+        #    cls.query.filter(cls.id.in_(ids)).order_by(db.case(when, value=cls.id)),
+        #    total,
+        #)
+
+    @classmethod
+    def reindex(cls):
+        """ add stump """
+        term1 = {"id": "wQ4sNZ",
+                 "link": '/terms/wQ4sNZ',
+                 "type": "term",
+                 "value": "F"}
+        term2 = {"id": "wmTZPQ",
+                 "link": '/terms/wmTZPQ',
+                 "type": "term",
+                 "value": "blood"}
+        node1 = {"id": "yXWr0Y",
+                 "link": '/nodes/yXWr0Y',
+                 "model": "ICDC",
+                 "type": "node",
+                 "handle": "study_site"}
+        node2 = {"handle": "study",
+                 "id": "TJvgqF",
+                 "type": "node",
+                 "link": '/nodes/TJvgqF'}
+        
+        #term1 = {"id": "wQ4sNZ", "value": "F"}
+        #term2 = {"id": "wmTZPQ", "value": "blood"}
+        #node1 = {"id": "yXWr0Y", "handle": "study_site"}
+        #node2 = {"handle": "study", "id": "TJvgqF"}
+
+        add_to_index(cls, term1)
+        add_to_index(cls, term2)
+        add_to_index(cls, node1)
+        add_to_index(cls, node2)
+
+
+    @classmethod
+    def scrub(cls):
+        """clear everything"""
+        totally_scrub_index(cls)
