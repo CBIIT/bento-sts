@@ -1,7 +1,7 @@
 {% extends 'bootstrap/base.html' %}
 
 {% block title %}
-    {% if title %}{{ title }} - pySTS{% else %}{{ _('Welcome to pySTS') }}{% endif %}
+    {% if title %}{{ title }} - STS{% else %}{{ _('Welcome to STS') }}{% endif %}
 {% endblock %}
 
 {% block navbar %}
@@ -14,7 +14,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">pySTS</a>
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">STS</a>
             </div>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
