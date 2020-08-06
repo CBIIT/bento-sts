@@ -27,9 +27,6 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    app.config["SERVER_NAME"] = "127.0.0.1:5000"
-    app.config["PREFERRED_URL_SCHEME"] = "http://"
-
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
