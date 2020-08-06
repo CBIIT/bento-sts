@@ -62,7 +62,7 @@ class mdb:
         if model is not None:
             query = """
             MATCH (n1:node)
-            WHERE n1.nanoid6 = $nid
+            WHERE n1.nanoid = $nid
             WHERE n1.model = $model
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
@@ -70,20 +70,20 @@ class mdb:
             OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(c1)
             OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-            RETURN DISTINCT n1.nanoid6 as n1_id,
+            RETURN DISTINCT n1.nanoid as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
-                        r12.nanoid6 as r12_id,
+                        r12.nanoid as r12_id,
                         r12.handle as r12_handle,
-                        n2.nanoid6 as n2_id,
+                        n2.nanoid as n2_id,
                         n2.handle  as n2_handle,
                         n2.model   as n2_model,
-                        r31.nanoid6    as r31_id,
+                        r31.nanoid    as r31_id,
                         r31.handle as r31_handle,
-                        n3.nanoid6 as n3_id,
+                        n3.nanoid as n3_id,
                         n3.handle  as n3_handle,
                         n3.model   as n3_model,
-                        p1.nanoid6 as p1_id,
+                        p1.nanoid as p1_id,
                         p1.handle  as p1_handle,
                         p1.value_domain as p1_valuedomain,
                         p1.model as p1_model
@@ -91,27 +91,27 @@ class mdb:
         else:
             query = """
             MATCH (n1:node)
-            WHERE n1.nanoid6 = $nid
+            WHERE n1.nanoid = $nid
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
             OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
             OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(c1)
             OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-            RETURN DISTINCT n1.nanoid6 as n1_id,
+            RETURN DISTINCT n1.nanoid as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
-                        r12.nanoid6 as r12_id,
+                        r12.nanoid as r12_id,
                         r12.handle as r12_handle,
-                        n2.nanoid6 as n2_id,
+                        n2.nanoid as n2_id,
                         n2.handle  as n2_handle,
                         n2.model   as n2_model,
-                        r31.nanoid6    as r31_id,
+                        r31.nanoid    as r31_id,
                         r31.handle as r31_handle,
-                        n3.nanoid6 as n3_id,
+                        n3.nanoid as n3_id,
                         n3.handle  as n3_handle,
                         n3.model   as n3_model,
-                        p1.nanoid6 as p1_id,
+                        p1.nanoid as p1_id,
                         p1.handle  as p1_handle,
                         p1.value_domain as p1_valuedomain,
                         p1.model as p1_model
@@ -232,14 +232,14 @@ class mdb:
         # swap handle to property.handle (vs.handle is null)
         if model is None:
             answers = tx.run(
-                "MATCH (n:node) RETURN DISTINCT n.nanoid6 as id, n.handle as handle"
+                "MATCH (n:node) RETURN DISTINCT n.nanoid as id, n.handle as handle"
             )
         else:
             answers = tx.run(
                 """
                 MATCH (n:node) 
                 WHERE n.model = $model 
-                RETURN DISTINCT n.nanoid6 as id, n.handle as handle
+                RETURN DISTINCT n.nanoid as id, n.handle as handle
                 """, model=model,
             )
 
@@ -268,7 +268,7 @@ class mdb:
         if model is None:
             querystring = """
             MATCH (vs:value_set)
-            WHERE vs.nanoid6 = $vsid
+            WHERE vs.nanoid = $vsid
             MATCH (p:property)-[:has_value_set]->(vs)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(cp)
@@ -276,19 +276,19 @@ class mdb:
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
             RETURN DISTINCT
-                p.nanoid6 as property_id,
+                p.nanoid as property_id,
                 p.handle as property_handle,
                 p.model as property_model,
-                vs.nanoid6 as vs_id,
+                vs.nanoid as vs_id,
                 vs.url as vs_url,
                 vs.handle as vs_handle,
-                t.nanoid6 as term_id,
+                t.nanoid as term_id,
                 t.value as term_value
             """
         else:
             querystring = """
             MATCH (vs:value_set)
-            WHERE vs.nanoid6 = $vsid
+            WHERE vs.nanoid = $vsid
             MATCH (p:property)-[:has_value_set]->(vs)
             WHERE toLower(p.model) = toLower($model)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
@@ -297,13 +297,13 @@ class mdb:
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
             RETURN DISTINCT
-                p.nanoid6 as property_id,
+                p.nanoid as property_id,
                 p.handle as property_handle,
                 p.model as property_model,
-                vs.nanoid6 as vs_id,
+                vs.nanoid as vs_id,
                 vs.url as vs_url,
                 vs.handle as vs_handle,
-                t.nanoid6 as term_id,
+                t.nanoid as term_id,
                 t.value as term_value
             """
         return querystring
@@ -382,11 +382,11 @@ class mdb:
         # todo: add version controls
         if model is None:
             return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
-                      RETURN DISTINCT vs.nanoid6 as id, p.handle as handle"""
+                      RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
         else:
             return """MATCH (vs:value_set)<-[:has_value_set]-(p:property) 
                       WHERE toLower(p.model) = toLower($model)
-                      RETURN DISTINCT vs.nanoid6 as id, p.handle as handle"""
+                      RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
 
     def get_list_of_valuesets(self, model=None):
         with self.driver.session() as session:
@@ -401,15 +401,15 @@ class mdb:
         result = {}
         answer = tx.run(
             "MATCH (t:term) "
-            "WHERE t.nanoid6 = $tid "
+            "WHERE t.nanoid = $tid "
             "OPTIONAL MATCH (t)-[:has_origin]->(to:origin) "
             "RETURN DISTINCT "
-            "    t.nanoid6 as id, "
+            "    t.nanoid as id, "
             "    t.value as value,"
             "    t.desc as desc,"
             "    t.origin_definition as origin_definition,"
             "    t.origin_id as origin_id,"
-            "    to.nanoid6 as originid,"
+            "    to.nanoid as originid,"
             "    to.name as originname ",
             tid=tid,
         )
@@ -457,7 +457,7 @@ class mdb:
                 MATCH (t)-[:has_origin]->(to:origin)
                 MATCH (vs:value_set) -[:has_term]->(t)
                 RETURN DISTINCT
-                    t.nanoid6 as id, 
+                    t.nanoid as id, 
                     t.value as value,
                     to.name as origin
                 """
@@ -477,7 +477,7 @@ class mdb:
         answers = tx.run(
             "MATCH (o:origin)"
             "RETURN DISTINCT"
-            "    o.nanoid6 as id, "
+            "    o.nanoid as id, "
             "    o.name as name "
         )
         for record in answers:
@@ -514,10 +514,10 @@ class mdb:
             OPTIONAL MATCH (p)-[:has_value_set]->(vs)
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
             RETURN DISTINCT
-            p.nanoid6 as id,
+            p.nanoid as id,
             p.handle as handle,
             p.model as property_model,
-            COUNT(DISTINCT(t.nanoid6))
+            COUNT(DISTINCT(t.nanoid))
                          """
         )
         for record in answers:
@@ -539,19 +539,19 @@ class mdb:
         answers = tx.run(
             """
             MATCH (p:property)
-            WHERE p.nanoid6 = $pid
+            WHERE p.nanoid = $pid
             OPTIONAL MATCH (p)-[:has_value_set]->(vs)
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
             RETURN DISTINCT
-            p.nanoid6 as id,
+            p.nanoid as id,
             p.handle as handle,
             p.model as model,
             p.value_domain as valuedomain,
             p.is_required as isrequired,
-            vs.nanoid6 as valueset_id,
-            t.nanoid6 as term_id,
+            vs.nanoid as valueset_id,
+            t.nanoid as term_id,
             t.value as term_value,
-            COUNT(DISTINCT(t.nanoid6))
+            COUNT(DISTINCT(t.nanoid))
             """,
             pid=pid,
         )

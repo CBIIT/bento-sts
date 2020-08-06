@@ -36,7 +36,13 @@
         <br>
         <br>
         <img src="/static/ctdc-model.svg" alt="ctdc-model" class="img-fluid" width="900">
+        {% endif %}
         
+        {% if mdb.handle == 'Bento' %}
+        <br>
+        Bento Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
+        <br>
+        View model in <a href="https://github.com/CBIIT/BENTO-TAILORx-model">Github</a>
         {% endif %}
     {% endif %}
 
