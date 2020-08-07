@@ -16,6 +16,7 @@ from flask_babel import _, get_locale
 from guess_language import guess_language
 from app import db
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
+import app.search
 from app.models import User, Post, Entity
 from app.translate import translate
 from app.main import bp
@@ -294,8 +295,6 @@ def edit_profile():
 @bp.route("/search")
 @login_required
 def search():
-
-    Entity.reindex()
 
     if not g.search_form.validate():
         return redirect(url_for("main.index"))

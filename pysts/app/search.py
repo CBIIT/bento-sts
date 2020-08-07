@@ -3,7 +3,7 @@ from flask import current_app
 
 def add_to_index(entity):
     """ REFACTOR: updating to use mdb fields """
-    index = "default"
+    index = "mdb"
 
     # this disables elasticsearch if it isn't configured/
     # aka  env ELASTICSEARCH_URL is not set
@@ -38,7 +38,7 @@ def remove_from_index(entity):
     """ REFACTOR: refactor to mdb """
     if not current_app.elasticsearch:
         return
-    current_app.elasticsearch.delete(index="default", id=entity['id'])
+    current_app.elasticsearch.delete(index="mdb", id=entity['id'])
 
 
 def query_index(index, query, page, per_page):
@@ -47,7 +47,7 @@ def query_index(index, query, page, per_page):
         return [], 0
 
     search = current_app.elasticsearch.search(
-        index="default",
+        index="mdb",
         body={
             "query": {"multi_match": {"query": query, "fields": ["primary", "primary_", "handle", "value", "desc"]}},
             "from": (page - 1) * per_page,
@@ -55,6 +55,7 @@ def query_index(index, query, page, per_page):
         },
     )
 
+    ids   = [hit["_id"] for hit in search["hits"]["hits"]]
     names = [hit["_source"]["primary"] for hit in search["hits"]["hits"]]
     links = [hit["_source"]["link"] for hit in search["hits"]["hits"]]
     types = [hit["_source"]["type"] for hit in search["hits"]["hits"]]

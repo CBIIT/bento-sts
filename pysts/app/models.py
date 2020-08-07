@@ -153,8 +153,8 @@ class Entity():
         hits, total = query_index(cls, expression, page, per_page)
         return (hits, total)
 
-    @classmethod
-    def reindex(cls):
+    #@classmethod
+    def reindex():
         """ TODO: REFACTOR! FINISH THIS !! """
         term1 = {"id": "wQ4sNZ",
                  "link": '/terms/wQ4sNZ',
@@ -174,8 +174,8 @@ class Entity():
                  "type": "node",
                  "link": '/nodes/TJvgqF'}
 
-        add_to_index(cls, term1)
-        add_to_index(cls, term2)
-        add_to_index(cls, node1)
-        add_to_index(cls, node2)
+        add_to_index( term1)
+        add_to_index( term2)
+        add_to_index( node1)
+        add_to_index( node2)
 
