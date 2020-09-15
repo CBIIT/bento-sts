@@ -49,7 +49,7 @@ def query_index(index, query, page, per_page):
     search = current_app.elasticsearch.search(
         index="mdb",
         body={
-            "query": {"multi_match": {"query": query, "fields": ["primary", "primary_", "handle", "value", "desc"]}},
+            "query": {"multi_match": {"query": query, "fields": ["*"]}},
             "from": (page - 1) * per_page,
             "size": per_page,
         },
