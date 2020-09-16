@@ -15,7 +15,7 @@ from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
 from app import db
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm
 import app.search
 from app.models import User, Post, Entity
 from app.translate import translate
@@ -191,7 +191,7 @@ def valuesets(id=None):
             )
 
 
-@bp.route("/terms/<id>")
+@bp.route("/terms/<id>", methods=['GET', 'POST'])
 @bp.route("/terms")
 @login_required
 def terms(id=None):
@@ -201,17 +201,30 @@ def terms(id=None):
 
     if id is not None:
         term_ = m.get_term_by_id(id)
-        if format == "json":
-            return jsonify(term_)
-        else:
-            return render_template(
-                "mdb-term.html",
-                title=_("Term"),
-                mdb=term_,
-                subtype="main.terms",
-                display="detail",
-            )
 
+        form = EditTermForm()
+        if form.validate_on_submit():
+            # would actually make chages here
+            # current_user.username = form.username.data
+            #current_user.about_me = form.about_me.data
+            #db.session.commit()
+            flash(_("Your changes have been saved."))
+            return redirect(url_for("main.terms"))  ## ?? 
+
+        elif request.method == "GET":
+            form.termname.data = term_['value']
+
+            if format == "json":
+                return jsonify(term_)
+            else:
+                return render_template(
+                    "mdb-term.html",
+                    title=_("Term"),
+                    mdb=term_,
+                    subtype="main.terms",
+                    display="detail",
+                    form=form,
+                )
     else:
         terms_ = m.get_list_of_terms()
         if format == "json":

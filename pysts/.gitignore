@@ -40,3 +40,6 @@ app.db
 pysts.log*
 
 .ipynb_checkpoints
+
+# ignore pyenv
+.python-version
