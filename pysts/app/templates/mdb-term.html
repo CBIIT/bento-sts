@@ -13,7 +13,7 @@
           <thead>
          <tr>
             <th style="width:300px"> Term Value </th> 
-            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.value}} </a>  </th>
+            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.value}} </a>        </th>
        </tr>
           </thead>
           </tbody>
@@ -33,11 +33,40 @@
       </table>
       </div>
     </div>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editTermModal">
+    Edit Term
+    </button>
     <br><br>
-    <h3>EDIT</h3>
-    <div class="row">
-            {{ wtf.quick_form(form) }}
+   
+    <!-- Modal -->
+<div class="modal fade" id="editTermModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form class="form" method="post" role="form">
+   
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h3 class="modal-title" id="exampleModalLabel">Edit Term</h3>
+        </div>
+       <!-- <form class="form form-horizontal" method="post" role="form"> -->
+        <div class="modal-body">
+
+                    {{ form.hidden_tag() }}
+                    {{ wtf.form_errors(form, hiddens="only") }}
+                    {{ wtf.form_field(form.termname) }}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          {{ wtf.form_field(form.submit) }}
+        </div>
+        </form>
+      </div>
     </div>
+  </div>
+
     <br><br>
 
     <div>
@@ -65,3 +94,14 @@
 
     {% endif %}
 {% endblock %}
+
+<!--
+{% block script %}
+<script>
+$('#modal-confirm').click(function(){
+    // Perform the action after modal confirm button is clicked.
+    $('#form-submit').click(); // submitting the form
+});
+</script>
+{% endblock %}
+-->

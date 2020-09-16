@@ -23,8 +23,8 @@ class EditProfileForm(FlaskForm):
 
 
 class EditTermForm(FlaskForm):
-    termname = StringField('name', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of name must be greater than 0 and less than 140 characters")])
-    submit = SubmitField("Submit")
+    termname = StringField('Value', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of name must be greater than 0 and less than 140 characters")])
+    submit = SubmitField("Save Changes")
 
 
 class EmptyForm(FlaskForm):
