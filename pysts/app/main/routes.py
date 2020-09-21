@@ -208,11 +208,12 @@ def terms(id=None):
             # current_user.username = form.username.data
             #current_user.about_me = form.about_me.data
             #db.session.commit()
+            m.update_term_by_id(id, form.termvalue.data)
             flash(_("Your changes have been saved."))
-            return redirect(url_for("main.terms", id=id ))  
+            return redirect(url_for("main.terms", id=id))
 
         elif request.method == "GET":
-            form.termname.data = term_['value']
+            form.termvalue.data = term_['value']
 
             if format == "json":
                 return jsonify(term_)

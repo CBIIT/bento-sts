@@ -20,9 +20,6 @@
          <tr>
              <td> Id </td> <td>{{mdb.id}} </td>
         </tr>
-        <tr>
-            <td> Model </td> <td>{{mdb.model}} </td>
-       </tr>
        <tr>
         <td> Origin Id </td> <td>{{mdb.origin_id}} </td>
    </tr>
@@ -56,7 +53,7 @@
 
                     {{ form.hidden_tag() }}
                     {{ wtf.form_errors(form, hiddens="only") }}
-                    {{ wtf.form_field(form.termname) }}
+                    {{ wtf.form_field(form.termvalue) }}
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
