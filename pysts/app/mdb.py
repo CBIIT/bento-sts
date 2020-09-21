@@ -66,6 +66,7 @@ class mdb:
             MATCH (n1:node)
             WHERE n1.nanoid = $nid
             WHERE n1.model = $model
+            AND n1._to IS NULL
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
             OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
@@ -94,6 +95,7 @@ class mdb:
             query = """
             MATCH (n1:node)
             WHERE n1.nanoid = $nid
+            AND n1._to IS NULL
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
             OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
@@ -155,10 +157,8 @@ class mdb:
                 # see if we need to add this node
                 unique = True
                 from_node_ = json.dumps(from_node, sort_keys=True)
-                pprint.pprint(from_node_)
                 for other_node in result["has_relationship_from_nodes"]:
                     other_node_ = json.dumps(other_node, sort_keys=True)
-                    pprint.pprint(other_node_)
                     if other_node_ == from_node_:
                         unique = False
                         break
@@ -235,13 +235,17 @@ class mdb:
         # swap handle to property.handle (vs.handle is null)
         if model is None:
             answers = tx.run(
-                "MATCH (n:node) RETURN DISTINCT n.nanoid as id, n.handle as handle"
+                """
+                MATCH (n:node) 
+                WHERE n._to IS NULL
+                RETURN DISTINCT n.nanoid as id, n.handle as handle
+                """
             )
         else:
             answers = tx.run(
                 """
                 MATCH (n:node)
-                WHERE n.model = $model
+                WHERE n.model = $model AND n._to IS NULL
                 RETURN DISTINCT n.nanoid as id, n.handle as handle
                 """, model=model,
             )
@@ -262,6 +266,37 @@ class mdb:
         with self.driver.session() as session:
             list_o_dicts = session.read_transaction(self._get_list_of_nodes_query, model)
         return list_o_dicts
+
+    # ========================================================================= #
+    @staticmethod
+    def _do_update_node(tx, neo4jquery, nid, nhandle):
+        result = []
+
+        answers = tx.run(neo4jquery, nid=nid, nhandle=nhandle)
+
+        for record in answers:
+            result.append(record)
+        return result
+
+    def get_query_to_update_node(self):
+        return '''
+                MATCH (n1:node)
+                WHERE n1.nanoid = $nid and n1._to IS NULL
+                CALL apoc.refactor.cloneNodesWithRelationships([n1])
+                YIELD input, output
+                MATCH (n2:node)
+                where n2.nanoid = $nid and n2._to IS NULL and id(n1) < id(n2)
+                SET n1._to = ( n1._from + 1 ), n2._from = (n1._from + 1), n2.handle = $nhandle
+                RETURN id(n2);
+                '''
+
+    def update_node_by_id(self, nid, nhandle):
+        with self.driver.session() as session:
+            pprint.pprint('trying to run update node on {} and {}'.format(nid, nhandle))
+            query = self.get_query_to_update_node()
+            node_ = session.write_transaction(self._do_update_node, query, nid, nhandle)
+            # TODO update elasticsearch, remove old handle and add new
+        return node_
 
     # ############################################################################################### #
     # VALUESETS

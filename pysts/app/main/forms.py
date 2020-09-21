@@ -23,7 +23,12 @@ class EditProfileForm(FlaskForm):
 
 
 class EditTermForm(FlaskForm):
-    termvalue = StringField('Value', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of name must be greater than 0 and less than 140 characters")])
+    termvalue = StringField('Value', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of term value must be greater than 0 and less than 140 characters")])
+    submit = SubmitField("Save Changes")
+
+
+class EditNodeForm(FlaskForm):
+    nodeHandle = StringField('Handle', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of handle must be greater than 0 and less than 140 characters")])
     submit = SubmitField("Save Changes")
 
 
