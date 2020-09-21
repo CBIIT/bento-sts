@@ -10,6 +10,7 @@ from flask import (
     g,
     jsonify,
     current_app,
+    Response
 )
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
@@ -19,6 +20,7 @@ from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, Edi
 import app.search
 from app.models import User, Post, Entity
 from app.main import bp
+from app.util import get_yaml_for
 import app.mdb
 
 
@@ -73,13 +75,19 @@ def models(name=None):
 
     if name is not None:
         model_ = m.get_model_by_name(name)
-        return render_template(
-            "mdb-model.html",
-            title=_("Model: {}".format(model_.handle)),
-            mdb=model_,
-            subtype="main.models",
-            display="detail",
-        )
+
+        if format == 'yaml':
+            yaml = get_yaml_for(model_.handle)
+            return Response(yaml, mimetype='text/plain')
+
+        else:
+            return render_template(
+                "mdb-model.html",
+                title=_("Model: {}".format(model_.handle)),
+                mdb=model_,
+                subtype="main.models",
+                display="detail",
+            )
 
     else:
         models_ = m.get_list_of_models()

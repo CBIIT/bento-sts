@@ -8,10 +8,10 @@
     <br><br>
       <table >
          <tr>
-             <th> List of all Models </th>
+             <th> List of all Models </th> <th></th>
          </tr>
          {% for item in mdb %}
-         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
+         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a>  </td> <td> (file: <a href="{{url_for( 'main.models', name=item, format='yaml' ) }}"> {{item}}.yaml</a>)</td> </tr>
          {% endfor %}
        </table>
        <br><br>
