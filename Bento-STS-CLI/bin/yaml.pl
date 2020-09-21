@@ -7,6 +7,8 @@ use FindBin qw( $Bin $Script $RealBin $RealScript);
 use Getopt::Long qw(GetOptions);
 
 use lib "$Bin/../lib";
+use lib "/app/extlib/lib/perl5";
+use lib "/app/bento-meta/perl/lib";
 use Bento::STS::CLI;
 use Bento::STS::CLI::Yaml;
 
