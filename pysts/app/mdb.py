@@ -56,7 +56,7 @@ class mdb:
     # ############################################################################################### #
     @staticmethod
     def _get_node_by_id_query(tx, nid, model=None):
-        
+
         # // idea: n3 -> n1 --> n2
         result = {}
         query = ""
@@ -240,8 +240,8 @@ class mdb:
         else:
             answers = tx.run(
                 """
-                MATCH (n:node) 
-                WHERE n.model = $model 
+                MATCH (n:node)
+                WHERE n.model = $model
                 RETURN DISTINCT n.nanoid as id, n.handle as handle
                 """, model=model,
             )
@@ -389,7 +389,7 @@ class mdb:
             return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
                       RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
         else:
-            return """MATCH (vs:value_set)<-[:has_value_set]-(p:property) 
+            return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
                       WHERE toLower(p.model) = toLower($model)
                       RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
 
@@ -446,15 +446,14 @@ class mdb:
             term_ = session.read_transaction(self._get_term_by_id_query, tid)
         return term_
 
-    # ------------------------------------------------------------------------- #
     # ========================================================================= #
 
     @staticmethod
     def _get_list_of_terms_query(tx, neo4jquery):
         result = []
-        
+
         answers = tx.run(neo4jquery)
-        
+
         for record in answers:
             row = {record["id"]: record["value"]}
             result.append(row)
@@ -508,7 +507,8 @@ class mdb:
         with self.driver.session() as session:
             query = self.get_query_to_update_term()
             term_ = session.write_transaction(self._do_update_term, query, tid, tvalue)
-        return term_    
+            # TODO update elasticsearch, remove old term and add new term
+        return term_
 
     # ############################################################################################### #
     # ORIGINS
