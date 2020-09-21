@@ -32,6 +32,21 @@ sub get_model_handles {
     return @handles;
 }
 
+
+sub get_model {
+    my ($bolt_url, $model_) = @_;
+
+    $bolt_url //= 'bolt://127.0.0.1:7687';
+    #print "Using Bento::Meta version=$Bento::Meta::VERSION\n";
+
+    my $m = Bento::Meta->new;
+
+    $m->load_all_db_models($bolt_url);
+    my $model__ = $m->model($model_);
+
+    return $model__;
+}
+
 sub get_icdc_model {
     my ($bolt_url) = @_;
 
