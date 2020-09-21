@@ -1,7 +1,7 @@
 from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Length
+from wtforms.validators import ValidationError, DataRequired, Length, InputRequired
 from flask_babel import _, lazy_gettext as _l
 from app.models import User
 
@@ -20,6 +20,16 @@ class EditProfileForm(FlaskForm):
             user = User.query.filter_by(username=self.username.data).first()
             if user is not None:
                 raise ValidationError(_("Please use a different username."))
+
+
+class EditTermForm(FlaskForm):
+    termvalue = StringField('Value', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of term value must be greater than 0 and less than 140 characters")])
+    submit = SubmitField("Save Changes")
+
+
+class EditNodeForm(FlaskForm):
+    nodeHandle = StringField('Handle', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of handle must be greater than 0 and less than 140 characters")])
+    submit = SubmitField("Save Changes")
 
 
 class EmptyForm(FlaskForm):

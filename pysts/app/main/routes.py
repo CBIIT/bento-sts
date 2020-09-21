@@ -15,10 +15,9 @@ from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
 from app import db
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm
 import app.search
 from app.models import User, Post, Entity
-from app.translate import translate
 from app.main import bp
 import app.mdb
 
@@ -80,7 +79,7 @@ def models(name=None):
             mdb=model_,
             subtype="main.models",
             display="detail",
-    )
+        )
 
     else:
         models_ = m.get_list_of_models()
@@ -90,10 +89,10 @@ def models(name=None):
             mdb=models_,
             subtype="main.models",
             display="list",
-    )
+        )
 
 
-@bp.route("/nodes/<id>")
+@bp.route("/nodes/<id>", methods=['GET', 'POST'])
 @bp.route("/nodes")
 @login_required
 def nodes(id=None):
@@ -106,18 +105,28 @@ def nodes(id=None):
     # A: single node
     if id is not None:
         node_ = m.get_node_by_id(id)
-        # TODO check that id actually exists - handle error
+        # FIXME check that id actually exists - handle error
 
-        if format == "json":
-            return jsonify(node_)
-        else:
-            return render_template(
-                "mdb-node.html",
-                title=_("Node"),
-                mdb=node_,
-                subtype="main.nodes",
-                display="detail",
-            )
+        form = EditNodeForm()
+        if form.validate_on_submit():
+            m.update_node_by_id(id, form.nodeHandle.data)
+            flash(_("Your changes have been saved."))
+            return redirect(url_for("main.nodes", id=id))
+
+        elif request.method == "GET":
+            form.nodeHandle.data = node_['handle']
+
+            if format == "json":
+                return jsonify(node_)
+            else:
+                return render_template(
+                    "mdb-node.html",
+                    title=_("Node"),
+                    mdb=node_,
+                    subtype="main.nodes",
+                    display="detail",
+                    form=form,
+                )
 
     # B: filter by model
     if model is not None:
@@ -126,7 +135,7 @@ def nodes(id=None):
 
         if format == "json":
             return jsonify(nodes_)
-        else: 
+        else:
             return render_template(
                 "mdb-node-list.html",
                 title=_("Nodes in Model {}".format(model)),
@@ -156,7 +165,6 @@ def valuesets(id=None):
 
     format = request.args.get("format")
     model = request.args.get("model")
-    print("ya, got model".format(model))
     m = app.mdb.mdb()
 
     if id is not None:
@@ -191,7 +199,7 @@ def valuesets(id=None):
             )
 
 
-@bp.route("/terms/<id>")
+@bp.route("/terms/<id>", methods=['GET', 'POST'])
 @bp.route("/terms")
 @login_required
 def terms(id=None):
@@ -201,17 +209,28 @@ def terms(id=None):
 
     if id is not None:
         term_ = m.get_term_by_id(id)
-        if format == "json":
-            return jsonify(term_)
-        else:
-            return render_template(
-                "mdb-term.html",
-                title=_("Term"),
-                mdb=term_,
-                subtype="main.terms",
-                display="detail",
-            )
 
+        form = EditTermForm()
+        if form.validate_on_submit():
+            # go and make actual changes ...
+            m.update_term_by_id(id, form.termvalue.data)
+            flash(_("Your changes have been saved."))
+            return redirect(url_for("main.terms", id=id))
+
+        elif request.method == "GET":
+            form.termvalue.data = term_['value']
+
+            if format == "json":
+                return jsonify(term_)
+            else:
+                return render_template(
+                    "mdb-term.html",
+                    title=_("Term"),
+                    mdb=term_,
+                    subtype="main.terms",
+                    display="detail",
+                    form=form,
+                )
     else:
         terms_ = m.get_list_of_terms()
         if format == "json":
@@ -331,4 +350,3 @@ def about_mdb():
 @login_required
 def about_sts():
     return render_template("about-sts.html", title=_("About STS"))
-
