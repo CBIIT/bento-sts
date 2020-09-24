@@ -545,6 +545,62 @@ class mdb:
             # TODO update elasticsearch, remove old term and add new term
         return term_
 
+    # ------------------------------------------------------------------------- #
+
+    @staticmethod
+    def _do_create_term(tx, neo4jquery, tvalue):
+        print("working with for {}".format(tvalue))
+        result = []
+
+        answers = tx.run(neo4jquery, tvalue=tvalue)
+
+        for record in answers:
+            result.append(record)
+        return result
+
+    def get_query_to_create_term(self):
+        return '''
+                MATCH (t1:term)
+                WHERE t1.value = $tvalue and t1._to IS NULL
+                SET t1._to = ( t1._from + 1 ), t2._from = (t1._from + 1), t2.value = $tvalue
+                RETURN id(t2);
+                '''
+
+    def create_term(self, tvalue):
+        with self.driver.session() as session:
+            query = self.get_query_to_create_term()
+            term_ = session.write_transaction(self._do_create_term, query, tvalue)
+            # TODO update elasticsearch add new term
+        return term_
+
+    # ------------------------------------------------------------------------- #
+
+    @staticmethod
+    def _do_deprecate_term(tx, neo4jquery, tid):
+        print("deprecating term {}".format(tid))
+        result = []
+
+        answers = tx.run(neo4jquery, tid=tid)
+
+        for record in answers:
+            result.append(record)
+        return result
+
+    def get_query_to_deprecate_term(self):
+        return '''
+                MATCH (t1:term)
+                WHERE t1.nanoid = $tid and t1._to IS NULL
+                SET t1._to = ( t1._from + 1 )
+                RETURN id(t1);
+                '''
+
+    def deprecate_term(self, tid):
+        with self.driver.session() as session:
+            query = self.get_query_to_deprecate_term()
+            term_ = session.write_transaction(self._do_deprecate_term, query, tid)
+            # TODO update elasticsearch, remove old term
+        return term_
+
     # ############################################################################################### #
     # ORIGINS
     # ############################################################################################### #
