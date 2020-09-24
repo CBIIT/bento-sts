@@ -27,6 +27,10 @@ class EditTermForm(FlaskForm):
     submit = SubmitField("Save Changes")
 
 
+class DeprecateTermForm(FlaskForm):
+    submit = SubmitField("Deprecate Term")
+
+
 class EditNodeForm(FlaskForm):
     nodeHandle = StringField('Handle', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of handle must be greater than 0 and less than 140 characters")])
     submit = SubmitField("Save Changes")

@@ -16,7 +16,7 @@ from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
 from app import db
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm
 import app.search
 from app.models import User, Post, Entity
 from app.main import bp
@@ -141,7 +141,7 @@ def nodes(id=None):
         # TODO check that id actually exists - handle error
         nodes_ = m.get_list_of_nodes(model)
 
-        if format == "json":
+        if format == "json": 
             return jsonify(nodes_)
         else:
             return render_template(
@@ -218,15 +218,22 @@ def terms(id=None):
     if id is not None:
         term_ = m.get_term_by_id(id)
 
-        form = EditTermForm()
-        if form.validate_on_submit():
+        editform = EditTermForm()
+        deprecateform = DeprecateTermForm()
+        
+        if editform.validate_on_submit():
             # go and make actual changes ...
-            m.update_term_by_id(id, form.termvalue.data)
+            m.update_term_by_id(id, editform.termvalue.data)
             flash(_("Your changes have been saved."))
             return redirect(url_for("main.terms", id=id))
 
-        elif request.method == "GET":
-            form.termvalue.data = term_['value']
+        elif deprecateform.validate_on_submit():
+            m.deprecate_term(id)
+            flash(_("Term has been deprecated."))
+            return redirect(url_for("main.terms"))           
+
+        if request.method == "GET":
+            editform.termvalue.data = term_['value']
 
             if format == "json":
                 return jsonify(term_)
@@ -237,7 +244,8 @@ def terms(id=None):
                     mdb=term_,
                     subtype="main.terms",
                     display="detail",
-                    form=form,
+                    form=editform,
+                    deprecateform=deprecateform,
                 )
     else:
         terms_ = m.get_list_of_terms()
