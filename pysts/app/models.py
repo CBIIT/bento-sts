@@ -156,3 +156,4 @@ class Entity():
     # @classmethod
     def reindex():
         """ TODO: REFACTOR! FINISH THIS !! """
+        pass
