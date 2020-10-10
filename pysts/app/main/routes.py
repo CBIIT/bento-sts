@@ -1,6 +1,7 @@
 # route.py
 
 from datetime import datetime
+import json
 from flask import (
     render_template,
     flash,
@@ -15,13 +16,14 @@ from flask import (
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
-from app import db
+from app import db, logging
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm
 import app.search
 from app.models import User, Post, Entity
 from app.main import bp
 from app.util import get_yaml_for
 import app.mdb
+from app.arc import get_diff
 
 
 @bp.before_app_request
@@ -366,3 +368,16 @@ def about_mdb():
 @login_required
 def about_sts():
     return render_template("about-sts.html", title=_("About STS"))
+
+
+@bp.route("/diff")
+@login_required
+def diff():
+    '''stub for yaml diff functionality'''
+
+    # simple bento_meta/diff poc using stub/test yaml
+    delta = app.arc.get_diff()
+    current_app.logger.info('I have diff {}'.format(delta))
+    deltastring = json.dumps(delta)
+    return deltastring, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
