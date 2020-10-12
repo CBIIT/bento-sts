@@ -14,8 +14,8 @@ from bento_meta.object_map import ObjectMap
 def get_diff():
     APP_ROOT = os.path.dirname(os.path.abspath(__file__))   # refers to application_top
     APP_STATIC = os.path.join(APP_ROOT, 'static')
-    yml_a = os.path.join(APP_STATIC, "test-model-d.yml")
-    yml_b = os.path.join(APP_STATIC, "test-model-e.yml")
+    yml_a = os.path.join(APP_STATIC, "test-model-c.yml")
+    yml_b = os.path.join(APP_STATIC, "test-model-d.yml")
     a = MDF(yml_a, handle='test1')
     b = MDF(yml_b, handle='test1')
 
