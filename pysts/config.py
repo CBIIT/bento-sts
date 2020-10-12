@@ -21,3 +21,6 @@ class Config(object):
     MS_TRANSLATOR_KEY = os.environ.get("MS_TRANSLATOR_KEY")
     ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
     POSTS_PER_PAGE = 25
+    MAX_CONTENT_LENGTH = 2 * 1024 * 1024
+    UPLOAD_EXTENSIONS = ['.yaml', '.yml']
+    UPLOAD_PATH = 'uploads'

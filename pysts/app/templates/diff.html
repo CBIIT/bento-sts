@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block styles %}
+{{super()}}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/dropzone.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+
+    <h1>YAML-Formatted MDF File Upload</h1>
+    <form action="{{ url_for('main.upload_files') }}" class="dropzone">
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/dropzone.js"></script>
+
+{% endblock %}    

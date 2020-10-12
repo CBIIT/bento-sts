@@ -1,7 +1,9 @@
 # route.py
 
 from datetime import datetime
+import os
 import json
+import pprint
 from flask import (
     render_template,
     flash,
@@ -11,10 +13,13 @@ from flask import (
     g,
     jsonify,
     current_app,
-    Response
+    Response,
+    abort,
+    send_from_directory
 )
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
+from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm
@@ -370,14 +375,42 @@ def about_sts():
     return render_template("about-sts.html", title=_("About STS"))
 
 
+@bp.errorhandler(413)
+def too_large(e):
+    return "File is too large", 413
+
+
 @bp.route("/diff")
 @login_required
 def diff():
     '''stub for yaml diff functionality'''
 
+    # simple check of app.config
+    current_app.logger.warn('the uploads dir is {}'.format(current_app.config['UPLOAD_PATH']))
+
     # simple bento_meta/diff poc using stub/test yaml
     delta = app.arc.get_diff()
-    current_app.logger.info('I have diff {}'.format(delta))
-    deltastring = json.dumps(delta)
-    return deltastring, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    deltapp = pprint.pformat(delta)
+    current_app.logger.info('Furthermore pp is {}'.format(deltapp))
 
+    files = os.listdir(current_app.config['UPLOAD_PATH'])
+
+    # return deltapp, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    return render_template('diff.html', files=files, delta=deltapp)
+
+
+@bp.route("/diff", methods=['POST'])
+@login_required
+def upload_files():
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+            return "Invalid yaml", 400
+        uploaded_file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
+    return redirect(url_for('main.index'))
+
+@bp.route('/uploads/<filename>')
+def upload(filename):
+    return send_from_directory(current_app.config['UPLOAD_PATH'], filename)
