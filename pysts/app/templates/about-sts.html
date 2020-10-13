@@ -10,12 +10,33 @@
     <p>
     For example: <code> https://metabento.com/nodes?model=ICDC </code>
 
+    <br>
+    <br>
 
     <h2> JSON </h2>
     Use url parameter <code> ?format=json </code> to get JSON-formatted output.
 
     <p>
     For example: <code> https://metabento.com/valuesets/EapU3g?format=json </code>
+
+    <br>
+    <br>
+    
+    <h2> ID </h2>
+    Individual entities (nodes, properties, and terms) are identified by their Id either in the URL path or as parameter (as a query string)
+    <br>
+    <ul>
+        <li> In the URL path: <code> /terms/&lt;termid&gt; </code> </li>
+        <li>As a query parameter: <code> /terms?id=termid </code></li>
+    </ul>
+
+    <p>
+    For example: 
+    <ul>
+        <li> <code> https://metabento.com/valuesets/EapU3g </code> </li>
+        <li> <code> https://metabento.com/valuesets?id=EapU3g </code> </li>
+    </ul>    
+
 
 
 {% endblock %}
