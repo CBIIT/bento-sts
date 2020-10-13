@@ -107,7 +107,7 @@ def models(name=None):
         )
 
 @bp.route("/nodes", defaults={'nodeid': None}, methods=['GET', 'POST'])
-@bp.route('/nodes/<nodeid>')
+@bp.route('/nodes/<nodeid>', methods=['GET', 'POST'])
 @login_required
 def nodes(nodeid):
 
@@ -181,7 +181,7 @@ def nodes(nodeid):
 
 
 @bp.route("/properties", defaults={'propid': None}, methods=['GET', 'POST'])
-@bp.route('/properties/<propid>')
+@bp.route('/properties/<propid>', methods=['GET', 'POST'])
 @login_required
 def properties(propid):
 
@@ -232,7 +232,7 @@ def properties(propid):
 
 
 @bp.route("/valuesets", defaults={'valuesetid': None}, methods=['GET', 'POST'])
-@bp.route('/valuesets/<valuesetid>')
+@bp.route('/valuesets/<valuesetid>', methods=['GET', 'POST'])
 @login_required
 def valuesets(valuesetid):
 
@@ -283,7 +283,7 @@ def valuesets(valuesetid):
 
 
 @bp.route("/terms", defaults={'termid': None}, methods=['GET', 'POST'])
-@bp.route('/terms/<termid>')
+@bp.route('/terms/<termid>', methods=['GET', 'POST'])
 @login_required
 def terms(termid):
 
@@ -347,7 +347,7 @@ def terms(termid):
 
 
 @bp.route("/origins", defaults={'originid': None}, methods=['GET', 'POST'])
-@bp.route('/origins/<originid>')
+@bp.route('/origins/<originid>', methods=['GET', 'POST'])
 @login_required
 def origins(originid):
     format = request.args.get("format")
