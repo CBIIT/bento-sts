@@ -26,3 +26,4 @@ class Config(object):
     UPLOAD_PATH = 'uploads'
     DROPZONE_MAX_FILE_SIZE = 3
     DROPZONE_MAX_FILES = 30
+    DROPZONE_UPLOAD_ON_CLICK = True
