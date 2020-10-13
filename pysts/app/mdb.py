@@ -59,6 +59,8 @@ class mdb:
 
         # // idea: n3 -> n1 --> n2
         result = {}
+        _seen_properties = []   # for convenience tracking
+
         query = ""
 
         if model is not None:
@@ -88,7 +90,7 @@ class mdb:
                         n3.model   as n3_model,
                         p1.nanoid as p1_id,
                         p1.handle  as p1_handle,
-                        p1.value_domain as p1_valuedomain,
+                        p1.value_domain as p1_value_domain,
                         p1.model as p1_model
                         """
         else:
@@ -117,7 +119,7 @@ class mdb:
                         n3.model   as n3_model,
                         p1.nanoid as p1_id,
                         p1.handle  as p1_handle,
-                        p1.value_domain as p1_valuedomain,
+                        p1.value_domain as p1_value_domain,
                         p1.model as p1_model
                         """
 
@@ -196,7 +198,20 @@ class mdb:
 
             # D. if there are properties
             if record["p1_id"]:
-                pass
+
+                if "has_properties" not in result.keys():
+                    result["has_properties"] = []
+
+                if record["p1_id"] not in _seen_properties:
+                    property_ = {
+                        "id": record["p1_id"],
+                        "handle": record["p1_handle"],
+                        "type": "property",
+                        "link": url_for('main.properties', id=record["p1_id"]),
+                        "value_domain": record["p1_value_domain"]
+                    }
+                    _seen_properties.append(record["p1_id"])
+                    result["has_properties"].append(property_)
 
         return result
 
