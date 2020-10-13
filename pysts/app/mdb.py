@@ -24,7 +24,7 @@ class mdb:
     @staticmethod
     def _get_models_query(tx):
         list_of_models = []
-        result = tx.run("MATCH (n:node) RETURN DISTINCT n.model as model")
+        result = tx.run("MATCH (n:node) WHERE n._to IS NULL RETURN DISTINCT n.model as model")
         for record in result:
             list_of_models.append(record["model"])
         return list_of_models
@@ -75,6 +75,13 @@ class mdb:
             OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(c1)
             OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
+            WHERE   n3._to  IS NULL AND
+                    r12._to IS NULL AND
+                    n2._to  IS NULL AND
+                    r31._to IS NULL AND
+                    p1._to  IS NULL AND
+                    ct._to  IS NULL AND
+                    o._to   IS NULL
             RETURN DISTINCT n1.nanoid as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
@@ -104,6 +111,13 @@ class mdb:
             OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(c1)
             OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
+            WHERE   n3._to  IS NULL AND
+                    r12._to IS NULL AND
+                    n2._to  IS NULL AND
+                    r31._to IS NULL AND
+                    p1._to  IS NULL AND
+                    ct._to  IS NULL AND
+                    o._to   IS NULL
             RETURN DISTINCT n1.nanoid as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
@@ -246,7 +260,7 @@ class mdb:
     @staticmethod
     def _get_list_of_nodes_query(tx, model=None):
         result = []
-        # todo: add version controls
+
         # swap handle to property.handle (vs.handle is null)
         if model is None:
             answers = tx.run(
@@ -309,9 +323,9 @@ class mdb:
                 CALL apoc.refactor.cloneNodesWithRelationships([n1])
                 YIELD input, output
                 MATCH (n2:node)
-                where n2.nanoid = $nid and n2._to IS NULL and id(n1) < id(n2)
+                where n2.nanoid = $nid and n2._to IS NULL and id(n1) <> id(n2)
                 SET n1._to = ( n1._from + 1 ), n2._from = (n1._from + 1), n2.handle = $nhandle
-                RETURN id(n2);
+                RETURN id(n2)
                 '''
 
     def update_node_by_id(self, nid, nhandle):
@@ -328,17 +342,21 @@ class mdb:
     def get_query_for_valueset_by_id(self, model=None):
         querystring = ""
 
-        # todo: add version controls
         if model is None:
             querystring = """
             MATCH (vs:value_set)
-            WHERE vs.nanoid = $vsid
+            WHERE vs.nanoid = $vsid and vs._to IS NULL
             MATCH (p:property)-[:has_value_set]->(vs)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
             OPTIONAL MATCH (ct:term)-[:represents]->(cp)
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
+            WHERE   p._to   IS NULL AND
+                    ct._to  IS NULL AND
+                    t._to   IS NULL AND
+                    cto._to IS NULL AND
+                    vso._to IS NULL
             RETURN DISTINCT
                 p.nanoid as property_id,
                 p.handle as property_handle,
@@ -352,7 +370,7 @@ class mdb:
         else:
             querystring = """
             MATCH (vs:value_set)
-            WHERE vs.nanoid = $vsid
+            WHERE vs.nanoid = $vsid and vs._to IS NULL
             MATCH (p:property)-[:has_value_set]->(vs)
             WHERE toLower(p.model) = toLower($model)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
@@ -360,6 +378,11 @@ class mdb:
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
+            WHERE   p._to   IS NULL AND
+                    ct._to  IS NULL AND
+                    t._to   IS NULL AND
+                    cto._to IS NULL AND
+                    vso._to IS NULL
             RETURN DISTINCT
                 p.nanoid as property_id,
                 p.handle as property_handle,
@@ -445,13 +468,13 @@ class mdb:
         return result
 
     def get_query_for_list_of_valuesets(self, model):
-        # todo: add version controls
         if model is None:
             return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
+                      WHERE vs._to IS NULL and p._to IS NULL
                       RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
         else:
             return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
-                      WHERE toLower(p.model) = toLower($model)
+                      WHERE toLower(p.model) = toLower($model) and vs._to IS NULL and p._to IS NULL
                       RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
 
     def get_list_of_valuesets(self, model=None):
@@ -468,17 +491,20 @@ class mdb:
     def _get_term_by_id_query(tx, tid):
         result = {}
         answer = tx.run(
-            "MATCH (t:term) "
-            "WHERE t.nanoid = $tid AND t._to IS NULL "
-            "OPTIONAL MATCH (t)-[:has_origin]->(to:origin) "
-            "RETURN DISTINCT "
-            "    t.nanoid as id, "
-            "    t.value as value,"
-            "    t.desc as desc,"
-            "    t.origin_definition as origin_definition,"
-            "    t.origin_id as origin_id,"
-            "    to.nanoid as originid,"
-            "    to.name as originname ",
+            """
+            MATCH (t:term) 
+            WHERE t.nanoid = $tid AND t._to IS NULL
+            OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
+            WHERE to._to IS NULL
+            RETURN DISTINCT
+                t.nanoid as id,
+                t.value as value,
+                t.desc as desc,
+                t.origin_definition as origin_definition,
+                t.origin_id as origin_id,
+                to.nanoid as originid,
+                to.name as originname
+            """,
             tid=tid,
         )
 
@@ -576,9 +602,9 @@ class mdb:
                 CALL apoc.refactor.cloneNodesWithRelationships([t1])
                 YIELD input, output
                 MATCH (t2:term)
-                where t2.nanoid = $tid and t2._to IS NULL and id(t1) < id(t2)
+                where t2.nanoid = $tid and t2._to IS NULL and id(t1) <> id (t2)
                 SET t1._to = ( t1._from + 1 ), t2._from = (t1._from + 1), t2.value = $tvalue
-                RETURN id(t2);
+                RETURN id(t2)
                 '''
 
     def update_term_by_id(self, tid, tvalue):
