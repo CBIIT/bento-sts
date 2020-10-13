@@ -59,6 +59,34 @@
     <!-- End Modal-->
     <br><br>
 
+
+    <div>
+      {% if mdb.has_properties %}
+      <h4> Node Properties</h4>
+      <div id="nodeProperties" name="nodeProperties" style="margin:20px; padding:20x">
+          {% for property_item in mdb.has_properties %}
+
+          <table class="table-striped" >
+              <tr> <th style="width:300px"> Node Name </th>  
+                   <th style="width:300px"> <a href="{{url_for( 'main.properties', id=property_item.id ) }}"> {{property_item.handle }}</a> </th>
+              </tr>
+              <tr> 
+                  <td>  Id </td>  
+                  <td> {{ property_item.id }} </td>
+              </tr>
+              <tr> 
+                  <td> Value Domain </td>  
+                  <td> {{ property_item.value_domain }}</td>
+              </tr>
+          </table>
+          <br>
+          {% endfor %}
+      </div>    
+      <br>
+      {% endif %}
+  </div>
+
+
     <div>
         {% if mdb.has_relationship_from_nodes %}
         <h3> From Nodes </h3>
