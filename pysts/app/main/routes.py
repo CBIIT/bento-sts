@@ -106,14 +106,21 @@ def models(name=None):
             display="list",
         )
 
-
-@bp.route("/nodes/<id>", methods=['GET', 'POST'])
-@bp.route("/nodes")
+@bp.route("/nodes", defaults={'nodeid': None}, methods=['GET', 'POST'])
+@bp.route('/nodes/<nodeid>')
 @login_required
-def nodes(id=None):
+def nodes(nodeid):
 
     format = request.args.get("format")
     model = request.args.get("model")
+    id_ = request.args.get("id")
+
+    id = nodeid
+    if nodeid is None:
+        if id_ is not None:
+            id = id_
+
+    current_app.logger.warn('> NODES id {} and id_{} and nodeid {}'.format(id, id_, nodeid ))
 
     m = app.mdb.mdb()
 
@@ -145,18 +152,18 @@ def nodes(id=None):
 
     # B: filter by model
     if model is not None:
-        # TODO check that id actually exists - handle error
+
         nodes_ = m.get_list_of_nodes(model)
 
-        if format == "json": 
+        if format == "json":
             return jsonify(nodes_)
         else:
             return render_template(
-                "mdb-node-list.html",
+                "mdb.html",
                 title=_("Nodes in Model {}".format(model)),
                 mdb=nodes_,
                 subtype="main.nodes",
-                display="list-by-model",
+                display="tuple",
             )
 
     # C: plain list
@@ -169,17 +176,25 @@ def nodes(id=None):
             title=_("Nodes"),
             mdb=nodes_,
             subtype="main.nodes",
-            display="list",
+            display="tuple",  # from list
         )
 
 
-@bp.route("/properties/<id>")
-@bp.route("/properties")
+@bp.route("/properties", defaults={'propid': None}, methods=['GET', 'POST'])
+@bp.route('/properties/<propid>')
 @login_required
-def properties(id=None):
+def properties(propid):
 
     format = request.args.get("format")  # for returning in json format
     model = request.args.get("model")    # to filter by model
+    id_ = request.args.get("id")
+
+    id = propid
+    if propid is None:
+        if id_ is not None:
+            id = id_
+
+    current_app.logger.warn('> PROP id {} and id_{} and propid {}'.format(id, id_, propid ))
 
     m = app.mdb.mdb()
 
@@ -212,17 +227,27 @@ def properties(id=None):
                 title=_("Properties"),
                 mdb=p_,
                 subtype="main.properties",
-                display="list",
+                display="prop-tuple",  # from list
             )
 
 
-@bp.route("/valuesets/<id>")
-@bp.route("/valuesets")
+@bp.route("/valuesets", defaults={'valuesetid': None}, methods=['GET', 'POST'])
+@bp.route('/valuesets/<valuesetid>')
 @login_required
-def valuesets(id=None):
+def valuesets(valuesetid):
 
     format = request.args.get("format")
     model = request.args.get("model")
+
+    id_ = request.args.get("id")
+
+    id = valuesetid
+    if valuesetid is None:
+        if id_ is not None:
+            id = id_
+
+    current_app.logger.warn('> VS id {} and id_{} and valuesetid {}'.format(id, id_, valuesetid))
+
     m = app.mdb.mdb()
 
     if id is not None:
@@ -257,12 +282,22 @@ def valuesets(id=None):
             )
 
 
-@bp.route("/terms/<id>", methods=['GET', 'POST'])
-@bp.route("/terms")
+@bp.route("/terms", defaults={'termid': None}, methods=['GET', 'POST'])
+@bp.route('/terms/<termid>')
 @login_required
-def terms(id=None):
+def terms(termid):
 
     format = request.args.get("format")
+    model = request.args.get("model")    # to filter by model
+    id_ = request.args.get("id")
+
+    id = termid
+    if termid is None:
+        if id_ is not None:
+            id = id_
+
+    current_app.logger.warn('> TERMS id {} and id_{} and termid {}'.format(id, id_, termid))
+
     m = app.mdb.mdb()
 
     if id is not None:
@@ -280,7 +315,7 @@ def terms(id=None):
         elif deprecateform.validate_on_submit():
             m.deprecate_term(id)
             flash(_("Term has been deprecated."))
-            return redirect(url_for("main.terms"))           
+            return redirect(url_for("main.terms"))
 
         if request.method == "GET":
             editform.termvalue.data = term_['value']
@@ -298,7 +333,7 @@ def terms(id=None):
                     deprecateform=deprecateform,
                 )
     else:
-        terms_ = m.get_list_of_terms()
+        terms_ = m.get_list_of_terms(model)
         if format == "json":
             return jsonify(terms_)
         else:
@@ -307,15 +342,24 @@ def terms(id=None):
                 title=_("Terms"),
                 mdb=terms_,
                 subtype="main.terms",
-                display="list",
+                display="term-tuple",
             )
 
 
-@bp.route("/origins/<id>")
-@bp.route("/origins")
+@bp.route("/origins", defaults={'originid': None}, methods=['GET', 'POST'])
+@bp.route('/origins/<originid>')
 @login_required
-def origins(id=None):
+def origins(originid):
     format = request.args.get("format")
+    id_ = request.args.get("id")
+
+    id = originid
+    if originid is None:
+        if id_ is not None:
+            id = id_
+
+    current_app.logger.warn('> ORIGIN id {} and id_{} and originid {}'.format(id, id_, originid))
+
     m = app.mdb.mdb()
 
     origins_ = m.get_list_of_origins()
@@ -441,7 +485,7 @@ def diff():
     # create set of files in dir for dropdown, but exclude .gitkeep file, which is needed to keep dir in git
     for _file in files:
         current_app.logger.warn('... Adding a new file')
-        if _file == '.gitkeep':
+        if _file == '.gitkeep' or _file == '.gitignore':
             continue
         tup = (_file, _file)
         file_choices.append(tup)

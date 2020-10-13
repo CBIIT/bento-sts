@@ -67,7 +67,7 @@ class mdb:
             query = """
             MATCH (n1:node)
             WHERE n1.nanoid = $nid
-            WHERE n1.model = $model
+            WHERE toLower(n1.model) = toLower($model)
             AND n1._to IS NULL
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
@@ -251,22 +251,31 @@ class mdb:
         if model is None:
             answers = tx.run(
                 """
-                MATCH (n:node) 
+                MATCH (n:node)
                 WHERE n._to IS NULL
-                RETURN DISTINCT n.nanoid as id, n.handle as handle
+                RETURN DISTINCT
+                    n.nanoid as id,
+                    n.handle as handle,
+                    n.model as model
+                ORDER BY n.model, n.handle
                 """
             )
         else:
             answers = tx.run(
                 """
                 MATCH (n:node)
-                WHERE n.model = $model AND n._to IS NULL
-                RETURN DISTINCT n.nanoid as id, n.handle as handle
-                """, model=model,
+                WHERE toLower(n.model) = toLower($model) AND n._to IS NULL
+                RETURN DISTINCT
+                    n.nanoid as id,
+                    n.handle as handle,
+                    n.model as model
+                ORDER BY n.model, n.handle
+                """, model=model
             )
 
         for record in answers:
-            row = {record["id"]: record["handle"]}
+            # row = {record["id"]: record["handle"]}
+            row = (record["id"], record["handle"], record['model'])
             result.append(row)
         return result
 
@@ -501,32 +510,49 @@ class mdb:
     # ========================================================================= #
 
     @staticmethod
-    def _get_list_of_terms_query(tx, neo4jquery):
+    def _get_list_of_terms_query(tx, model=None):
         result = []
 
-        answers = tx.run(neo4jquery)
-
-        for record in answers:
-            row = {record["id"]: record["value"]}
-            result.append(row)
-        return result
-
-    def get_query_for_list_of_terms(self):
-        return """
-                MATCH (t:term)
-                MATCH (t)-[:has_origin]->(to:origin)
-                MATCH (vs:value_set) -[:has_term]->(t)
-                WHERE t._to IS NULL
+        if model is None:
+            answers = tx.run(
+                """
+                MATCH (p)-[:has_value_set]->(vs)
+                MATCH (vs)-[:has_term]->(t:term)
+                WHERE p._to IS NULL and vs._to IS NULL and t._to IS NULL
                 RETURN DISTINCT
                     t.nanoid as id,
                     t.value as value,
-                    to.name as origin
+                    p.handle as handle,
+                    p.model as model,
+                    p.nanoid as pid
+                ORDER BY model, handle, value
                 """
+            )
+        else:
+            answers = tx.run(
+                """
+                MATCH (p)-[:has_value_set]->(vs)
+                MATCH (vs)-[:has_term]->(t:term)
+                WHERE p._to IS NULL and vs._to IS NULL and t._to IS NULL and toLower(p.model) = toLower($model)
+                RETURN DISTINCT
+                    t.nanoid as id,
+                    t.value as value,
+                    p.handle as handle,
+                    p.model as model,
+                    p.nanoid as pid
+                ORDER BY model, handle, value
+                """, model=model
+            )
 
-    def get_list_of_terms(self):
+        for record in answers:
+            # row = {record["id"]: record["value"]}
+            row = (record["id"], record["value"], record['model'], record['handle'], record['pid'])
+            result.append(row)
+        return result
+
+    def get_list_of_terms(self, model=None):
         with self.driver.session() as session:
-            query = self.get_query_for_list_of_terms()
-            list_o_dicts = session.read_transaction(self._get_list_of_terms_query, query)
+            list_o_dicts = session.read_transaction(self._get_list_of_terms_query, model)
         return list_o_dicts
 
     # ------------------------------------------------------------------------- #
@@ -665,40 +691,35 @@ class mdb:
         if model is None:
             answers = tx.run(
                 """
-                MATCH (p:property)
-                OPTIONAL MATCH (n)-[:has_property]->(p)
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-                WHERE n._to IS NULL and vs._to IS NULL and t._to IS NULL 
+                MATCH (n:node)-[:has_property]->(p:property)
+                WHERE p._to IS NULL and n._to IS NULL
                 RETURN DISTINCT
                 p.nanoid as id,
                 p.handle as handle,
                 p.model as property_model,
-                n.handle as nodehandle,
-                n.nanoid as nodeid,
-                COUNT(DISTINCT(t.nanoid))
+                n.nanoid as nid,
+                n.handle as nhandle
+                ORDER BY property_model, handle
                 """
             )
         else:
             answers = tx.run(
                 """
-                MATCH (p:property)
-                OPTIONAL MATCH (n)-[:has_property]->(p)
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-                WHERE n._to IS NULL and vs._to IS NULL and t._to IS NULL and n.model = $model
+                MATCH (n:node)-[:has_property]->(p:property)
+                WHERE toLower(p.model) = toLower($model) and p._to IS NULL and n._to IS NULL
                 RETURN DISTINCT
                 p.nanoid as id,
                 p.handle as handle,
                 p.model as property_model,
-                n.handle as nodehandle,
-                n.nanoid as nodeid,
-                COUNT(DISTINCT(t.nanoid))
+                n.nanoid as nid,
+                n.handle as nhandle
+                ORDER BY property_model, handle
                 """, model=model
             )
 
         for record in answers:
-            row = {record["id"]: record["handle"]}
+            # row = {record["id"]: record["handle"]}
+            row = (record["id"], record["handle"], record['property_model'], record['nhandle'], record['nid'])
             result.append(row)
         return result
 

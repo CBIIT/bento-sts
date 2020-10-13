@@ -36,4 +36,64 @@
        <br><br>
     {% endif %}
 
+    {% if display == 'tuple'  %}
+    <br><br>
+    <div id="listall" name="listall" style="margin:20px; padding:20x">
+      <table class="table-striped">
+         <tr>
+             <th style="width:300px"> Name </th> <th style="width:300px"> Model</th>
+         </tr>
+         {% for entry in mdb %}
+              <tr> 
+                <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+                <td> {{ entry[2] }} </td>
+              </tr>
+         {% endfor %}
+       </table>      
+      </div> 
+       <br><br>
+    {% endif %}
+
+    {% if display == 'prop-tuple'  %}
+    <br><br>
+    <div id="listall" name="listall" style="margin:20px; padding:20x">
+      <table class="table-striped">
+         <tr>
+             <th style="width:300px"> Name </th> 
+             <th style="width:300px"> Node</th> 
+             <th style="width:300px"> Model</th>
+         </tr>
+         {% for entry in mdb %}
+              <tr> 
+                <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+                <td> <a href="{{url_for('main.nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
+                <td> {{ entry[2] }} </td>
+              </tr>
+         {% endfor %}
+       </table>      
+      </div> 
+       <br><br>
+    {% endif %}
+
+    {% if display == 'term-tuple'  %}
+    <br><br>
+    <div id="listall" name="listall" style="margin:20px; padding:20x">
+      <table class="table-striped">
+         <tr>
+             <th style="width:300px"> Name </th> 
+             <th style="width:300px"> Property</th> 
+             <th style="width:300px"> Model</th>
+         </tr>
+         {% for entry in mdb %}
+              <tr> 
+                <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+                <td> <a href="{{url_for('main.properties', id=entry[4] ) }}">{{ entry[3] }} </td>
+                <td> {{ entry[2] }} </td>
+              </tr>
+         {% endfor %}
+       </table>      
+      </div> 
+       <br><br>
+    {% endif %}
+
 {% endblock %}
