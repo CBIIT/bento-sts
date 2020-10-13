@@ -28,4 +28,3 @@ class Config(object):
     DROPZONE_MAX_FILES = 30
     DROPZONE_ALLOWED_FILE_CUSTOM = True
     DROPZONE_ALLOWED_FILE_TYPE = 'text/*, .yml, .yaml'
-    #DROPZONE_UPLOAD_ON_CLICK = True

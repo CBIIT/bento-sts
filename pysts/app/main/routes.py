@@ -19,7 +19,6 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
-from flask_dropzone import Dropzone
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
@@ -29,7 +28,7 @@ from app.models import User, Post, Entity
 from app.main import bp
 from app.util import get_yaml_for
 import app.mdb
-from app.arc import get_diff
+from app.arc import diff_mdf
 
 
 @bp.before_app_request
@@ -172,6 +171,49 @@ def nodes(id=None):
             subtype="main.nodes",
             display="list",
         )
+
+
+@bp.route("/properties/<id>")
+@bp.route("/properties")
+@login_required
+def properties(id=None):
+
+    format = request.args.get("format")  # for returning in json format
+    model = request.args.get("model")    # to filter by model
+
+    m = app.mdb.mdb()
+
+    # they specify property by id
+    if id is not None:
+        p_ = m.get_property_by_id(id, model)
+
+        if p_ is None or not bool(p_):
+            return render_template('/errors/400.html'), 400
+
+        if format == "json":
+            return jsonify(p_)
+        else:
+            return render_template(
+                "mdb-property.html",
+                title=_("Property: "),
+                mdb=p_,
+                subtype="main.properties",
+                display="detail",
+            )
+
+    # they didn't give an id, so list all properties
+    else:
+        p_ = m.get_list_of_properties(model)
+        if format == "json":
+            return jsonify(p_)
+        else:
+            return render_template(
+                "mdb.html",
+                title=_("Properties"),
+                mdb=p_,
+                subtype="main.properties",
+                display="list",
+            )
 
 
 @bp.route("/valuesets/<id>")
