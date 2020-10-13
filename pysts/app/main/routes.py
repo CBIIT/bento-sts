@@ -396,8 +396,11 @@ def diff():
     current_app.logger.warn('the uploads dir has: {}'.format(files))
     current_app.logger.warn('the uploads dir is {}'.format(current_app.config['UPLOAD_PATH']))
 
+    # create set of files in dir for dropdown, but exclude .gitkeep file, which is needed to keep dir in git
     for _file in files:
         current_app.logger.warn('... Adding a new file')
+        if _file == '.gitkeep':
+            continue
         tup = (_file, _file)
         file_choices.append(tup)
 
@@ -419,7 +422,7 @@ def diff():
             _diff = app.arc.diff_mdf(mdf_a, mdf_b)
             mdf_diff = pprint.pformat(_diff)
             current_app.logger.info('Lastly diff output is {}'.format(mdf_diff))
-    
+
     elif (request.method == 'POST'):
         current_app.logger.warn(' >>> now is INTERNAL ')
 
@@ -434,12 +437,11 @@ def diff():
                 if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
                     return "Invalid yaml", 400
 
-                APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
+                APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   
                 APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
                 uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
                 current_app.logger.info(' >>> upload_files() -- save')
 
-    # return deltapp, 200, {'Content-Type': 'text/plain; charset=utf-8'}
     return render_template('diff.html', form=dform, mdf_diff=mdf_diff)
 
 
@@ -462,7 +464,7 @@ def upload_files():
             APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
             APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
             uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
-            current_app.logger.info(' > upload_files() -- save')
+            current_app.logger.info('> upload_files() -- save()')
     return redirect(url_for('main.diff'))
 
 @bp.route('/uploads/<filename>')

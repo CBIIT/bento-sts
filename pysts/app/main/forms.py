@@ -32,11 +32,10 @@ class DeprecateTermForm(FlaskForm):
 
 
 class DiffForm(FlaskForm):
-    # validate_choice=False
-    #files = [('', '--'), ('joe', 'Joe'), ('bob', 'Bob'), ('ann', 'Ann'), ('frank', 'Frank')]
-    mdf_a = SelectField("Choose a base   MDF file", choices=[])
-    mdf_b = SelectField("Choose a second MDF file", choices=[])
+    mdf_a = SelectField("MDF file A", choices=[])
+    mdf_b = SelectField("MDF file B", choices=[])
     submit = SubmitField("Get Diff")
+
 
 class EditNodeForm(FlaskForm):
     nodeHandle = StringField('Handle', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of handle must be greater than 0 and less than 140 characters")])
