@@ -9,6 +9,7 @@ from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
+from flask_dropzone import Dropzone
 from elasticsearch import Elasticsearch
 from config import Config
 
@@ -39,6 +40,8 @@ def create_app(config_class=Config):
         if app.config["ELASTICSEARCH_URL"]
         else None
     )
+
+    dropzone = Dropzone(app)
 
     from app.errors import bp as errors_bp
 

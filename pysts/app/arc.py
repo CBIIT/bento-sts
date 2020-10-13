@@ -27,6 +27,27 @@ def get_diff():
     pprint.pprint(delta)
     return delta
 
+
+'''Phase 1: test diff works'''
+def diff_mdf(mdf_file_a, mdf_file_b):
+    # APP_ROOT = os.path.dirname(os.path.abspath(__file__))   # refers to application_top
+    # APP_STATIC = os.path.join(APP_ROOT, 'static')
+    APP_UPLOAD_PATH = current_app.config['UPLOAD_PATH']
+    mdf_a = os.path.join(APP_UPLOAD_PATH, mdf_file_a)
+    mdf_b = os.path.join(APP_UPLOAD_PATH, mdf_file_b)
+
+    a = MDF(mdf_a, handle='test1')
+    b = MDF(mdf_b, handle='test1')
+
+    #logger = logging.getLogger()
+    #logger.info('test message')
+
+    delta = diff_models(a.model, b.model)
+    current_app.logger.error('FINISHING diff_mdf')
+    pprint.pprint(delta)
+    return delta
+
+
 class jet():
     '''TO BE DEPRECATED'''
 

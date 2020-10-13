@@ -19,10 +19,11 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
+from flask_dropzone import Dropzone
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm, DiffForm
 import app.search
 from app.models import User, Post, Entity
 from app.main import bp
@@ -380,37 +381,91 @@ def too_large(e):
     return "File is too large", 413
 
 
-@bp.route("/diff")
+@bp.route("/diff", methods=['GET', 'POST'])
 @login_required
 def diff():
     '''stub for yaml diff functionality'''
-
+    current_app.logger.warn('>>>now in diff')
     # simple check of app.config
+    file_choices = [('', '')]
+    APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
+    APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
+    files = os.listdir(APP_UPLOAD_PATH)
+    current_app.logger.warn('the APP_ROOT is at: {}'.format(APP_ROOT))
+    current_app.logger.warn('the uploads dir is at: {}'.format(APP_UPLOAD_PATH))
+    current_app.logger.warn('the uploads dir has: {}'.format(files))
     current_app.logger.warn('the uploads dir is {}'.format(current_app.config['UPLOAD_PATH']))
 
-    # simple bento_meta/diff poc using stub/test yaml
-    delta = app.arc.get_diff()
-    deltapp = pprint.pformat(delta)
-    current_app.logger.info('Furthermore pp is {}'.format(deltapp))
+    for _file in files:
+        current_app.logger.warn('... Adding a new file')
+        tup = (_file, _file)
+        file_choices.append(tup)
 
-    files = os.listdir(current_app.config['UPLOAD_PATH'])
+    current_app.logger.warn('the options for file_choices is {}'.format(file_choices))
+
+    dform = DiffForm()
+    dform.mdf_a.choices = file_choices
+    dform.mdf_b.choices = file_choices
+
+    mdf_diff = ''
+    if dform.validate_on_submit():
+        current_app.logger.info('  CLICK !!!! ')
+
+        mdf_a = dform.mdf_a.data
+        mdf_b = dform.mdf_b.data
+
+        if (mdf_a and mdf_b):
+            # simple bento_meta/diff poc using stub/test yaml
+            _diff = app.arc.diff_mdf(mdf_a, mdf_b)
+            mdf_diff = pprint.pformat(_diff)
+            current_app.logger.info('Lastly diff output is {}'.format(mdf_diff))
+    
+    elif (request.method == 'POST'):
+        current_app.logger.warn(' >>> now is INTERNAL ')
+
+        uploaded_file = request.files.get('file')
+
+        if (uploaded_file):
+            filename = secure_filename(uploaded_file.filename)
+            current_app.logger.info(' >>> upload_files() has filename {}'.format(filename))
+
+            if filename != '':
+                file_ext = os.path.splitext(filename)[1]
+                if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+                    return "Invalid yaml", 400
+
+                APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
+                APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
+                uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
+                current_app.logger.info(' >>> upload_files() -- save')
 
     # return deltapp, 200, {'Content-Type': 'text/plain; charset=utf-8'}
-    return render_template('diff.html', files=files, delta=deltapp)
+    return render_template('diff.html', form=dform, mdf_diff=mdf_diff)
 
 
-@bp.route("/diff", methods=['POST'])
+@bp.route("/upload_files", methods=['POST'])
 @login_required
 def upload_files():
-    uploaded_file = request.files['file']
-    filename = secure_filename(uploaded_file.filename)
-    if filename != '':
-        file_ext = os.path.splitext(filename)[1]
-        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-            return "Invalid yaml", 400
-        uploaded_file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
-    return redirect(url_for('main.index'))
+    current_app.logger.warn(' > now is upload_files()')
+
+    uploaded_file = request.files.get('file')
+
+    if (uploaded_file):
+        filename = secure_filename(uploaded_file.filename)
+        current_app.logger.info(' > upload_files() has filename {}'.format(filename))
+
+        if filename != '':
+            file_ext = os.path.splitext(filename)[1]
+            if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+                return "Invalid yaml", 400
+
+            APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
+            APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
+            uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
+            current_app.logger.info(' > upload_files() -- save')
+    return redirect(url_for('main.diff'))
 
 @bp.route('/uploads/<filename>')
 def upload(filename):
+    current_app.logger.warn('>>>now in upload')
     return send_from_directory(current_app.config['UPLOAD_PATH'], filename)
