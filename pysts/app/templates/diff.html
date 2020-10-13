@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
+
 {% block styles %}
 {{super()}}
-<link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/dropzone.css" rel="stylesheet" type="text/css">
+{{ dropzone.load_css() }}
+{{ dropzone.style('border: 2px dashed #0087F7; margin: 10%; min-height: 400px;') }}
 {% endblock %}
 
 {% block app_content %}
@@ -10,8 +12,41 @@
     <h1> {{ title }} </h1>
 
     <h1>YAML-Formatted MDF File Upload</h1>
-    <form action="{{ url_for('main.upload_files') }}" class="dropzone">
+    <div>
+    {{ dropzone.create(action='main.diff') }}
+    {{ dropzone.load_js() }}
+    {{ dropzone.config() }}
+    </div>
+    <br>
+    <br>
+    <div>
+    <form action="{{ url_for('main.diff') }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+        {{ form.mdf_a.label }}
+        {{ form.mdf_a }}
+        </div>
+        <br>
+        <div>
+        {{ form.mdf_b.label }}
+        {{ form.mdf_b }}
+        </div>
+        <br>
+        {{ form.submit }}
     </form>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/dropzone.js"></script>
+    </div>
+    <br/>
+    <br/>
+
+    <div>
+        Well....
+        {% if mdf_diff is defined and mdf_diff %}
+        I GOT {{ mdf_diff }}
+        {% endif %}
+
+    
+    </div>
+
+YUCK
 
 {% endblock %}    

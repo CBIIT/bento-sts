@@ -1,6 +1,6 @@
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField
+from wtforms import StringField, SubmitField, TextAreaField, SelectField
 from wtforms.validators import ValidationError, DataRequired, Length, InputRequired
 from flask_babel import _, lazy_gettext as _l
 from app.models import User
@@ -30,6 +30,13 @@ class EditTermForm(FlaskForm):
 class DeprecateTermForm(FlaskForm):
     submit = SubmitField("Deprecate Term")
 
+
+class DiffForm(FlaskForm):
+    # validate_choice=False
+    #files = [('', '--'), ('joe', 'Joe'), ('bob', 'Bob'), ('ann', 'Ann'), ('frank', 'Frank')]
+    mdf_a = SelectField("Choose a base   MDF file", choices=[])
+    mdf_b = SelectField("Choose a second MDF file", choices=[])
+    submit = SubmitField("Get Diff")
 
 class EditNodeForm(FlaskForm):
     nodeHandle = StringField('Handle', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of handle must be greater than 0 and less than 140 characters")])

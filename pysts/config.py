@@ -24,3 +24,5 @@ class Config(object):
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024
     UPLOAD_EXTENSIONS = ['.yaml', '.yml']
     UPLOAD_PATH = 'uploads'
+    DROPZONE_MAX_FILE_SIZE = 3
+    DROPZONE_MAX_FILES = 30
