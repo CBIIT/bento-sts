@@ -40,19 +40,22 @@
         {% if mdb.has_terms %}
         <h3> Terms in Value Set</h3>
             
-            {% for term_item in mdb.has_terms %}
             <div id="termList" name="termList" style="margin:20px; padding:20x">
-            <table class="table-striped">
-                <tr> <th style="width:300px"> Term Value  </th>  
-                     <th style="width:300px"> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </th>
-                </tr>
+
+            <table class="table-striped" >
                 <tr> 
-                    <td> Id </td>  
-                    <td> {{ term_item.id }} </td>
-                </tr>
+                      <th style="width:300px"> Term </th>  
+                      <th style="width:300px"> Id </th>  
+                </tr>    
+                {% for term_item in mdb.has_terms %}
+                    <tr>
+                        <td> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </td>
+                        <td> {{ term_item.id }} </td>
+                    </tr>
+                {% endfor %}
             </table>
             </div>
-            {% endfor %}
+
         {% endif %}
     </div>
 
