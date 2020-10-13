@@ -366,7 +366,9 @@ class mdb:
                     "url": record["vs_url"],
                     "desc": "desc",
                     "type": "valueset",
-                    "link": url_for('main.valuesets', id=record["vs_id"])
+                    "link": url_for('main.valuesets', id=record["vs_id"]),
+                    "_for_propertyhandle": record["property_handle"],
+                    "_for_propertyid": record["property_id"]
                 }
 
             # B. add property
@@ -642,56 +644,108 @@ class mdb:
     # ############################################################################################### #
 
     @staticmethod
-    def _get_list_of_properties_query(tx):
+    def _get_list_of_properties_query(tx, model=None):
         result = []
-        # only get those terms associated with valuesets (some terms assoc w/ concepts)
-        answers = tx.run(
-            """
-            MATCH (p:property)
-            OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-            OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-            RETURN DISTINCT
-            p.nanoid as id,
-            p.handle as handle,
-            p.model as property_model,
-            COUNT(DISTINCT(t.nanoid))
-                         """
-        )
+
+        if model is None:
+            answers = tx.run(
+                """
+                MATCH (p:property)
+                OPTIONAL MATCH (n)-[:has_property]->(p)
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
+                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                WHERE n._to IS NULL and vs._to IS NULL and t._to IS NULL 
+                RETURN DISTINCT
+                p.nanoid as id,
+                p.handle as handle,
+                p.model as property_model,
+                n.handle as nodehandle,
+                n.nanoid as nodeid,
+                COUNT(DISTINCT(t.nanoid))
+                """
+            )
+        else:
+            answers = tx.run(
+                """
+                MATCH (p:property)
+                OPTIONAL MATCH (n)-[:has_property]->(p)
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
+                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                WHERE n._to IS NULL and vs._to IS NULL and t._to IS NULL and n.model = $model
+                RETURN DISTINCT
+                p.nanoid as id,
+                p.handle as handle,
+                p.model as property_model,
+                n.handle as nodehandle,
+                n.nanoid as nodeid,
+                COUNT(DISTINCT(t.nanoid))
+                """, model=model
+            )
+
         for record in answers:
             row = {record["id"]: record["handle"]}
             result.append(row)
         return result
 
-    def get_list_of_properties(self):
+    def get_list_of_properties(self, model=None):
         with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_properties_query)
+            
+            list_o_dicts = session.read_transaction(self._get_list_of_properties_query, model)
         return list_o_dicts
 
     @staticmethod
-    def _get_property_by_id_query(tx, pid):
+    def _get_property_by_id_query(tx, pid, model=None):
         result = {}
         _seen_terms = []
 
         # only get those terms associated with valuesets (some terms assoc w/ concepts)
-        answers = tx.run(
-            """
-            MATCH (p:property)
-            WHERE p.nanoid = $pid
-            OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-            OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-            RETURN DISTINCT
-            p.nanoid as id,
-            p.handle as handle,
-            p.model as model,
-            p.value_domain as valuedomain,
-            p.is_required as isrequired,
-            vs.nanoid as valueset_id,
-            t.nanoid as term_id,
-            t.value as term_value,
-            COUNT(DISTINCT(t.nanoid))
-            """,
-            pid=pid,
-        )
+        if model is None:
+            answers = tx.run(
+                """
+                MATCH (p:property)
+                WHERE p.nanoid = $pid
+                OPTIONAL MATCH (n)-[:has_property]->(p)
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
+                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                RETURN DISTINCT
+                p.nanoid as id,
+                p.handle as handle,
+                p.model as model,
+                p.value_domain as value_domain,
+                p.is_required as isrequired,
+                n.handle as nodehandle,
+                n.nanoid as nodeid,
+                vs.nanoid as valueset_id,
+                t.nanoid as term_id,
+                t.value as term_value,
+                COUNT(DISTINCT(t.nanoid))
+                """,
+                pid=pid,
+            )
+        else:
+            answers = tx.run(
+                """
+                MATCH (p:property)
+                WHERE p.nanoid = $pid
+                WHERE n.model = $model
+                OPTIONAL MATCH (n)-[:has_property]->(p)
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
+                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                RETURN DISTINCT
+                p.nanoid as id,
+                p.handle as handle,
+                p.model as model,
+                p.value_domain as value_domain,
+                p.is_required as isrequired,
+                n.handle as nodehandle,
+                n.nanoid as nodeid,
+                vs.nanoid as valueset_id,
+                t.nanoid as term_id,
+                t.value as term_value,
+                COUNT(DISTINCT(t.nanoid))
+                """,
+                pid=pid, model=model
+            )
 
         for record in answers:
 
@@ -701,10 +755,12 @@ class mdb:
                     "id": record["id"],
                     "handle": record["handle"],
                     "model": record["model"],
-                    "value_domain": record["valuedomain"],
+                    "value_domain": record["value_domain"],
                     "is_required": record["isrequired"],
                     "type": "property",
                     "link": "/properties/" + record["id"],
+                    "_for_nodehandle": record["nodehandle"],
+                    "_for_nodeid": record["nodeid"],
                 }
 
             # B. add valueset
@@ -736,7 +792,7 @@ class mdb:
 
         return result
 
-    def get_property_by_id(self, pid):
+    def get_property_by_id(self, pid, model=None):
         with self.driver.session() as session:
-            property_ = session.read_transaction(self._get_property_by_id_query, pid)
+            property_ = session.read_transaction(self._get_property_by_id_query, pid, model)
         return property_

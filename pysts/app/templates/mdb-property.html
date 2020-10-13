@@ -8,21 +8,28 @@
     <br><br>
     <div>
       <h3> Details </h3>
-      <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
+      <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
       <table class="table-striped">
          <tr>
             <th style="width:300px"> Handle </th> 
             <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
        </tr>
-         <tr>
-             <td> Id </td> <td>{{mdb.id}} </td>
-        </tr>
+        <tr>
+            <td> Id </td> <td>{{mdb.id}} </td>
+       </tr>
         <tr>
             <td> Model </td> <td>{{mdb.model}} </td>
        </tr>
+       {% if mdb.value_domain %}
        <tr>
-         <td> For Property </td> <td><a href="{{url_for( 'main.properties', id=mdb._for_propertyid ) }}"> {{mdb._for_propertyhandle}} </a> </td>
+            <td> Value domain </td> <td>{{mdb.value_domain}} </td>
        </tr>
+       {% endif %}
+       {% if mdb._for_nodehandle %}
+       <tr>
+         <td> For Node </td> <td><a href="{{url_for( 'main.nodes', id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
+       </tr>
+       {% endif %}
       </table>
       </div>
     </div>
