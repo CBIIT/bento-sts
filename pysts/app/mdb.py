@@ -70,18 +70,17 @@ class mdb:
             WHERE toLower(n1.model) = toLower($model)
             AND n1._to IS NULL
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
+                WHERE NOT (n2._to is NOT NULL) and NOT (r12._to IS NOT NULL)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
+                WHERE NOT (n3._to is NOT NULL) and NOT (r31._to IS NOT NULL)
             OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
+                WHERE NOT (p1._to is NOT NULL)
             OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
+                WHERE NOT (c1._to IS NOT NULL)
             OPTIONAL MATCH (ct:term)-[:represents]->(c1)
+                WHERE NOT (ct._to IS NOT NULL)
             OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-            WHERE   n3._to  IS NULL AND
-                    r12._to IS NULL AND
-                    n2._to  IS NULL AND
-                    r31._to IS NULL AND
-                    p1._to  IS NULL AND
-                    ct._to  IS NULL AND
-                    o._to   IS NULL
+                WHERE NOT (o._to IS NOT NULL)
             RETURN DISTINCT n1.nanoid as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
@@ -106,18 +105,17 @@ class mdb:
             WHERE n1.nanoid = $nid
             AND n1._to IS NULL
             OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
+                WHERE NOT (n2._to is NOT NULL) and NOT (r12._to IS NOT NULL)
             OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
+                WHERE NOT (n3._to is NOT NULL) and NOT (r31._to IS NOT NULL)
             OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
+                WHERE NOT (p1._to is NOT NULL)
             OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
+                WHERE NOT (c1._to IS NOT NULL)
             OPTIONAL MATCH (ct:term)-[:represents]->(c1)
+                WHERE NOT (ct._to IS NOT NULL)
             OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-            WHERE   n3._to  IS NULL AND
-                    r12._to IS NULL AND
-                    n2._to  IS NULL AND
-                    r31._to IS NULL AND
-                    p1._to  IS NULL AND
-                    ct._to  IS NULL AND
-                    o._to   IS NULL
+                WHERE NOT (o._to IS NOT NULL)
             RETURN DISTINCT n1.nanoid as n1_id,
                         n1.handle as n1_handle,
                         n1.model as n1_model,
@@ -346,17 +344,18 @@ class mdb:
             querystring = """
             MATCH (vs:value_set)
             WHERE vs.nanoid = $vsid and vs._to IS NULL
-            MATCH (p:property)-[:has_value_set]->(vs)
+            MATCH (p:property)-[:has_value_set]->(vs) 
+                WHERE NOT (p._to IS NOT NULL)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
+                WHERE NOT (p._to IS NOT NULL) AND NOT (cp._to IS NOT NULL)
             OPTIONAL MATCH (ct:term)-[:represents]->(cp)
+                WHERE NOT (ct._to IS NOT NULL)
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                WHERE NOT (t._to IS NOT NULL)
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
+                WHERE NOT (cto._to IS NOT NULL)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
-            WHERE   p._to   IS NULL AND
-                    ct._to  IS NULL AND
-                    t._to   IS NULL AND
-                    cto._to IS NULL AND
-                    vso._to IS NULL
+                WHERE NOT (vso._to IS NOT NULL)
             RETURN DISTINCT
                 p.nanoid as property_id,
                 p.handle as property_handle,
@@ -372,17 +371,17 @@ class mdb:
             MATCH (vs:value_set)
             WHERE vs.nanoid = $vsid and vs._to IS NULL
             MATCH (p:property)-[:has_value_set]->(vs)
-            WHERE toLower(p.model) = toLower($model)
+            WHERE toLower(p.model) = toLower($model) AND NOT (p._to IS NOT NULL)
             OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
+                WHERE NOT (p._to IS NOT NULL) AND NOT (cp._to IS NOT NULL)
             OPTIONAL MATCH (ct:term)-[:represents]->(cp)
+                WHERE NOT (ct._to IS NOT NULL)
             OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                WHERE NOT (t._to IS NOT NULL)
             OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
+                WHERE NOT (cto._to IS NOT NULL)
             OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
-            WHERE   p._to   IS NULL AND
-                    ct._to  IS NULL AND
-                    t._to   IS NULL AND
-                    cto._to IS NULL AND
-                    vso._to IS NULL
+                WHERE NOT (vso._to IS NOT NULL)
             RETURN DISTINCT
                 p.nanoid as property_id,
                 p.handle as property_handle,
