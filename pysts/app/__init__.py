@@ -25,7 +25,9 @@ babel = Babel()
 
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    # see: "Application Object -> About the First Parameter"
+    # at https://flask.palletsprojects.com/en/1.1.x/api/#flask.g
+    app = Flask(__name__.split('.')[0])
     app.config.from_object(config_class)
 
     db.init_app(app)
