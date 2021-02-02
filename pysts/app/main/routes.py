@@ -18,7 +18,6 @@ from flask import (
     send_from_directory
 )
 from flask_login import current_user, login_required
-from flask_babel import _, get_locale
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
@@ -37,7 +36,7 @@ def before_request():
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
         g.search_form = SearchForm()
-    g.locale = str(get_locale())
+    g.locale = 'EN_US'
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -46,13 +45,10 @@ def before_request():
 def index():
     form = PostForm()
     if form.validate_on_submit():
-        language = guess_language(form.post.data)
-        if language == "UNKNOWN" or len(language) > 5:
-            language = ""
         post = Post(body=form.post.data, author=current_user, language=language)
         db.session.add(post)
         db.session.commit()
-        flash(_("Your post is now live!"))
+        flash("Your post is now live!")
         return redirect(url_for("main.index"))
     page = request.args.get("page", 1, type=int)
     posts = current_user.followed_posts().paginate(
@@ -62,7 +58,7 @@ def index():
     prev_url = url_for("main.index", page=posts.prev_num) if posts.has_prev else None
     return render_template(
         "index.html",
-        title=_("Home"),
+        title="Home",
         form=form,
         posts=posts.items,
         next_url=next_url,
@@ -90,7 +86,7 @@ def models(name=None):
         else:
             return render_template(
                 "mdb-model.html",
-                title=_("Model: {}".format(model_.handle)),
+                title="Model: {}".format(model_.handle),
                 mdb=model_,
                 subtype="main.models",
                 display="detail",
@@ -100,7 +96,7 @@ def models(name=None):
         models_ = m.get_list_of_models()
         return render_template(
             "mdb-model.html",
-            title=_("Models"),
+            title="Models",
             mdb=models_,
             subtype="main.models",
             display="list",
@@ -132,7 +128,7 @@ def nodes(nodeid):
         form = EditNodeForm()
         if form.validate_on_submit():
             m.update_node_by_id(id, form.nodeHandle.data)
-            flash(_("Your changes have been saved."))
+            flash("Your changes have been saved.")
             return redirect(url_for("main.nodes", id=id))
 
         elif request.method == "GET":
@@ -143,7 +139,7 @@ def nodes(nodeid):
             else:
                 return render_template(
                     "mdb-node.html",
-                    title=_("Node"),
+                    title="Node",
                     mdb=node_,
                     subtype="main.nodes",
                     display="detail",
@@ -160,7 +156,7 @@ def nodes(nodeid):
         else:
             return render_template(
                 "mdb.html",
-                title=_("Nodes in Model {}".format(model)),
+                title="Nodes in Model {}".format(model),
                 mdb=nodes_,
                 subtype="main.nodes",
                 display="tuple",
@@ -173,7 +169,7 @@ def nodes(nodeid):
     else:
         return render_template(
             "mdb.html",
-            title=_("Nodes"),
+            title="Nodes",
             mdb=nodes_,
             subtype="main.nodes",
             display="tuple",  # from list
@@ -210,7 +206,7 @@ def properties(propid):
         else:
             return render_template(
                 "mdb-property.html",
-                title=_("Property: "),
+                title="Property: ",
                 mdb=p_,
                 subtype="main.properties",
                 display="detail",
@@ -224,7 +220,7 @@ def properties(propid):
         else:
             return render_template(
                 "mdb.html",
-                title=_("Properties"),
+                title="Properties",
                 mdb=p_,
                 subtype="main.properties",
                 display="prop-tuple",  # from list
@@ -262,7 +258,7 @@ def valuesets(valuesetid):
         else:
             return render_template(
                 "mdb-valueset.html",
-                title=_("Value Set: "),
+                title="Value Set: ",
                 mdb=vs_,
                 subtype="main.valuesets",
                 display="detail",
@@ -275,7 +271,7 @@ def valuesets(valuesetid):
         else:
             return render_template(
                 "mdb.html",
-                title=_("Value Sets"),
+                title="Value Sets",
                 mdb=vs_,
                 subtype="main.valuesets",
                 display="list",
@@ -309,12 +305,12 @@ def terms(termid):
         if editform.validate_on_submit():
             # go and make actual changes ...
             m.update_term_by_id(id, editform.termvalue.data)
-            flash(_("Your changes have been saved."))
+            flash("Your changes have been saved.")
             return redirect(url_for("main.terms", id=id))
 
         elif deprecateform.validate_on_submit():
             m.deprecate_term(id)
-            flash(_("Term has been deprecated."))
+            flash("Term has been deprecated.")
             return redirect(url_for("main.terms"))
 
         if request.method == "GET":
@@ -325,7 +321,7 @@ def terms(termid):
             else:
                 return render_template(
                     "mdb-term.html",
-                    title=_("Term"),
+                    title="Term",
                     mdb=term_,
                     subtype="main.terms",
                     display="detail",
@@ -339,7 +335,7 @@ def terms(termid):
         else:
             return render_template(
                 "mdb.html",
-                title=_("Terms"),
+                title="Terms",
                 mdb=terms_,
                 subtype="main.terms",
                 display="term-tuple",
@@ -368,7 +364,7 @@ def origins(originid):
 
     return render_template(
         "mdb.html",
-        title=_("Origins"),
+        title="Origins",
         mdb=origins_,
         subtype="main.origins",
         display="list",
@@ -413,12 +409,12 @@ def edit_profile():
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
         db.session.commit()
-        flash(_("Your changes have been saved."))
+        flash("Your changes have been saved.")
         return redirect(url_for("main.edit_profile"))
     elif request.method == "GET":
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
-    return render_template("edit_profile.html", title=_("Edit Profile"), form=form)
+    return render_template("edit_profile.html", title="Edit Profile", form=form)
 
 
 @bp.route("/search")
@@ -444,7 +440,7 @@ def search():
     )
     return render_template(
         "search.html",
-        title=_("Search"),
+        title="Search",
         hits=hits,
         next_url=next_url,
         prev_url=prev_url,
@@ -453,13 +449,13 @@ def search():
 @bp.route("/about-mdb")
 @login_required
 def about_mdb():
-    return render_template("about-mdb.html", title=_("About MDB"))
+    return render_template("about-mdb.html", title="About MDB")
 
 
 @bp.route("/about-sts")
 @login_required
 def about_sts():
-    return render_template("about-sts.html", title=_("About STS"))
+    return render_template("about-sts.html", title="About STS")
 
 
 @bp.errorhandler(413)
