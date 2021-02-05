@@ -1,0 +1,14 @@
+version: '2'
+services:
+  bento-neo4j:
+    image: 'maj1/test-db-bento-meta'
+    ports:
+      - "8474:7474"
+      - "8473:7473"
+      - "8687:7687"
+  plain-neo4j:
+    image: 'maj1/test-plain-db-bento-meta'
+    ports:
+      - "7474"
+      - "7473"
+      - "7687"

@@ -19,14 +19,14 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from guess_language import guess_language
+# from guess_language import guess_language
 from app import db, logging
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm, DiffForm
 import app.search
 from app.models import User, Post, Entity
 from app.main import bp
 from app.util import get_yaml_for
-import app.mdb
+import app.cypher
 from app.arc import diff_mdf
 
 
@@ -57,7 +57,7 @@ def index():
 @login_required
 def models(name=None):
     format = request.args.get("format")
-    m = app.mdb.mdb()
+    m = app.cypher.mdb()
 
     if name is not None:
         model_ = m.get_model_by_name(name)
@@ -68,7 +68,7 @@ def models(name=None):
 
         else:
             return render_template(
-                "mdb-model.html",
+                "mdb-model-list.html",
                 title="Model: {}".format(model_.handle),
                 mdb=model_,
                 subtype="main.models",
@@ -101,7 +101,7 @@ def nodes(nodeid):
 
     current_app.logger.warn('> NODES id {} and id_{} and nodeid {}'.format(id, id_, nodeid ))
 
-    m = app.mdb.mdb()
+    m = app.cypher.mdb()
 
     # A: single node
     if id is not None:
@@ -175,7 +175,7 @@ def properties(propid):
 
     current_app.logger.warn('> PROP id {} and id_{} and propid {}'.format(id, id_, propid ))
 
-    m = app.mdb.mdb()
+    m = app.cypher.mdb()
 
     # they specify property by id
     if id is not None:
@@ -227,7 +227,7 @@ def valuesets(valuesetid):
 
     current_app.logger.warn('> VS id {} and id_{} and valuesetid {}'.format(id, id_, valuesetid))
 
-    m = app.mdb.mdb()
+    m = app.cypher.mdb()
 
     if id is not None:
         vs_ = m.get_valueset_by_id(id, model)
@@ -277,7 +277,7 @@ def terms(termid):
 
     current_app.logger.warn('> TERMS id {} and id_{} and termid {}'.format(id, id_, termid))
 
-    m = app.mdb.mdb()
+    m = app.cypher.mdb()
 
     if id is not None:
         term_ = m.get_term_by_id(id)
@@ -339,7 +339,7 @@ def origins(originid):
 
     current_app.logger.warn('> ORIGIN id {} and id_{} and originid {}'.format(id, id_, originid))
 
-    m = app.mdb.mdb()
+    m = app.cypher.mdb()
 
     origins_ = m.get_list_of_origins()
     if format == "json":

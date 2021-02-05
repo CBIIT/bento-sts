@@ -11,8 +11,10 @@ from flask_moment import Moment
 from flask_dropzone import Dropzone
 from elasticsearch import Elasticsearch
 from config import Config
+from app.bento.n4jdb import N4jdb
 
 db = SQLAlchemy()
+n4jdb = N4jdb()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = "auth.login"

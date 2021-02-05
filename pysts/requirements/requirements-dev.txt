@@ -3,3 +3,8 @@
 ipykernel
 flake8
 black
+pytest==4.6.5
+pytest-runner==5.1
+docker-compose==1.28.2
+pytest-docker==0.10.1
+requests==2.20.0
