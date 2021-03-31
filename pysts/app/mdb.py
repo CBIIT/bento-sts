@@ -1,7 +1,10 @@
 import os
 import pprint
 import json
-from flask import url_for
+from collections import namedtuple
+from operator import attrgetter
+from app import db, logging
+from flask import url_for, current_app
 from neo4j import GraphDatabase
 from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
@@ -857,3 +860,55 @@ class mdb:
         with self.driver.session() as session:
             property_ = session.read_transaction(self._get_property_by_id_query, pid, model)
         return property_
+
+
+    @staticmethod
+    def _get_dataplan_query(tx, model=None):
+        result = []
+
+        # only get those terms associated with valuesets (some terms assoc w/ concepts)
+        if model is not None:
+            answers = tx.run(
+                """
+                MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
+                WHERE toLower(n.model) = toLower($model)
+                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
+                """,
+                model=model
+            )
+            for record in answers:
+                # row = {record["id"]: record["handle"]}
+                #row = (record["id"], record["handle"], record['property_model'], record['nhandle'], record['nid'])
+                #current_app.logger.warn('>>')
+                #current_app.logger.warn(record)
+                result.append(record)
+        return result
+
+    def get_dataplan(self, model=None):
+        with self.driver.session() as session:
+            current_app.logger.warn('have model {}'.format(model))
+            dataplan_records = session.read_transaction(self._get_dataplan_query, model)
+            formatted_dataplan = self.format_dataplan(dataplan_records)
+        return formatted_dataplan
+
+    def format_dataplan(self, dataplan):
+        """
+        explanation
+        iterate, put keys out front, containing an array (for table)
+        """
+        dict_of_tags = {}
+        tagged_record = namedtuple('datatag', ['node', 'node_nanoid', 'property', 'property_nanoid', 'tag_value'])
+        for row in dataplan:
+            tr = tagged_record(row[0], row[1], row[2], row[3], row[5])
+            tag = row[4]
+
+            if tag not in dict_of_tags:
+                dict_of_tags[tag] = []
+            dict_of_tags[tag].append(tr)
+
+        # sort by node
+        for tag in dict_of_tags:
+            stuff = dict_of_tags[tag]
+            sorted_stuff = sorted(stuff, key=lambda x: (x.node, x.property, x.tag_value))
+            dict_of_tags[tag] = sorted_stuff
+        return dict_of_tags
