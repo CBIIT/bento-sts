@@ -863,42 +863,48 @@ class mdb:
 
 
     @staticmethod
-    def _get_dataplan_query(tx, model=None):
+    def _get_tags_from_db(tx, model=None):
         result = []
 
-        # only get those terms associated with valuesets (some terms assoc w/ concepts)
-        if model is not None:
-            answers = tx.run(
+        current_app.logger.warn('yup... using model {}'.format(model))
+
+        query_against_all_models = """
+                MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
+                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
+        query_against_specific_model = """
                 MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
                 WHERE toLower(n.model) = toLower($model)
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
-                """,
-                model=model
-            )
-            for record in answers:
-                # row = {record["id"]: record["handle"]}
-                #row = (record["id"], record["handle"], record['property_model'], record['nhandle'], record['nid'])
-                #current_app.logger.warn('>>')
-                #current_app.logger.warn(record)
-                result.append(record)
+                """
+
+        db_records = None
+        if model is None:
+            db_records = tx.run(query_against_all_models,)
+            current_app.logger.warn(' point 2 ... using model {}'.format(model))
+        else:
+            db_records = tx.run(query_against_specific_model, model=model)
+            current_app.logger.warn(' point 3 ... using model {}'.format(model))
+        for record in db_records:
+            result.append(record)
+
         return result
 
-    def get_dataplan(self, model=None):
+    def get_tags(self, model=None):
         with self.driver.session() as session:
             current_app.logger.warn('have model {}'.format(model))
-            dataplan_records = session.read_transaction(self._get_dataplan_query, model)
-            formatted_dataplan = self.format_dataplan(dataplan_records)
-        return formatted_dataplan
+            tag_records = session.read_transaction(self._get_tags_from_db, model)
+            formatted_tags = self.format_tags_records(tag_records)
+        return formatted_tags
 
-    def format_dataplan(self, dataplan):
+    def format_tags_records(self, dataset):
         """
         explanation
         iterate, put keys out front, containing an array (for table)
         """
         dict_of_tags = {}
         tagged_record = namedtuple('datatag', ['node', 'node_nanoid', 'property', 'property_nanoid', 'tag_value'])
-        for row in dataplan:
+        for row in dataset:
             tr = tagged_record(row[0], row[1], row[2], row[3], row[5])
             tag = row[4]
 
@@ -912,3 +918,28 @@ class mdb:
             sorted_stuff = sorted(stuff, key=lambda x: (x.node, x.property, x.tag_value))
             dict_of_tags[tag] = sorted_stuff
         return dict_of_tags
+
+    def get_tag_keys(self, model=None):
+        with self.driver.session() as session:
+            current_app.logger.warn('have model {}'.format(model))
+            tag_records = session.read_transaction(self._get_tags_from_db, model)
+            formatted_tags = self.format_tag_keys(tag_records)
+        return formatted_tags
+
+    def format_tag_keys(self, tag_records):
+        """
+        explanation
+        iterate, put keys out front, containing an array (for table)
+        """
+        tag_keys = []
+        #tagged_record = namedtuple('datatag', ['node', 'node_nanoid', 'property', 'property_nanoid', 'tag_value'])
+        for row in tag_records:
+            tag_key = row[4]
+            tag_value = row[5]
+
+            if tag_key not in tag_keys:
+                tag_keys.append(tag_key)
+
+        # sort by node
+        tag_keys.sort()
+        return tag_keys    
