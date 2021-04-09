@@ -142,3 +142,7 @@ cython_debug/
 # app specific stuff
 app.db
 pysts.log*
+
+# DEVELOPER specific stuff
+TODO.md
+TODO.txt
