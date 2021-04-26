@@ -1,5 +1,5 @@
 from flask import Blueprint
 
-bp = Blueprint("datasubset", __name__)
+bp = Blueprint("datasubsets", __name__)
 
 from app.datasubsets import routes

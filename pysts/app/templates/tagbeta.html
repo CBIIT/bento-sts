@@ -8,6 +8,19 @@
     Trigger: {{ extra }}
     <br>
    
+    <div class="row justify-content-md-center">
+        <form action="{{ url_for('datasubsets.tagbeta') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <div class="col-sm-2">
+                {{ form.datasubsets.label }}
+                {{ form.datasubsets }}
+            </div>
+            <div class="col-sm-2">
+                {{ form.submit }}
+            </div>    
+        </form>
+    </div>        
+
     {% if formatted_tags %}
         {% for tag in formatted_tags %}
         <h2> {{ tag }} Tagged Nodes </h2>

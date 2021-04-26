@@ -943,3 +943,81 @@ class mdb:
         # sort by node
         tag_keys.sort()
         return tag_keys    
+
+
+    def get_dataset_tags(self, dataset=None, model=None):
+        with self.driver.session() as session:
+            current_app.logger.warn('have model {}'.format(model))
+            tag_records = session.read_transaction(self._get_dataset_tags_from_db, dataset, model)
+            formatted_tags = self.format_tags_records(tag_records)
+        return formatted_tags
+
+
+    @staticmethod
+    def _get_dataset_tags_from_db(tx, dataset=None, model=None):
+        result = []
+
+        current_app.logger.warn('getting for tag {} in model {}'.format(dataset, model))
+
+        query_ = """
+                MATCH (n:node)-[:has_property]->(p:property)-[:has_tag]->(t:tag)
+                WHERE toLower(n.model) = toLower($model)
+                AND   t.key = "submitter"
+                AND   t.value = $dataset
+                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
+                """
+
+        db_records = None
+        
+        db_records = tx.run(query_, dataset=dataset, model=model)
+        current_app.logger.warn(' point BB ... using model {}'.format(model))
+        for record in db_records:
+            result.append(record)
+
+        return result
+
+    def get_dataset_tag_choices(self):
+        with self.driver.session() as session:
+            tag_records = session.read_transaction(self._get_dataset_tag_choices_from_db)
+            # formatted_tags = self.format_tags_records(tag_records)
+        return tag_records
+
+    @staticmethod
+    def _get_dataset_tag_choices_from_db(tx, dataset=None, model=None):
+        result = ()
+
+        query_all_models_and_tag_choices = """
+            MATCH (n:node)-[:has_property]->(p:property)-[:has_tag]->(t:tag)
+            WHERE t.key = "submitter"
+            RETURN distinct n.model, t.value
+            ORDER by n.model ASC, t.value ASC
+            """
+
+        db_records = tx.run(query_all_models_and_tag_choices)
+
+        # convert into nested tuple structure for optgroup selectfield
+        # ('ICDC', (                <-  option
+        #    ('NCATS', 'NCATS'),    <-  key, value pairs for selectfield
+        #    ('Glioma', 'Glioma'),
+        #    ('UBC01', 'UBC01')
+        # )),
+
+        # pt 1. organize for optgroup
+        temp_results = {}
+        for record in db_records:
+            mdl = record[0]
+            ky = record[1]
+            #print(mdl)
+            #print(ky)
+            mdlky = mdl + "----" + ky
+            if mdl not in temp_results:
+                temp_results[mdl] = ()
+            temp_results[mdl] += ((mdlky, ky),)
+
+        # pt 2. casting from dict to tuple needed for optgroup
+        for m in temp_results:
+            result += (m, temp_results[m])
+
+        print('')
+        print((result,))
+        return (result,)
