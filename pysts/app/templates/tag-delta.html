@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h1> Tags</h1>
+    <br>
+    Trigger: {{ extra }}
+    <br>
+   
+    <div class="container">
+        <form action="{{ url_for('datasubsets.tagdelta') }}" method="POST">
+            {{ form.hidden_tag() }}    
+        
+            <div class="row align-items-start">     
+                <div class="col-xl-6"> 
+                        {{ form.aset.label }}
+                        {{ form.aset }}
+                </div>   
+            
+                <div class="col-xl-6">
+                        {{ form.bset.label }}
+                        {{ form.bset }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xl-6"> 
+
+                    {{ form.submit }}
+                </div>
+                <div class="col-xl-6"> 
+                    &nbsp;
+                </div>
+            </div>
+            </form>
+            
+            <!--
+            <div class="col-lg-3">
+                <form action="{{ url_for('datasubsets.tagdelta') }}" method="POST">
+                    {{ newform.hidden_tag() }}
+                <div class="row">
+                    {{ newform.newsubset_model.label }}
+                </div>
+                <div class="row">
+                    {{ newform.newsubset_model }}
+                </div>
+                
+                <div class="row">
+                    {{ newform.newsubset_tag.label }}
+                </div>
+                <div class="row">
+                    {{ newform.newsubset_tag }}
+                </div>
+                
+                <div class="row">
+                    {{ newform.submit }}
+                </div>
+                </form>
+            </div>
+            -->   
+             
+
+         
+         <div class="row ">
+            <div class="col-xl-6"> 
+                {% if formatteda %}
+                {% for tag in formatteda %}
+                <h2> {{ taga }} Tagged Nodes </h2>
+                
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Node</th>
+                            <th>Property</th>
+                            <!--<th>Tag name</th>-->
+                        </tr>
+                        {% for row in formatteda[tag] %}
+                            <tr>
+                                <td> <a href="{{url_for("main.nodes", id=row[1] ) }}">{{ row[0] }}</a> </td>
+                                <td> <a href="{{url_for("main.properties", id=row[3] ) }}">{{ row[2] }}</a> </td>
+                                <!--<td> {{row[4]}} </td> -->
+                            </tr>
+                        {% endfor %}
+                    </table>
+
+                <br><br>
+                {% endfor %} 
+                {% else %}
+                No tags were found
+                 {% endif %}
+            </div>
+
+            <div class="col-xl-6"> 
+                    {% if formattedb %}
+                    {% for tag in formattedb %}
+                    <h2> {{ tagb }} Tagged Nodes </h2>
+
+                        <table class="table table-striped">
+                            <tr>
+                                <th>Node</th>
+                                <th>Property</th>
+                                <!--<th>Tag name</th>-->
+                            </tr>
+                            {% for row in formattedb[tag] %}
+                                <tr>
+                                    <td> <a href="{{url_for("main.nodes", id=row[1] ) }}">{{ row[0] }}</a> </td>
+                                    <td> <a href="{{url_for("main.properties", id=row[3] ) }}">{{ row[2] }}</a> </td>
+                                    <!--<td> {{row[4]}} </td>-->
+                                </tr>
+                            {% endfor %}
+                        </table>
+
+                    <br><br>
+                    {% endfor %} 
+                    {% else %}
+                    No tags were found
+                    {% endif %}
+            </div> <!--end col-->
+        </div> <!-- end row-->
+    </div>
+
+{% endblock %}

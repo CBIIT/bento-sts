@@ -22,11 +22,12 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
-from app.datasubsets.forms import ChooseSubsetForm, gammaSubsetForm
+from app.datasubsets.forms import ChooseSubsetForm, gammaSubsetForm, deltaOneForm, deltaTwoForm
 from app.models import User, Post, Entity
 from app.datasubsets import bp
 from app.datasubsets.decon import get_model_and_tag
 import app.mdb
+
 
 
 @bp.route("/datasubsets", methods=["GET", "POST"])
@@ -220,7 +221,63 @@ def taggamma():
     return render_template(
         "tag-gamma.html",
         form=tagform,
-        extra="D",
+        extra="G",
         model=model_,
         formatted_tags=plan_
+    )
+
+@bp.route("/tag-delta", methods=["GET", "POST"])
+@login_required
+def tagdelta():
+
+    model_a = None
+    plan_a = None
+    tag_a = None
+    model_b = None
+    plan_b = None
+    tag_b = None
+
+    m = app.mdb.mdb()
+    optgroup_ = m.get_dataset_tag_choices()
+    avail_models_ = m.get_list_of_models()
+    print('logging, now looking for list {} '.format(avail_models_))
+
+    oneform = deltaOneForm()
+    oneform.aset.choices = optgroup_
+    oneform.bset.choices = optgroup_
+
+    newtagform = deltaTwoForm()
+    newtagform.newsubset_model.choices = [[x, x] for x in avail_models_]
+
+    print('logging, now examining newtagform {} '.format(newtagform.newsubset_model.choices))
+
+    if oneform.validate_on_submit():
+        # hack as a way to extract the model and tag from the choice/html form
+        if (oneform.aset.data):
+            model_a, tag_a = get_model_and_tag(oneform.aset.data)
+            print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
+            plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
+        if (oneform.bset.data):
+            model_b, tag_b = get_model_and_tag(oneform.bset.data)
+            print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
+            plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
+
+    #if newtagform.validate_on_submit():
+    #    model_ = newtagform.newsubset_model.data()
+    #    tag_  = newtagform.newsubset_tag.data()
+    #    print('logging, now looking to create new tag for model {} and tag {}'.format(model_, tag_))
+
+
+    return render_template(
+        "tag-delta.html",
+        form=oneform,
+        newform=newtagform,
+        extra="D",
+        taga=tag_a,
+        modela=model_a,
+        formatteda=plan_a,
+        tagb=tag_b,
+        modelb=model_b,
+        formattedb=plan_b
+
     )

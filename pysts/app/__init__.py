@@ -9,6 +9,7 @@ from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_dropzone import Dropzone
+from flask_wtf.csrf import CSRFProtect
 from elasticsearch import Elasticsearch
 from config import Config
 
@@ -20,6 +21,7 @@ login.login_message = "Please log in to access this page."
 mail = Mail()
 bootstrap = Bootstrap()
 moment = Moment()
+csrf = CSRFProtect()
 
 
 def create_app(config_class=Config):
@@ -34,6 +36,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     bootstrap.init_app(app)
     moment.init_app(app)
+    csrf.init_app(app)
     app.elasticsearch = (
         Elasticsearch([app.config["ELASTICSEARCH_URL"]])
         if app.config["ELASTICSEARCH_URL"]

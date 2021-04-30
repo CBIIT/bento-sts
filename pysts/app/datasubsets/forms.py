@@ -13,3 +13,15 @@ class ChooseSubsetForm(FlaskForm):
 class gammaSubsetForm(FlaskForm):
     datasubsets = SelectField("Data Subset ", )
     submit = SubmitField("Select Data Subset")
+
+class deltaOneForm(FlaskForm):
+    aset = SelectField("Data Subset ", )
+    bset = SelectField("Data Subset ", )
+    submit = SubmitField("Select Data Subset")
+
+class deltaTwoForm(FlaskForm):
+    newsubset_model = SelectField("Model for New Subset ", choices=[])
+    newsubset_tag = StringField('Name of New Subset')
+
+    submit = SubmitField("Create New Data Subset")
+
