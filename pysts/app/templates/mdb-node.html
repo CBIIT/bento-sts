@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
+{% from 'bootstrap/form.html' import render_form, render_field, render_hidden_errors %}
 
 {% block app_content %}
     <br>
@@ -45,12 +45,12 @@
             <div class="modal-body">
     
                         {{ form.hidden_tag() }}
-                        {{ wtf.form_errors(form, hiddens="only") }}
-                        {{ wtf.form_field(form.nodeHandle) }}
+                        {{ render_hidden_errors(form) }}
+                        {{ render_field(form.nodeHandle) }}
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-              {{ wtf.form_field(form.submit) }}
+              {{ render_field(form.submit) }}
             </div>
             </form>
           </div>

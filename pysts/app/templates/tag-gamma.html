@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
+{% from 'bootstrap/form.html' import render_form, render_field %}
 
 {% block app_content %}
     <br>
@@ -8,18 +8,28 @@
     Trigger: {{ extra }}
     <br>
    
-    <div class="row justify-content-md-center">
-        <form action="{{ url_for('datasubsets.taggamma') }}" method="POST">
-            {{ form.hidden_tag() }}
+    <div class="container">
+        <div class="row justify-content-md-center">
             <div class="col-sm-2">
-                {{ form.datasubsets.label }}
-                {{ form.datasubsets }}
-            </div>
-            <div class="col-sm-2">
-                {{ form.submit }}
-            </div>    
-        </form>
-    </div>        
+                <form action="{{ url_for('datasubsets.taggamma') }}" method="POST">
+                    {{ form.hidden_tag() }}
+                <div class="row">
+                    {{ form.datasubsets.label }}
+                </div>
+                <div class="row">
+                    {{ form.datasubsets }}
+                </div>
+                <div class="row">
+                    {{ form.submit }}
+                </div>
+                </form>
+            </div>   
+            
+             
+         </div>
+    </div>       
+    
+    
 
     {% if formatted_tags %}
     {% for tag in formatted_tags %}
