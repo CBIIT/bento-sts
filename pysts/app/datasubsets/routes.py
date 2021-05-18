@@ -283,10 +283,11 @@ def tagdelta():
                 plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
                 print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
         if (oneform.create.data):
-            if (oneform.newsubset_model.data is not None and oneform.newsubset_tag.data is not None):
+            tag = oneform.newsubset_tag.data.strip()
+            if (oneform.newsubset_model.data is not None and tag is not None and tag != ''):
                 newtagid = m.create_submitter_tag_for_model(oneform.newsubset_model.data, oneform.newsubset_tag.data)
                 print('logging, created new tag {}'.format(newtagid)) 
-                return redirect(url_for('datasubsets.tag-delta'))
+                return redirect(url_for('datasubsets.tagdelta'))
 
     return render_template(
         "tag-delta.html",

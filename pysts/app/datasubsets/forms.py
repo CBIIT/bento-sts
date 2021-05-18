@@ -18,6 +18,6 @@ class deltaOneForm(FlaskForm):
     aset = SelectField("Data Subset ", )
     bset = SelectField("Data Subset ", )
     newsubset_model = SelectField("Model for New Subset ", )
-    newsubset_tag = StringField('Name of New Subset', [Optional()])
+    newsubset_tag = StringField('Name of New Subset', [Optional(strip_whitespace=True)])
     submit = SubmitField("Submit")
     create = SubmitField("Create")

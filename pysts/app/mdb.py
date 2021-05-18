@@ -1050,7 +1050,7 @@ class mdb:
     #       so I can create "empty" datasets
     @staticmethod
     def _get_submitter_tag_choices_from_db(tx, model=None):
-        result = []
+        result = ()
 
         current_app.logger.warn('.yup... using model {}'.format(model))
 
@@ -1089,20 +1089,23 @@ class mdb:
         for record in db_records:
             mdl = record[0]
             ky = record[1]
-            #print(mdl)
-            #print(ky)
+            print(' model is {}'.format(mdl))
+            print(' key is {}'.format(ky))
             mdlky = mdl + "----" + ky
             if mdl not in temp_results:
                 temp_results[mdl] = ()
-            temp_results[mdl] += ((mdlky, ky),)
+            arglbargl = temp_results[mdl]
+            funkmeister = (mdlky, ky)
+            temp_results[mdl] = arglbargl + (funkmeister,)
 
         # pt 2. casting from dict to tuple needed for optgroup
         for m in temp_results:
-            result += (m, temp_results[m])
+            flashmasterj = (m, temp_results[m])
+            result = result + (flashmasterj,)
 
         print('')
-        print((result,))
-        return (result,)
+        print(result)
+        return result
 
     def create_submitter_tag_for_model(self, model=None, tag=None):
         with self.driver.session() as session:
