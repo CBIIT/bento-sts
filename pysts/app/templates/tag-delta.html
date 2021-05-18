@@ -30,7 +30,7 @@
                     {{ render_field(form.submit, button_map={'submit': 'primary' }) }}
                 </div>
                 <div class="col-4">             
-                    {{ render_field(form.submit, button_map={'submit': 'primary' }) }}
+                    &nbsp;
                 </div>
                 <div class="col-4">             
                     {{ render_field(form.create, button_map={'create': 'secondary' }) }}
@@ -47,13 +47,13 @@
             <div class="col"> 
                 {% if formatteda %}
                 {% for tag in formatteda %}
-                <h2> {{ taga }}Nodes </h2>
+                <h2> MAIN: {{ taga }}</h2>
                 
                     <table class="table table-striped">
                         <tr>
                             <th>Node</th>
                             <th>Property</th>
-                            <th>Remove</th>
+                            <th>Remove from MAIN</th>
                         </tr>
                         {% for row in formatteda[tag] %}
                             <tr>
@@ -75,13 +75,13 @@
                 <form action="{{ url_for('datasubsets.tagphi') }}" method="POST">
                     {% if formattedb %}
                     {% for tag in formattedb %}
-                    <h2> {{ tagb }} Nodes </h2>
+                    <h2> REF: {{ tagb }} </h2>
 
                         <table class="table table-striped">
                             <tr>
                                 <th>Node</th>
                                 <th>Property</th>
-                                <th>Add</th>
+                                <th>Add to MAIN</th>
                                 <!--<th>Tag name</th>-->
                             </tr>
                             {% for row in formattedb[tag] %}
