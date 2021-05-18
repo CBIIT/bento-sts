@@ -2,55 +2,101 @@
 {% from 'bootstrap/form.html' import render_form, render_field %}
 
 {% block app_content %}
-    <br>
-    <nav aria-label="...">
-        <ul class="pager">
-      <li class="model">
-         <a href="{{ url_for('main.models') }}"> List Models </a>
-      </li>
-      <li class="nodes">
-         <a href="{{ url_for('main.nodes') }}"> List Nodes </a>
-      </li>
-      <li class="properties">
-         <a href="{{ url_for('main.properties') }}"> List Properties </a>
-      </li>
-      <li class="terms">
-         <a href="{{ url_for('main.terms') }}"> List Terms </a>
-      </li>
-      <li class="origins">
-         <a href="{{ url_for('main.origins') }}"> List Origins </a>
-      </li>
-    </ul>
-    </nav>
 
+<div class="container">
+   <div class="row">
+       <div class="col-6">
+
+            <br>
+            <h4> Model Data Browser</h4>
+            <nav aria-label="...">
+               <ul class="pager">
+               <li class="model">
+                  <a href="{{ url_for('main.models') }}"> List Models </a>
+               </li>
+               <li class="nodes">
+                  <a href="{{ url_for('main.nodes') }}"> List Nodes </a>
+               </li>
+               <li class="properties">
+                  <a href="{{ url_for('main.properties') }}"> List Properties </a>
+               </li>
+               <li class="terms">
+                  <a href="{{ url_for('main.terms') }}"> List Terms </a>
+               </li>
+               <li class="origins">
+                  <a href="{{ url_for('main.origins') }}"> List Origins </a>
+               </li>
+            </ul>
+            </nav> 
+         <br>
+         <h4> MDF Diff </h4>
+         <ul class="pager">
+         <li class="diff">
+            <a href="{{ url_for( 'main.diff') }}"> Find the diff between 2 MDF files</a>
+            </li>
+         </ul>
+
+         <br>
+         <h4> Data Subsets</h4>
+         <ul class="pager">
+               <li class="tags">
+                     <a href="{{ url_for('datasubsets.tags') }}"> List All Tagged Data</a>
+               </li>
+               <li class="tag-select">
+                     <a href="{{ url_for('datasubsets.tagselect') }}"> Select Data Subsets</a>
+               </li>
+               <li class="tag-delta">
+                     <a href="{{ url_for('datasubsets.tagdelta') }}"> Edit Data Subsets</a>
+               </li>
+               <li class="tag-export">
+                     <a href="{{ url_for('datasubsets.tagexport') }}"> Export Data Plan</a>
+               </li>
+         </ul>
+
+      </div>
+
+<div class="col-6">
+      <br>
+      <h4> About </h4>
+      <ul class="pager">
+        <li class="aboutmdb">
+         <a href="{{ url_for( 'main.about_mdb') }}">About MDB</a>
+        </li>
+        <li>
+         <a href="{{ url_for( 'main.about_sts') }}">About STS</a> and how to filter
+        </li>
+       </ul> 
+
+   <br>
+   <h4> Reports and Version History</h4>
    <ul class="pager">
-      <li class="index">
-         <a href="{{ url_for('datasubsets.index') }}"> List Tag Index - list all tags one page </a>
+      <li class="reports">
+         <a href="{{ url_for('main.reports') }}"> Releases and Data Reports</a>
       </li>
-      <li class="tags">
-         <a href="{{ url_for('datasubsets.tags') }}"> List Tags - defferent tags()</a>
-      </li>
-      <li class="tagbeta">
-         <a href="{{ url_for('datasubsets.tagbeta') }}"> List Tags beta - show all icdc one page or ctdc one page</a>
-      </li>
-      <li class="taggamma">
-         <a href="{{ url_for('datasubsets.taggamma') }}"> List Tags gamma - do select avail tags (context select) ICDC -> </a>
-      </li>
-      <li class="tagdelta">
-         <a href="{{ url_for('datasubsets.tagdelta') }}"> List Tags delta - show paired datasets</a>
-      </li>
-      <li class="tagepsilon">
-         <a href="{{ url_for('datasubsets.tagepsilon') }}"> List Tags epsilon - show tags, using tag's model</a>
-      </li>
-   </ul>
+        <li class="version-history">
+              <a href="{{ url_for('main.versionhistory') }}"> Version History</a>
+        </li>
+      </ul>     
 
+   <br>
+   <h4> External Resources</h4>
+   <ul class="pager">
 
-    <br><br>
-    <div>
-    <h4><a href="{{ url_for( 'main.about_mdb') }}">About MDB</a></h4>
-    <br>
-    <h4><a href="{{ url_for( 'main.about_sts') }}">About STS</a> and how to filter</h4>
-    <br>
-    <h4><a href="{{ url_for( 'main.diff') }}">MDF Diff</a> -- Find the diff between 2 MDF files</h4>
+      <li class="ncit">
+         <a href="https://ncithesaurus.nci.nih.gov/ncitbrowser/"> NCI Thesaurus</a>
+      </li>
+        <li class="evs">
+              <a href="https://evs.nci.nih.gov/"> NCI EVS</a>
+        </li>
+        <li class="cde">
+         <a href="https://cdebrowser.nci.nih.gov/cdebrowserClient/cdeBrowser.html#/search"> NCI CDE Browser </a>
+      </li>
+      <li class="umls">
+         <a href="https://www.nlm.nih.gov/research/umls/index.htm"> UMLS</a>
+      </li>
+      </ul>
+   </div>
+
+</div>
 </div>
 {% endblock %}

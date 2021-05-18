@@ -99,9 +99,9 @@ def tagbeta():
     )
 
 
-@bp.route("/tag-gamma", methods=["GET", "POST"])
+@bp.route("/tag-select", methods=["GET", "POST"])
 @login_required
-def taggamma():
+def tagselect():
 
     model_ = None
     plan_ = None
@@ -221,7 +221,7 @@ def taggamma():
         #current_app.logger.warn('point 4 got... {}'.format(plan_))
 
     return render_template(
-        "tag-gamma.html",
+        "tag-select.html",
         form=tagform,
         extra="G",
         model=model_,
@@ -293,14 +293,14 @@ def tagdelta():
                 print('--------')
                 print('plan_b is {}'.format(plan_b))
 
-                for datatag in plan_b['submitter']:
-                    #print('====')
-                    nanoid = datatag[3]
-                    print('test >> {}'.format(nanoid))
-                    setattr(F, str(nanoid), SubmitField(label="Add"))
-                    #msg = TextAreaField(id=1,default="hi",_name="1")
-                    #setattr(F, str("Add"), TextAreaField(description=str(nanoid)))
-
+                if 'submitter' in plan_b:
+                    for datatag in plan_b['submitter']:
+                        #print('====')
+                        nanoid = datatag[3]
+                        print('test >> {}'.format(nanoid))
+                        setattr(F, str(nanoid), SubmitField(label="Add"))
+                        #msg = TextAreaField(id=1,default="hi",_name="1")
+                        #setattr(F, str("Add"), TextAreaField(description=str(nanoid)))
 
         if (oneform.create.data):
             tag = oneform.newsubset_tag.data.strip()
@@ -393,3 +393,8 @@ def tagphi():
     print('yup')
 
     return redirect(url_for('datasubsets.tagdelta'))
+
+@bp.route("/tag-export", methods=["GET", "POST"])
+@login_required
+def tagexport():
+        return render_template("tag-export.html")
