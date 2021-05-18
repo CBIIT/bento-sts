@@ -245,12 +245,11 @@ def tagdelta():
     oneform = deltaOneForm()
     oneform.aset.choices = optgroup_
     oneform.bset.choices = optgroup_
-    possible_avail_models_ = [[x, x] for x in avail_models_]
-
-    print('logging, now examining oneform newsubset model {} '.format(possible_avail_models_))
-
-    #button_id = request.args.get('buttonname')
-    #print('A HA !! button FOUND {} '.format(button_id))
+    possible_avail_models_ = [(x, x) for x in avail_models_]
+    possible_avail_models_ = tuple(possible_avail_models_)    
+    oneform.newsubset_model.choices = possible_avail_models_
+    
+    #print('logging, now examining oneform newsubset model {} '.format(possible_avail_models_))
 
     if oneform.validate_on_submit():
         print(' ... submit data {}'.format(oneform.submit.data))
