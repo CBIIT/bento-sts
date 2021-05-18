@@ -22,6 +22,29 @@
       </li>
     </ul>
     </nav>
+
+   <ul class="pager">
+      <li class="index">
+         <a href="{{ url_for('datasubsets.index') }}"> List Tag Index - list all tags one page </a>
+      </li>
+      <li class="tags">
+         <a href="{{ url_for('datasubsets.tags') }}"> List Tags - defferent tags()</a>
+      </li>
+      <li class="tagbeta">
+         <a href="{{ url_for('datasubsets.tagbeta') }}"> List Tags beta - show all icdc one page or ctdc one page</a>
+      </li>
+      <li class="taggamma">
+         <a href="{{ url_for('datasubsets.taggamma') }}"> List Tags gamma - do select avail tags (context select) ICDC -> </a>
+      </li>
+      <li class="tagdelta">
+         <a href="{{ url_for('datasubsets.tagdelta') }}"> List Tags delta - show paired datasets</a>
+      </li>
+      <li class="tagepsilon">
+         <a href="{{ url_for('datasubsets.tagepsilon') }}"> List Tags epsilon - show tags, using tag's model</a>
+      </li>
+   </ul>
+
+
     <br><br>
     <div>
     <h4><a href="{{ url_for( 'main.about_mdb') }}">About MDB</a></h4>

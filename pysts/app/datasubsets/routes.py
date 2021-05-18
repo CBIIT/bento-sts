@@ -281,3 +281,61 @@ def tagdelta():
         formattedb=plan_b
 
     )
+
+
+@bp.route("/tag-epsilon", methods=["GET", "POST"])
+@login_required
+def tagepsilon():
+
+    model_ = None
+    plan_ = None
+    tag_ = None
+
+    m = app.mdb.mdb()
+    optgroup_ = m.get_submitter_tag_choices()
+
+    tagform = gammaSubsetForm()
+    
+    tagform.datasubsets.choices = optgroup_
+
+    if tagform.validate_on_submit():
+
+        if (0):
+            #model = tagform.datasubsets.data
+            #model_ = tagform.datasubsets.data.label
+            import pprint
+            pprint.pprint(dir(tagform.datasubsets))
+            print("\ndata is ")
+            pprint.pprint(tagform.datasubsets.data)
+            print("\nid is ")
+            pprint.pprint(tagform.datasubsets.id)
+            print("\nchoice_values is ")
+            pprint.pprint(tagform.datasubsets.choice_values)
+            print("\nname is ")
+            pprint.pprint(tagform.datasubsets.name)
+            print("\nlabel is ")
+            pprint.pprint(tagform.datasubsets.label)
+            print("\nmeta is ")
+            pprint.pprint(tagform.datasubsets.meta)
+            print("\noption_widget is ")
+            pprint.pprint(tagform.datasubsets.option_widget)
+            print("\nraw_Data is ")
+            pprint.pprint(tagform.datasubsets.raw_data)
+            print("\ngettext is ")
+            pprint.pprint(tagform.datasubsets.gettext)
+
+        model_, tag_ = get_model_and_tag(tagform.datasubsets.data)
+        print('logging, now looking for model {} and tag {}'.format(model_, tag_))
+        #if model is None:
+        #    model = 'All Model'
+        plan_ = m.get_dataset_tags(dataset=tag_, model=model_)
+
+        #current_app.logger.warn('point 4 got... {}'.format(plan_))
+
+    return render_template(
+        "tag-epsilon.html",
+        form=tagform,
+        extra="epsilon",
+        model=model_,
+        formatted_tags=plan_
+    )

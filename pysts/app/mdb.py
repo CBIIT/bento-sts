@@ -862,6 +862,10 @@ class mdb:
         return property_
 
 
+
+
+
+
     @staticmethod
     def _get_tags_from_db(tx, model=None):
         result = []
@@ -1021,3 +1025,71 @@ class mdb:
         print('')
         print((result,))
         return (result,)
+
+    def get_submitter_tag_choices(self, model=None):
+        with self.driver.session() as session:
+            tag_records = session.read_transaction(self._get_submitter_tag_choices_from_db, model)
+            # formatted_tags = self.format_tags_records(tag_records)
+        return tag_records
+
+    # note: there are a couple of approaches for getting tags from the database
+    #       one could get them by starting at node, and then going to property
+    #       but I'm now trying to also label the tag directly with {model:"ICDC"}
+    #       so I can create "empty" datasets
+    @staticmethod
+    def _get_submitter_tag_choices_from_db(tx, model=None):
+        result = []
+
+        current_app.logger.warn('.yup... using model {}'.format(model))
+
+        query_against_all_models = """
+                MATCH (t:tag)
+                WHERE t.key = 'submitter'
+                RETURN DISTINCT t.model, t.value
+                ORDER by t.model ASC, t.value ASC;
+                """
+        
+        query_against_specific_model = """
+                MATCH (t:tag)
+                WHERE toLower(t.model) = toLower($model)
+                AND   t.key = 'submitter'
+                RETURN DISTINCT t.model, t.value
+                ORDER by t.model ASC, t.value ASC;
+                """
+
+        db_records = None
+        if model is None:
+            db_records = tx.run(query_against_all_models,)
+            current_app.logger.warn('.point 22 ... using model {}'.format(model))
+        else:
+            db_records = tx.run(query_against_specific_model, model=model)
+            current_app.logger.warn('.point 23 ... using model {}'.format(model))
+        
+        # convert into nested tuple structure for optgroup selectfield
+        # ('ICDC', (                <-  option
+        #    ('NCATS', 'NCATS'),    <-  key, value pairs for selectfield
+        #    ('Glioma', 'Glioma'),
+        #    ('UBC01', 'UBC01')
+        # )),
+
+        # pt 1. organize for optgroup
+        temp_results = {}
+        for record in db_records:
+            mdl = record[0]
+            ky = record[1]
+            #print(mdl)
+            #print(ky)
+            mdlky = mdl + "----" + ky
+            if mdl not in temp_results:
+                temp_results[mdl] = ()
+            temp_results[mdl] += ((mdlky, ky),)
+
+        # pt 2. casting from dict to tuple needed for optgroup
+        for m in temp_results:
+            result += (m, temp_results[m])
+
+        print('')
+        print((result,))
+        return (result,)
+
+        return result
