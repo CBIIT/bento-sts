@@ -10,23 +10,23 @@
    
     <div class="container">
         <form action="{{ url_for('datasubsets.tagdelta') }}" method="POST">
-            {{ form.hidden_tag() }}    
+            {{ form.hidden_tag() }}  
+            {{ form.csrf_token() }}  
         
             <div class="row align-items-start">     
                 <div class="col-xl-6"> 
-                        {{ form.aset.label }}
-                        {{ form.aset }}
+                        {{ render_field(form.aset) }}
                 </div>   
             
                 <div class="col-xl-6">
-                        {{ form.bset.label }}
-                        {{ form.bset }}
+                        {{ render_field(form.bset) }}
                 </div>
             </div>
             <div class="row">
-                <div class="col-xl-6"> 
+                <div class="col-xl-6">
+                    {{ render_field(form.submit, button_map={'submit_button': 'primary' }) }}
 
-                    {{ form.submit }}
+                    {{ render_field(form.create, button_map={'create_button': 'secondary'}) }}
                 </div>
                 <div class="col-xl-6"> 
                     &nbsp;
@@ -34,30 +34,6 @@
             </div>
             </form>
             
-            <!--
-            <div class="col-lg-3">
-                <form action="{{ url_for('datasubsets.tagdelta') }}" method="POST">
-                    {{ newform.hidden_tag() }}
-                <div class="row">
-                    {{ newform.newsubset_model.label }}
-                </div>
-                <div class="row">
-                    {{ newform.newsubset_model }}
-                </div>
-                
-                <div class="row">
-                    {{ newform.newsubset_tag.label }}
-                </div>
-                <div class="row">
-                    {{ newform.newsubset_tag }}
-                </div>
-                
-                <div class="row">
-                    {{ newform.submit }}
-                </div>
-                </form>
-            </div>
-            -->   
              
 
          

@@ -22,7 +22,7 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
-from app.datasubsets.forms import ChooseSubsetForm, gammaSubsetForm, deltaOneForm, deltaTwoForm
+from app.datasubsets.forms import ChooseSubsetForm, gammaSubsetForm, deltaOneForm
 from app.models import User, Post, Entity
 from app.datasubsets import bp
 from app.datasubsets.decon import get_model_and_tag
@@ -245,33 +245,50 @@ def tagdelta():
     oneform = deltaOneForm()
     oneform.aset.choices = optgroup_
     oneform.bset.choices = optgroup_
+    possible_avail_models_ = [[x, x] for x in avail_models_]
 
-    newtagform = deltaTwoForm()
-    newtagform.newsubset_model.choices = [[x, x] for x in avail_models_]
+    print('logging, now examining oneform newsubset model {} '.format(possible_avail_models_))
 
-    print('logging, now examining newtagform {} '.format(newtagform.newsubset_model.choices))
+    #button_id = request.args.get('buttonname')
+    #print('A HA !! button FOUND {} '.format(button_id))
 
     if oneform.validate_on_submit():
+        print(' ... submit data {}'.format(oneform.submit.data))
+        print(' ... submit label {}'.format(oneform.submit.label))
+        print(' ... submit name {}'.format(oneform.submit.name))
+        print(' ... submit raw_data {}'.format(oneform.submit.raw_data))
+        print(' ... submit object_data {}'.format(oneform.submit.object_data))
+        print(' ... submit shortname {}'.format(oneform.submit.type  ))
+        print(' ... submit type {}'.format(oneform.submit.short_name  ))
+    
+        print(' ... create data {}'.format(oneform.create.data))
+        print(' ... create label {}'.format(oneform.create.label))
+        print(' ... create name {}'.format(oneform.create.name))
+        print(' ... create raw_data {}'.format(oneform.create.raw_data))
+        print(' ... create object_data {}'.format(oneform.create.object_data))
+        print(' ... create shortname {}'.format(oneform.create.type  ))
+        print(' ... create type {}'.format(oneform.create.short_name  ))
+    
+
         # hack as a way to extract the model and tag from the choice/html form
+        print('GOOD VALIDATION')
         if (oneform.aset.data):
             model_a, tag_a = get_model_and_tag(oneform.aset.data)
             print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
             plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
+            print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
         if (oneform.bset.data):
             model_b, tag_b = get_model_and_tag(oneform.bset.data)
             print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
             plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
-
-    #if newtagform.validate_on_submit():
-    #    model_ = newtagform.newsubset_model.data()
-    #    tag_  = newtagform.newsubset_tag.data()
-    #    print('logging, now looking to create new tag for model {} and tag {}'.format(model_, tag_))
+            print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
+    else:
+        print('BAD VALIDATION') 
 
 
     return render_template(
         "tag-delta.html",
         form=oneform,
-        newform=newtagform,
         extra="D",
         taga=tag_a,
         modela=model_a,
