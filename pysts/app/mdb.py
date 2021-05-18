@@ -990,12 +990,21 @@ class mdb:
     def _get_dataset_tag_choices_from_db(tx, dataset=None, model=None):
         result = ()
 
-        query_all_models_and_tag_choices = """
+        OLD_query_all_models_and_tag_choices = """
             MATCH (n:node)-[:has_property]->(p:property)-[:has_tag]->(t:tag)
             WHERE t.key = "submitter"
             RETURN distinct n.model, t.value
             ORDER by n.model ASC, t.value ASC
             """
+
+        NEW_query_all_models_and_tag_choices = """
+            MATCH (t:tag)
+            WHERE t.key = "submitter"
+            RETURN distinct t.model, t.value
+            ORDER by t.model ASC, t.value ASC
+            """
+
+        query_all_models_and_tag_choices = NEW_query_all_models_and_tag_choices
 
         db_records = tx.run(query_all_models_and_tag_choices)
 
@@ -1011,20 +1020,23 @@ class mdb:
         for record in db_records:
             mdl = record[0]
             ky = record[1]
-            #print(mdl)
-            #print(ky)
+            print(' model is {}'.format(mdl))
+            print(' key is {}'.format(ky))
             mdlky = mdl + "----" + ky
             if mdl not in temp_results:
                 temp_results[mdl] = ()
-            temp_results[mdl] += ((mdlky, ky),)
+            arglbargl = temp_results[mdl]
+            funkmeister = (mdlky, ky)
+            temp_results[mdl] = arglbargl + (funkmeister,)
 
         # pt 2. casting from dict to tuple needed for optgroup
         for m in temp_results:
-            result += (m, temp_results[m])
+            flashmasterj = (m, temp_results[m])
+            result = result + (flashmasterj,)
 
         print('')
-        print((result,))
-        return (result,)
+        print('result is {}'.format(result))
+        return result
 
     def get_submitter_tag_choices(self, model=None):
         with self.driver.session() as session:
@@ -1091,5 +1103,28 @@ class mdb:
         print('')
         print((result,))
         return (result,)
+
+    def create_submitter_tag_for_model(self, model=None, tag=None):
+        with self.driver.session() as session:
+            if (model is not None) and (tag is not None):
+                tag_records = session.read_transaction(self._create_submitter_tag_for_model, model, tag)
+                # formatted_tags = self.format_tags_records(tag_records)
+        return tag_records
+
+
+    @staticmethod
+    def _create_submitter_tag_for_model(tx, model=None, tag=None):
+        result = None
+
+        current_app.logger.warn('getting for tag {} in model {}'.format(model, tag))
+
+        create_tag_query_ = """
+                MERGE (t:tag {model:$model, key:"submitter", value:$tag})
+                RETURN id(t);
+                """
+
+        db_records = tx.run(create_tag_query_, model=model, tag=tag)
+        current_app.logger.warn('..point BB ... using model {}'.format(model))
+        result = db_records.single()[0]
 
         return result

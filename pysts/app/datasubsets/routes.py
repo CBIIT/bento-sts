@@ -236,11 +236,12 @@ def tagdelta():
     model_b = None
     plan_b = None
     tag_b = None
+    newtagid = None
 
     m = app.mdb.mdb()
     optgroup_ = m.get_dataset_tag_choices()
     avail_models_ = m.get_list_of_models()
-    print('logging, now looking for list {} '.format(avail_models_))
+    print('logging, point Y now looking for list {} '.format(avail_models_))
 
     oneform = deltaOneForm()
     oneform.aset.choices = optgroup_
@@ -249,7 +250,7 @@ def tagdelta():
     possible_avail_models_ = tuple(possible_avail_models_)    
     oneform.newsubset_model.choices = possible_avail_models_
     
-    #print('logging, now examining oneform newsubset model {} '.format(possible_avail_models_))
+    print('logging point Z')
 
     if oneform.validate_on_submit():
         print(' ... submit data {}'.format(oneform.submit.data))
@@ -257,33 +258,35 @@ def tagdelta():
         print(' ... submit name {}'.format(oneform.submit.name))
         print(' ... submit raw_data {}'.format(oneform.submit.raw_data))
         print(' ... submit object_data {}'.format(oneform.submit.object_data))
-        print(' ... submit shortname {}'.format(oneform.submit.type  ))
-        print(' ... submit type {}'.format(oneform.submit.short_name  ))
+        print(' ... submit shortname {}'.format(oneform.submit.type))
+        print(' ... submit type {}'.format(oneform.submit.short_name))
     
         print(' ... create data {}'.format(oneform.create.data))
         print(' ... create label {}'.format(oneform.create.label))
         print(' ... create name {}'.format(oneform.create.name))
         print(' ... create raw_data {}'.format(oneform.create.raw_data))
         print(' ... create object_data {}'.format(oneform.create.object_data))
-        print(' ... create shortname {}'.format(oneform.create.type  ))
-        print(' ... create type {}'.format(oneform.create.short_name  ))
+        print(' ... create shortname {}'.format(oneform.create.type))
+        print(' ... create type {}'.format(oneform.create.short_name))
     
-
-        # hack as a way to extract the model and tag from the choice/html form
-        print('GOOD VALIDATION')
-        if (oneform.aset.data):
-            model_a, tag_a = get_model_and_tag(oneform.aset.data)
-            print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
-            plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
-            print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
-        if (oneform.bset.data):
-            model_b, tag_b = get_model_and_tag(oneform.bset.data)
-            print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
-            plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
-            print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
-    else:
-        print('BAD VALIDATION') 
-
+        if (oneform.submit.data):
+            # hack as a way to extract the model and tag from the choice/html form
+            print('GOOD VALIDATION')
+            if (oneform.aset.data):
+                model_a, tag_a = get_model_and_tag(oneform.aset.data)
+                print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
+                plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
+                print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
+            if (oneform.bset.data):
+                model_b, tag_b = get_model_and_tag(oneform.bset.data)
+                print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
+                plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
+                print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
+        if (oneform.create.data):
+            if (oneform.newsubset_model.data is not None and oneform.newsubset_tag.data is not None):
+                newtagid = m.create_submitter_tag_for_model(oneform.newsubset_model.data, oneform.newsubset_tag.data)
+                print('logging, created new tag {}'.format(newtagid)) 
+                return redirect(url_for('datasubsets.tag-delta'))
 
     return render_template(
         "tag-delta.html",
@@ -294,8 +297,8 @@ def tagdelta():
         formatteda=plan_a,
         tagb=tag_b,
         modelb=model_b,
-        formattedb=plan_b
-
+        formattedb=plan_b,
+        newtagid=newtagid
     )
 
 
