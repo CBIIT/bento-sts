@@ -1,5 +1,6 @@
 # route.py
 
+from wtforms.fields.simple import SubmitField
 from app.datasubsets.forms import ChooseSubsetForm
 from datetime import datetime
 import os
@@ -22,11 +23,12 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
-from app.datasubsets.forms import ChooseSubsetForm, gammaSubsetForm, deltaOneForm
+from app.datasubsets.forms import ChooseSubsetForm, gammaSubsetForm, deltaOneForm, deltaTwoForm
 from app.models import User, Post, Entity
 from app.datasubsets import bp
 from app.datasubsets.decon import get_model_and_tag
 import app.mdb
+from wtforms import TextAreaField, SubmitField
 
 
 
@@ -238,6 +240,9 @@ def tagdelta():
     tag_b = None
     newtagid = None
 
+    class F(deltaTwoForm):
+        pass
+
     m = app.mdb.mdb()
     optgroup_ = m.get_dataset_tag_choices()
     avail_models_ = m.get_list_of_models()
@@ -269,6 +274,8 @@ def tagdelta():
         print(' ... create shortname {}'.format(oneform.create.type))
         print(' ... create type {}'.format(oneform.create.short_name))
     
+
+
         if (oneform.submit.data):
             # hack as a way to extract the model and tag from the choice/html form
             print('GOOD VALIDATION')
@@ -282,12 +289,30 @@ def tagdelta():
                 print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
                 plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
                 print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
+
+                print('--------')
+                print('plan_b is {}'.format(plan_b))
+
+                for datatag in plan_b['submitter']:
+                    #print('====')
+                    nanoid = datatag[3]
+                    print('test >> {}'.format(nanoid))
+                    setattr(F, str(nanoid), SubmitField(label="Add"))
+                    #msg = TextAreaField(id=1,default="hi",_name="1")
+                    #setattr(F, str("Add"), TextAreaField(description=str(nanoid)))
+
+
         if (oneform.create.data):
             tag = oneform.newsubset_tag.data.strip()
             if (oneform.newsubset_model.data is not None and tag is not None and tag != ''):
                 newtagid = m.create_submitter_tag_for_model(oneform.newsubset_model.data, oneform.newsubset_tag.data)
-                print('logging, created new tag {}'.format(newtagid)) 
+                print('logging, created new tag {}'.format(newtagid))
                 return redirect(url_for('datasubsets.tagdelta'))
+
+    formb = F()
+
+    if formb.validate_on_submit():
+         print('  YAHOOO ')
 
     return render_template(
         "tag-delta.html",
@@ -299,7 +324,8 @@ def tagdelta():
         tagb=tag_b,
         modelb=model_b,
         formattedb=plan_b,
-        newtagid=newtagid
+        newtagid=newtagid,
+        formb=formb
     )
 
 
@@ -359,3 +385,11 @@ def tagepsilon():
         model=model_,
         formatted_tags=plan_
     )
+
+
+@bp.route("/tag-phi", methods=["GET", "POST"])
+@login_required
+def tagphi():
+    print('yup')
+
+    return redirect(url_for('datasubsets.tagdelta'))

@@ -21,3 +21,10 @@ class deltaOneForm(FlaskForm):
     newsubset_tag = StringField('Name of New Subset', [Optional(strip_whitespace=True)])
     submit = SubmitField("Submit")
     create = SubmitField("Create")
+
+class deltaTwoForm(FlaskForm):
+    #addbtn = SubmitField("Add")
+
+    def append_field(cls, name, field):
+        setattr(cls, name, field)
+        return cls
