@@ -537,3 +537,10 @@ def upload(filename):
     return send_from_directory(current_app.config['UPLOAD_PATH'], filename)
 
 
+@bp.route('/reports', methods=['GET', 'POST'])
+def reports():
+    return render_template('reports.html',)
+
+@bp.route('/versionhistory', methods=['GET', 'POST'])
+def versionhistory():
+    return render_template('version-history.html')

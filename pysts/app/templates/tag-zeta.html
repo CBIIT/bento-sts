@@ -6,11 +6,12 @@
     <h1> Edit Data Subsets</h1>
     <br>
    
+    <form action="{{ url_for('datasubsets.tagtheta') }}" method="POST">
+        {{ form.hidden_tag() }}  
+        {{ form.csrf_token() }} 
+
     <div class="container">
-        <form action="{{ url_for('datasubsets.tagdelta') }}" method="POST">
-            {{ form.hidden_tag() }}  
-            {{ form.csrf_token() }}  
-        
+
         
             <div class="row"> 
                 <div class="col-4">
@@ -34,7 +35,7 @@
                     {{ render_field(form.create, button_map={'create': 'secondary' }) }}
                 </div>
             </div>   
-        </form>
+        
     </div>    
             
 </br>
@@ -51,7 +52,7 @@
                         <tr>
                             <th>Node</th>
                             <th>Property</th>
-                            <th>Remove from MAIN</th>
+                            <th>Remove</th>
                         </tr>
                         {% for row in formatteda[tag] %}
                             <tr>
@@ -66,43 +67,39 @@
                 {% endfor %} 
                 {% else %}
                 No tags were found
-                 {% endif %}
+                {% endif %}
             </div>
 
             <div class="col">
-                <form action="{{ url_for('datasubsets.tagphi') }}" method="POST">
-                    {% if formattedb %}
-                    {% for tag in formattedb %}
+               
+
+                    {% if form.subformB %}
                     <h2> REF: {{ tagb }} </h2>
 
                         <table class="table table-striped">
                             <tr>
                                 <th>Node</th>
                                 <th>Property</th>
-                                <th>Add to MAIN</th>
-                                <!--<th>Tag name</th>-->
+                                <th>Tag name</th>
                             </tr>
-                            {% for row in formattedb[tag] %}
+                            {% for var in variable_name_list %}
                                 <tr>
-                                    <td> <a href="{{url_for("main.nodes", id=row[1] ) }}">{{ row[0] }}</a> </td>
-                                    <td> <a href="{{url_for("main.properties", id=row[3] ) }}">{{ row[2] }}</a> </td>
-                                    <!--<td> {{ formb[row[3]]() }} </td>-->
-                                    <td> <a class="btn btn-outline-primary btn-sm" href="#" role="button">Add</a></td>
+                                    <td> <a href="{{url_for("main.nodes", id=form[var[1]] ) }}">{{ form[var[0]] }}</a> </td>
+                                    <td> <a href="{{url_for("main.properties", id=form[var[3]] ) }}">{{ form[var[2]] }}</a> </td>
+                                    <td> {{ render_field(form[var[4]], button_map={'add': 'secondary'})  }} </td>
                                 </tr>
                             {% endfor %}
                         </table>
 
                     <br><br>
-                    {% endfor %} 
                     {% else %}
                     No tags were found
                     {% endif %}
-                    </form>
+           
             </div> <!--end col-->
-
-
-
         </div> <!-- end row-->
     </div>
+
+ </form>    
 
 {% endblock %}

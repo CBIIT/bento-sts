@@ -1,6 +1,7 @@
 import os
 import json
 from flask import url_for, current_app
+import pprint
 from app import logging
 from neo4j import GraphDatabase
 from bento_meta.model import Model
@@ -35,7 +36,6 @@ def diff_mdf(mdf_file_a, mdf_file_b):
     delta = diff_models(a.model, b.model)
     current_app.logger.error('FINISHING diff_mdf')
     return delta
-
 
 class jet():
     '''TO BE DEPRECATED'''
