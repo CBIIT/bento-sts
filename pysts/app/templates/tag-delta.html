@@ -66,11 +66,11 @@
                 {% endfor %} 
                 {% else %}
                 No tags were found
-                 {% endif %}
+                {% endif %}
             </div>
 
             <div class="col">
-                <form action="{{ url_for('datasubsets.tagphi') }}" method="POST">
+
                     {% if formattedb %}
                     {% for tag in formattedb %}
                     <h2> REF: {{ tagb }} </h2>
@@ -86,8 +86,8 @@
                                 <tr>
                                     <td> <a href="{{url_for("main.nodes", id=row[1] ) }}">{{ row[0] }}</a> </td>
                                     <td> <a href="{{url_for("main.properties", id=row[3] ) }}">{{ row[2] }}</a> </td>
-                                    <!--<td> {{ formb[row[3]]() }} </td>-->
-                                    <td> <a class="btn btn-outline-primary btn-sm" href="#" role="button">Add</a></td>
+                                    <td> {{ formb[row[3]]() }} </td>
+                                    
                                 </tr>
                             {% endfor %}
                         </table>
@@ -97,11 +97,8 @@
                     {% else %}
                     No tags were found
                     {% endif %}
-                    </form>
+                    
             </div> <!--end col-->
-
-
-
         </div> <!-- end row-->
     </div>
 
