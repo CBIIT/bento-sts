@@ -5,7 +5,8 @@ from app.datasubsets.forms import ChooseSubsetForm, dataSubSet
 from datetime import datetime
 import os
 import json
-import pprint
+import logging
+from pprint import pprint
 from flask import (
     render_template,
     flash,
@@ -320,7 +321,7 @@ def tagdelta():
         print('session b is for {}'.format(session['tag_b']))
 
     return render_template(
-        "tag-delta.html",
+        "edit.html",
         form=oneform,
         extra="D",
         taga=tag_a,
@@ -404,14 +405,14 @@ def tagexport():
         return render_template("tag-export.html")
     
 
-@bp.route("/tag-zeta", methods=["GET", "POST"])
+@bp.route("/datasubsets/edit", methods=["GET", "POST"])
 @login_required
-def tagzeta():
+def edit():
 
     # notice
-    import pprint
-    dump_a = request.form.to_dict()
-    pprint.pprint('dump_a got back {}'.format(dump_a))
+    #import pprint
+    #dump_a = request.form.to_dict()
+    #pprint.pprint('dump_a got back {}'.format(dump_a))
 
     model_a = None
     plan_a = None
@@ -425,7 +426,7 @@ def tagzeta():
     m = app.mdb.mdb()
     optgroup_ = m.get_dataset_tag_choices()
     avail_models_ = m.get_list_of_models()
-    print('logging, point Y now looking for list {} '.format(avail_models_))
+    #print('logging, point Y now looking for list {} '.format(avail_models_))
 
     ## populate choices for dropdowns
     #oneform = deltaOneForm()
@@ -442,7 +443,7 @@ def tagzeta():
     #    pass    
     Fb = []
 
-    print('logging point Z3')
+    #print('logging point Z3')
 
     ## now populate formA and formB if in session
     model_a = session.pop('model_a', None)
@@ -450,19 +451,19 @@ def tagzeta():
     model_b = session.pop('model_b', None)
     tag_b = session.pop('tag_b', None)
 
-    print('logging point Z4')
+    #print('logging point Z4')
 
     if (tag_a):
-        print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
+        #print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
         plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
-        print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
+        #print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
         session['tag_a'] = tag_a
         session['model_a'] = model_a
                 
     if (tag_b):
-        print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
+        #print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
         plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
-        print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
+        #print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
         session['tag_b'] = tag_b
         session['model_b'] = model_b
     
@@ -475,9 +476,9 @@ def tagzeta():
                         #msg = TextAreaField(id=1,default="hi",_name="1")
                         #setattr(F, str("Add"), TextAreaField(description=str(nanoid)))
 
-    print('dumper')
-    pprint.pprint(Fb)
-    print('dumped')
+    #print('dumper')
+    #pprint.pprint(Fb)
+    #print('dumped')
 
     def formbuilder(datatagarray):
         class Tagsubset(deltaOneForm):
@@ -488,7 +489,7 @@ def tagzeta():
             setattr(Tagsubset, 'nodeid_%d' % i,    datatagrow[1])
             setattr(Tagsubset, 'proplabel_%d' % i, datatagrow[2])
             setattr(Tagsubset, 'propid_%d' % i, datatagrow[3])
-            setattr(Tagsubset, 'addbtn_%d' % i, SubmitField('Add', id=datatagrow[3]))
+            setattr(Tagsubset, 'addbtn_%d' % i, SubmitField(datatagrow[3], default=datatagrow[3]))
 
         return Tagsubset()
     
@@ -497,37 +498,38 @@ def tagzeta():
     for i in range(len(Fb)):
         variable_name_list.append([ 'nodelabel_%d' % i, 
                                     'nodeid_%d' % i,
-                                    'proplabel_%d' %i ,
-                                    'propid_%d' %i ,
-                                    'addbtn_%d' %i
+                                    'proplabel_%d' % i ,
+                                    'propid_%d' % i ,
+                                    'addbtn_%d' % i
                                     ] )
 
     ## populate choices for dropdowns
     oneform = formbuilder(Fb)
 
-    print('dumper ----- deltaOneForm')
-    pprint.pprint(oneform)
-    pprint.pprint(dir(oneform))
-    print('dumper ----- deltaOneForm')
-    print('dumper ----- deltaOneForm')
+    #if (0):
+        #print('dumper ----- deltaOneForm-zeta')
+        #import pprint
+        #pprint.pprint(dir(oneform))
+        ##pprint.pprint(dir(oneform))
+        #print('dumper ----- deltaOneForm-zeta')
 
     oneform.aset.choices = optgroup_
     oneform.bset.choices = optgroup_
     oneform.newsubset_model.choices = possible_avail_models_
 
     if (tag_a):
-        print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
+        #print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
         plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
-        print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
+        #print('logging, now HAVE for model {} and tag {}'.format(model_a, tag_a))
         session['tag_a'] = tag_a
         session['model_a'] = model_a
         if 'choice_a' in session:
             oneform.aset.data = session['choice_a']
                 
     if (tag_b):
-        print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
+        #print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
         plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
-        print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
+        #print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
         session['tag_b'] = tag_b
         session['model_b'] = model_b
         if 'choice_b' in session:
@@ -541,7 +543,7 @@ def tagzeta():
         #                #setattr(F, str("Add"), TextAreaField(description=str(nanoid)))
 
     return render_template(
-        "tag-zeta.html",
+        "edit.html",
         form=oneform,
         extra="zeta",
         taga=tag_a,
@@ -557,16 +559,26 @@ def tagzeta():
 
 
 
-@bp.route("/tag-theta", methods=["GET", "POST"])
+@bp.route("/datasubsets/choose", methods=["GET", "POST"])
 @login_required
-def tagtheta():
+def choose():
 
-    print('HERE')
-    
+    #print('HERE')
+    ##payload = dir(request.form)
+    #req = request.form
+    #print('-------------')
+    #print(req)
+    #print('---\n\n')
+
+    #if request.method == 'POST':
+    #    if 'addbtn_1' in req:
+    #        print("SCOOBY DOO")
+    #        print(req['addbtn_1'])
+    #        print(" .... WGERE ARE YOU")
     # notice
-    import pprint
-    dump_a = request.form.to_dict()
-    pprint.pprint('dump_a got back {}'.format(dump_a))
+    #import pprint
+    #dump_a = request.form.to_dict()
+    #pprint.pprint('dump_a got back {}'.format(dump_a))
 
     model_a = None
     plan_a = None
@@ -580,7 +592,7 @@ def tagtheta():
     m = app.mdb.mdb()
     optgroup_ = m.get_dataset_tag_choices()
     avail_models_ = m.get_list_of_models()
-    print('logging, point Y now looking for list {} '.format(avail_models_))
+    #print('logging, point Y now looking for list {} '.format(avail_models_))
 
     oneform = deltaOneForm()
     oneform.aset.choices = optgroup_
@@ -598,60 +610,60 @@ def tagtheta():
     print('logging point T0')
 
     if oneform.validate_on_submit():
-        print(' ... submit data {}'.format(oneform.submit.data))
-        print(' ... submit label {}'.format(oneform.submit.label))
-        print(' ... submit name {}'.format(oneform.submit.name))
-        print(' ... submit raw_data {}'.format(oneform.submit.raw_data))
-        print(' ... submit object_data {}'.format(oneform.submit.object_data))
-        print(' ... submit shortname {}'.format(oneform.submit.type))
-        print(' ... submit type {}'.format(oneform.submit.short_name))
+        if (0):
+            print(' ... submit data {}'.format(oneform.submit.data))
+            print(' ... submit label {}'.format(oneform.submit.label))
+            print(' ... submit name {}'.format(oneform.submit.name))
+            print(' ... submit raw_data {}'.format(oneform.submit.raw_data))
+            print(' ... submit object_data {}'.format(oneform.submit.object_data))
+            print(' ... submit shortname {}'.format(oneform.submit.type))
+            print(' ... submit type {}'.format(oneform.submit.short_name))
     
-        print(' ... create data {}'.format(oneform.create.data))
-        print(' ... create label {}'.format(oneform.create.label))
-        print(' ... create name {}'.format(oneform.create.name))
-        print(' ... create raw_data {}'.format(oneform.create.raw_data))
-        print(' ... create object_data {}'.format(oneform.create.object_data))
-        print(' ... create shortname {}'.format(oneform.create.type))
-        print(' ... create type {}'.format(oneform.create.short_name))
+            print(' ... create data {}'.format(oneform.create.data))
+            print(' ... create label {}'.format(oneform.create.label))
+            print(' ... create name {}'.format(oneform.create.name))
+            print(' ... create raw_data {}'.format(oneform.create.raw_data))
+            print(' ... create object_data {}'.format(oneform.create.object_data))
+            print(' ... create shortname {}'.format(oneform.create.type))
+            print(' ... create type {}'.format(oneform.create.short_name))
 
-        import pprint
-        print('dumping oneform')
-        pprint.pprint(oneform)
-        print('done.')
+            print('dumping oneform')
+            print('done.')
 
         if (oneform.submit.data):
             # hack as a way to extract the model and tag from the choice/html form
-            print('GOOD VALIDATION')
+            if (0):
+                print('GOOD VALIDATION')
 
-            print(' ... A choice data {}'.format(oneform.aset.data))
-            print(' ... A choice label {}'.format(oneform.aset.label))
-            print(' ... A choice name {}'.format(oneform.aset.name))
-            print(' ... A choice raw_data {}'.format(oneform.aset.raw_data))
-            print(' ... A choice object_data {}'.format(oneform.aset.object_data))
-            print(' ... A choice shortname {}'.format(oneform.aset.type))
-            print(' ... A choice type {}'.format(oneform.aset.short_name))
-            print(' ... A choice id {}'.format(oneform.aset.id))
+                print(' ... A choice data {}'.format(oneform.aset.data))
+                print(' ... A choice label {}'.format(oneform.aset.label))
+                print(' ... A choice name {}'.format(oneform.aset.name))
+                print(' ... A choice raw_data {}'.format(oneform.aset.raw_data))
+                print(' ... A choice object_data {}'.format(oneform.aset.object_data))
+                print(' ... A choice shortname {}'.format(oneform.aset.type))
+                print(' ... A choice type {}'.format(oneform.aset.short_name))
+                print(' ... A choice id {}'.format(oneform.aset.id))
 
             if (oneform.aset.data):
                 model_a, tag_a = get_model_and_tag(oneform.aset.data)
-                print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
+                #print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
                 plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
-                print('logging, now HAVE for A model {} and tag {} and id {}'.format(model_a, tag_a, oneform.aset.id))
+                #print('logging, now HAVE for A model {} and tag {} and id {}'.format(model_a, tag_a, oneform.aset.id))
                 session['tag_a'] = tag_a
                 session['model_a'] = model_a
                 session['choice_a'] = oneform.aset.data
 
             if (oneform.bset.data):
                 model_b, tag_b = get_model_and_tag(oneform.bset.data)
-                print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
+                #print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
                 plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
-                print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
+                #print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
                 session['tag_b'] = tag_b
                 session['model_b'] = model_b
                 session['choice_b'] = oneform.bset.data
 
-                print('--------')
-                print('plan_b is {}'.format(plan_b))
+                #print('--------')
+                #print('plan_b is {}'.format(plan_b))
 
                 #if 'submitter' in plan_b:
                 #    for datatag in plan_b['submitter']:
@@ -666,24 +678,146 @@ def tagtheta():
             tag = oneform.newsubset_tag.data.strip()
             if (oneform.newsubset_model.data is not None and tag is not None and tag != ''):
                 newtagid = m.create_submitter_tag_for_model(oneform.newsubset_model.data, oneform.newsubset_tag.data)
-                print('logging, created new tag {}'.format(newtagid))
-                return redirect(url_for('datasubsets.tagzeta'))
+                #print('logging, created new tag {}'.format(newtagid))
+                return redirect(url_for('datasubsets.edit'))
 
-        #if (oneform.subformB.Add):
-        #    print('BINGO\n\n\n\n')
 
-        if (oneform.subformB.data):
-            print('BINGO222\n\n\n\n')
-            print('dumping subformb')
-            pprint.pprint(oneform.subformB)
-            print()
-            print(' ... submit data {}'.format(oneform.subformB.data))
-            print(' ... submit label {}'.format(oneform.subformB.label))
-            print(' ... submit name {}'.format(oneform.subformB.name))
-            print(' ... submit raw_data {}'.format(oneform.subformB.raw_data))
-            print(' ... submit object_data {}'.format(oneform.subformB.object_data))
-            print(' ... submit shortname {}'.format(oneform.subformB.type))
-            print(' ... submit type {}'.format(oneform.subformB.short_name))
-            print('done..')
+    return redirect(url_for('datasubsets.edit'))
 
-    return redirect(url_for('datasubsets.tagzeta'))
+@bp.route("/datasubsets/add", methods=["GET", "POST"])
+@login_required
+def add():    
+
+    current_app.logger.info('Datasubset Add')
+    current_app.logger.info('request_url is {}'.format(request.url))
+     
+    add_id = None
+    aset = None
+    tag_a = None
+    model_a = None
+    bset = None
+    bnode = None
+    tag_b = None
+    model_b = None
+
+    add_id = request.args.get('add_id', None)
+    aset = request.args.get('aset', None)
+    bset = request.args.get('bset', None)
+    bnode = request.args.get('bnode', None)
+    if (aset):
+         current_app.logger.debug('add: aset is {}'.format(aset))
+    if (bset):
+         current_app.logger.debug('add: bset is {}'.format(bset))
+
+
+    #req = request.get_json()
+    #if req:
+    #    current_app.logger.info('add: processing json')
+    #    if 'aset' in req:
+    #        aset = req['aset']
+    #    if 'bset' in req:
+    #        bset = req['bset']
+
+    
+    if add_id:
+        current_app.logger.debug('add: add_id is {}'.format(add_id))
+    
+    if aset:
+        current_app.logger.debug('add: aset is {}'.format(aset))
+        model_a, tag_a = get_model_and_tag(aset)
+        session['tag_a'] = tag_a
+        session['model_a'] = model_a
+        current_app.logger.debug('add: a tag is {}'.format(tag_a))
+        current_app.logger.debug('add: a model is {}'.format(model_a))
+    
+    if bset:
+        current_app.logger.debug('add: bset is {}'.format(bset))
+        model_b, tag_b = get_model_and_tag(bset)
+        session['tag_b'] = tag_b
+        session['model_b'] = model_b
+        current_app.logger.debug('add: b tag is {}'.format(tag_b))
+        current_app.logger.debug('add: b node is {}'.format(bnode))
+        current_app.logger.debug('add: b model is {}'.format(model_b))
+
+    if model_a != model_b:
+        flash('Both Models must be the same')
+        return redirect(url_for('datasubsets.edit'))
+
+    if tag_a == tag_b:
+        flash('Sorry Charlie, tag already here....')
+        return redirect(url_for('datasubsets.edit'))
+
+    m = app.mdb.mdb()
+    m.add_submitter_tag_for_model_prop(model=model_a, nodenanoid=bnode, propnanoid=add_id, tag=tag_a)
+
+    current_app.logger.debug('Add: Leaving')
+
+    return redirect(url_for('datasubsets.edit'))
+
+@bp.route("/datasubsets/remove", methods=["GET", "POST"])
+@login_required
+def remove():    
+
+    current_app.logger.info('START REMOVE')
+    current_app.logger.info('Datasubset Add')
+    current_app.logger.info('request_url is {}'.format(request.url))
+     
+    remove_id = None
+    aset = None
+    anode = None
+    tag_a = None
+    model_a = None
+    bset = None
+    tag_b = None
+    model_b = None
+
+    remove_id = request.args.get('remove_id', None)
+    aset = request.args.get('aset', None)
+    anode = request.args.get('anode', None)
+    bset = request.args.get('bset', None)
+    if (aset):
+         current_app.logger.debug('remove: aset is {}'.format(aset))
+    if (anode):
+         current_app.logger.debug('remove: anode is {}'.format(anode))
+    if (bset):
+         current_app.logger.debug('remove: bset is {}'.format(bset))
+
+
+    #req = request.get_json()
+    #if req:
+    #    current_app.logger.info('add: processing json')
+    #    if 'aset' in req:
+    #        aset = req['aset']
+    #    if 'bset' in req:
+    #        bset = req['bset']
+
+    
+    if remove_id:
+        current_app.logger.debug('remove: add_id is {}'.format(remove_id))
+    
+    if aset:
+        current_app.logger.debug('remove: aset is {}'.format(aset))
+        model_a, tag_a = get_model_and_tag(aset)
+        session['tag_a'] = tag_a
+        session['model_a'] = model_a
+        current_app.logger.debug('remove: a tag is {}'.format(tag_a))
+        current_app.logger.debug('remove: a model is {}'.format(model_a))
+    
+    if bset:
+        current_app.logger.debug('remove: bset is {}'.format(bset))
+        model_b, tag_b = get_model_and_tag(bset)
+        session['tag_b'] = tag_b
+        session['model_b'] = model_b
+        current_app.logger.debug('remove: b tag is {}'.format(tag_b))
+        current_app.logger.debug('remove: b model is {}'.format(model_b))
+
+    if (remove_id is not None and tag_a is not None and model_a is not None and anode is not None):
+        m = app.mdb.mdb()
+        m.remove_submitter_tag_for_model_prop(model=model_a, nodenanoid=anode,  propnanoid=remove_id, tag=tag_a)
+
+    #print('logging, point Y now looking for list {} '.format(avail_models_))
+
+
+    current_app.logger.debug('remove: Leaving')
+
+    return redirect(url_for('datasubsets.edit'))

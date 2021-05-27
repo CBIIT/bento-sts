@@ -964,10 +964,11 @@ class mdb:
         current_app.logger.warn('getting for tag {} in model {}'.format(dataset, model))
 
         query_ = """
-                MATCH (n:node)-[:has_property]->(p:property)-[:has_tag]->(t:tag)
+                MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
                 WHERE toLower(n.model) = toLower($model)
                 AND   t.key = "submitter"
                 AND   t.value = $dataset
+                MATCH (n)-[z:in_dataset { dataset: $dataset } ]->(p)
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
 
@@ -991,8 +992,9 @@ class mdb:
         result = ()
 
         OLD_query_all_models_and_tag_choices = """
-            MATCH (n:node)-[:has_property]->(p:property)-[:has_tag]->(t:tag)
+            MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
             WHERE t.key = "submitter"
+            AND EXISTS (np.dataset)
             RETURN distinct n.model, t.value
             ORDER by n.model ASC, t.value ASC
             """
@@ -1020,8 +1022,8 @@ class mdb:
         for record in db_records:
             mdl = record[0]
             ky = record[1]
-            print(' model is {}'.format(mdl))
-            print(' key is {}'.format(ky))
+            #print(' model is {}'.format(mdl))
+            #print(' key is {}'.format(ky))
             mdlky = mdl + "----" + ky
             if mdl not in temp_results:
                 temp_results[mdl] = ()
@@ -1034,8 +1036,8 @@ class mdb:
             flashmasterj = (m, temp_results[m])
             result = result + (flashmasterj,)
 
-        print('')
-        print('result is {}'.format(result))
+        #print('')
+        #print('result is {}'.format(result))
         return result
 
     def get_submitter_tag_choices(self, model=None):
@@ -1089,8 +1091,8 @@ class mdb:
         for record in db_records:
             mdl = record[0]
             ky = record[1]
-            print(' model is {}'.format(mdl))
-            print(' key is {}'.format(ky))
+            #print(' model is {}'.format(mdl))
+            #print(' key is {}'.format(ky))
             mdlky = mdl + "----" + ky
             if mdl not in temp_results:
                 temp_results[mdl] = ()
@@ -1103,8 +1105,8 @@ class mdb:
             flashmasterj = (m, temp_results[m])
             result = result + (flashmasterj,)
 
-        print('')
-        print(result)
+        #print('')
+        #print(result)
         return result
 
     def create_submitter_tag_for_model(self, model=None, tag=None):
@@ -1131,3 +1133,101 @@ class mdb:
         result = db_records.single()[0]
 
         return result
+
+
+
+    def add_submitter_tag_for_model_prop(self, model=None, nodenanoid=None, propnanoid=None, tag=None):
+        with self.driver.session() as session:
+            if (model is not None) and (tag is not None) and (nodenanoid is not None) and (propnanoid is not None):
+                tag_records = session.read_transaction(self._add_submitter_tag_for_model, model, nodenanoid, propnanoid, tag)
+                tag_records = session.read_transaction(self._add_submitter_tag_for_prop, model, nodenanoid, propnanoid, tag)
+                # formatted_tags = self.format_tags_records(tag_records)
+        return tag_records
+
+
+    @staticmethod
+    def _add_submitter_tag_for_model(tx, model=None, nodenanoid=None, propnanoid=None, tag=None):
+        result = None
+
+        current_app.logger.warn('ADD tag {} for node {} prop {} in model {}'.format(model, nodenanoid, propnanoid, tag))
+
+        add_tag_query_ = """
+                MATCH (n:node { model:$model, nanoid:$nodenanoid })-[np:has_property]->(p:property { nanoid:$propnanoid, model:$model })
+                MATCH (t:tag {key:'submitter', model:$model, value:$tag})
+                MERGE (p)-[r:has_tag]->(t);
+                """
+                #MERGE (p)-[r:has_tag]->(t);
+
+        db_records = tx.run(add_tag_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
+        current_app.logger.warn('..adding tag ... to model {}'.format(model))
+        #result = db_records.single()[0]
+
+        return        
+
+    @staticmethod
+    def _add_submitter_tag_for_prop(tx, model=None, nodenanoid=None, propnanoid=None, tag=None):
+        result = None
+
+        current_app.logger.warn('ADD tag {} for node {} prop {} in model {}'.format(model, nodenanoid, propnanoid, tag))
+
+        add_tag_query_ = """
+                MATCH (n:node { model:$model, nanoid:$nodenanoid })-[np:has_property]->(p:property { nanoid:$propnanoid, model:$model })
+                -[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag})
+                MERGE (n)-[z:in_dataset { dataset: $tag } ]->(p);
+                """
+                #MERGE (p)-[r:has_tag]->(t);
+
+        db_records = tx.run(add_tag_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
+        current_app.logger.warn('..adding tag ... to prop {}'.format(model))
+        #result = db_records.single()[0]
+
+        return   
+
+
+
+
+
+    def remove_submitter_tag_for_model_prop(self, model=None, nodenanoid=None, propnanoid=None, tag=None):
+        with self.driver.session() as session:
+            if (model is not None) and (tag is not None) and (nodenanoid is not None) and (propnanoid is not None):
+                tag_records = session.read_transaction(self._remove_submitter_tag_for_model_prop, model, nodenanoid, propnanoid, tag)
+                # formatted_tags = self.format_tags_records(tag_records)
+        return tag_records
+
+    @staticmethod
+    def _remove_submitter_tag_for_model_prop(tx, model=None, nodenanoid=None, propnanoid=None, tag=None):
+        result = None
+
+        current_app.logger.warn('REMOVING for tag {} for node {} prop {} in model {}'.format(model, nodenanoid, propnanoid, tag))
+
+        count_nodetag_query_ = """
+                MATCH (t:tag { value: $tag })<-[r:has_tag]-(p:property {nanoid: $propnanoid })<-[np:has_property]-(n:node)
+                with p,count(n) as rels
+                return rels;
+                """
+
+        db_records = tx.run(count_nodetag_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
+        result = db_records.single()[0]
+        current_app.logger.warn('..found {} counts - for removing tag from model'.format(result))
+
+        ''' only remove p-n tag '''
+        if result == 1:
+            remove_both_query_ = """
+                    MATCH (n:node { model:$model, nanoid:$nodenanoid })-[z:in_dataset { dataset: $tag } ]->(p:property { nanoid:$propnanoid, model:$model })-[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag}) 
+                    DELETE r, z
+                    """
+
+            db_records = tx.run(remove_both_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
+            current_app.logger.warn('..removing tag from model {}'.format(model))
+
+        ''' only remove p-n tag '''
+        if result > 1:
+            remove_node_query_ = """
+                    MATCH (n:node { model:$model, nanoid:$nodenanoid })-[z:in_dataset { dataset: $tag } ]->(p:property { nanoid:$propnanoid, model:$model })-[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag}) 
+                    DELETE z
+                    """
+
+            db_records = tx.run(remove_node_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
+            current_app.logger.warn('..removing tag from model {}'.format(model))
+
+        return

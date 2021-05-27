@@ -6,7 +6,7 @@
     <h1> Edit Data Subsets</h1>
     <br>
    
-    <form action="{{ url_for('datasubsets.tagtheta') }}" method="POST">
+    <form action="{{ url_for('datasubsets.choose') }}" method="POST">
         {{ form.hidden_tag() }}  
         {{ form.csrf_token() }} 
 
@@ -56,9 +56,10 @@
                         </tr>
                         {% for row in formatteda[tag] %}
                             <tr>
-                                <td> <a href="{{url_for("main.nodes", id=row[1] ) }}">{{ row[0] }}</a> </td>
-                                <td> <a href="{{url_for("main.properties", id=row[3] ) }}">{{ row[2] }}</a> </td>
-                                <td> <a class="btn btn-outline-primary btn-sm" href="#" role="button">Remove</a></td>
+                                <td> <a href="{{url_for('main.nodes', id=row[1] ) }}">{{ row[0] }}</a> </td>
+                                <td> <a href="{{url_for('main.properties', id=row[3] ) }}">{{ row[2] }}</a> </td>
+                                <td> <a href="{{url_for('datasubsets.remove', remove_id=row[3], aset=form.aset.data, anode=row[1], bset=form.bset.data) }}" , class="badge badge-secondary"><i class="bi bi-x-square-fill"></i> Remove</a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </table>
@@ -84,9 +85,10 @@
                             </tr>
                             {% for var in variable_name_list %}
                                 <tr>
-                                    <td> <a href="{{url_for("main.nodes", id=form[var[1]] ) }}">{{ form[var[0]] }}</a> </td>
-                                    <td> <a href="{{url_for("main.properties", id=form[var[3]] ) }}">{{ form[var[2]] }}</a> </td>
-                                    <td> {{ render_field(form[var[4]], button_map={'add': 'secondary'})  }} </td>
+                                    <td> <a href="{{url_for('main.nodes', id=form[var[1]] ) }}">{{ form[var[0]] }}</a> </td>
+                                    <td> <a href="{{url_for('main.properties', id=form[var[3]] ) }}">{{ form[var[2]] }}</a> </td>
+                                    <td> <a href="{{url_for('datasubsets.add', add_id=form[var[3]], aset=form.aset.data, bset=form.bset.data, bnode=form[var[1]] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </table>
