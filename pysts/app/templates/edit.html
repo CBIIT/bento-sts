@@ -6,63 +6,68 @@
     <h1> Edit Data Subsets</h1>
     <br>
    
-    <form action="{{ url_for('datasubsets.choose') }}" method="POST">
+    <form action="{{ url_for('datasubsets.act') }}" method="POST">
         {{ form.hidden_tag() }}  
         {{ form.csrf_token() }} 
 
     <div class="container">
-
-        
-            <div class="row"> 
-                <div class="col-4">
+        <div class="row"> 
+            <div class="col-3">
                         {{ render_field(form.aset) }}
-                </div>   
-                <div class="col-4">
-                        {{ render_field(form.bset) }}
-                </div>
-                <div class="col-4">             
-                    {{ render_field(form.newsubset_model) }}
-                    {{ render_field(form.newsubset_tag) }}
-                </div>
-                <div class="w-100"></div>
-                <div class="col-4">             
-                    {{ render_field(form.submit, button_map={'submit': 'primary' }) }}
-                </div>
-                <div class="col-4">             
-                    &nbsp;
-                </div>
-                <div class="col-4">             
-                    {{ render_field(form.create, button_map={'create': 'secondary' }) }}
-                </div>
             </div>   
-        
+            <div class="col-3">
+                        {{ render_field(form.bset) }}
+            </div>
+            <div class="col-3">             
+                    {{ render_field(form.entire_model) }}
+            </div>
+            <div class="col-3">             
+                {{ render_field(form.newsubset_model) }}
+                {{ render_field(form.newsubset_tag) }}
+            </div>
+        </div>   
+        <div class="row">
+            <div class="col-3">             
+                    {{ render_field(form.submit, button_map={'submit': 'primary' }) }}
+            </div>
+            <div class="col-3">             
+                    &nbsp;
+            </div>
+            <div class="col-3">             
+                    {{ render_field(form.entire, button_map={'entire': 'secondary' }) }}
+            </div>
+            <div class="col-3">             
+                {{ render_field(form.create, button_map={'create': 'secondary' }) }}
+            </div>
+        </div>   <!-- end row-->
     </div>    
             
-</br>
-</br>
+    </br>
+    </br>
 
     <div class="container">     
          <div class="row w-100">
-            <div class="col"> 
+            <div class="col-6"> 
                 {% if formatteda %}
                 {% for tag in formatteda %}
                 <h2> MAIN: {{ taga }}</h2>
                 
-                    <table class="table table-striped">
-                        <tr>
+                <table class="table table-striped">
+                    <tr>
                             <th>Node</th>
                             <th>Property</th>
                             <th>Remove</th>
-                        </tr>
-                        {% for row in formatteda[tag] %}
-                            <tr>
+                    </tr>
+                
+                    {% for row in formatteda[tag] %}
+                        <tr>
                                 <td> <a href="{{url_for('main.nodes', id=row[1] ) }}">{{ row[0] }}</a> </td>
                                 <td> <a href="{{url_for('main.properties', id=row[3] ) }}">{{ row[2] }}</a> </td>
                                 <td> <a href="{{url_for('datasubsets.remove', remove_id=row[3], aset=form.aset.data, anode=row[1], bset=form.bset.data) }}" , class="badge badge-secondary"><i class="bi bi-x-square-fill"></i> Remove</a>
                                 </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
+                        </tr>
+                   {% endfor %}
+                </table>
 
                 <br><br>
                 {% endfor %} 
@@ -71,35 +76,35 @@
                 {% endif %}
             </div>
 
-            <div class="col">
-               
+            <div class="col-6">
+                {% if formattedb %}
+                {% for tag in formattedb %}
+                <h2> REF: {{ tagb }}</h2>
+            
+                <table class="table table-striped">
+                    <tr>
+                        <th>Node</th>
+                        <th>Property</th>
+                        <th>Remove</th>
+                    </tr>
+                    {% for row in formattedb[tag] %}
+                        <tr>
+                            <td> <a href="{{url_for('main.nodes', id=row[1] ) }}">{{ row[0] }}</a> </td>
+                            <td> <a href="{{url_for('main.properties', id=row[3] ) }}">{{ row[2] }}</a> </td>
+                            <td> <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=form.bset.data, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
 
-                    {% if form.subformB %}
-                    <h2> REF: {{ tagb }} </h2>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
 
-                        <table class="table table-striped">
-                            <tr>
-                                <th>Node</th>
-                                <th>Property</th>
-                                <th>Tag name</th>
-                            </tr>
-                            {% for var in variable_name_list %}
-                                <tr>
-                                    <td> <a href="{{url_for('main.nodes', id=form[var[1]] ) }}">{{ form[var[0]] }}</a> </td>
-                                    <td> <a href="{{url_for('main.properties', id=form[var[3]] ) }}">{{ form[var[2]] }}</a> </td>
-                                    <td> <a href="{{url_for('datasubsets.add', add_id=form[var[3]], aset=form.aset.data, bset=form.bset.data, bnode=form[var[1]] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-
-                    <br><br>
-                    {% else %}
-                    No tags were found
-                    {% endif %}
-           
-            </div> <!--end col-->
-        </div> <!-- end row-->
+                <br><br>
+                {% endfor %} 
+                {% else %}
+                No tags were found
+                {% endif %}
+            </div> <!-- end row-->
+        </div>
     </div>
 
  </form>    

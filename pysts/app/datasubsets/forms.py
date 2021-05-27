@@ -39,16 +39,13 @@ class deltaThreeForm(FlaskForm):
         return cls
 
 class deltaOneForm(FlaskForm):
-    aset = SelectField("Data Subset ", )
-    bset = SelectField("Data Subset ", )
+    aset = SelectField("Edit Subset ", )
+    bset = SelectField("Ref Subset ", )    
+    entire_model = SelectField("Ref Model ", )
+
     newsubset_model = SelectField("Model for New Subset ", )
     newsubset_tag = StringField('Name of New Subset', [Optional(strip_whitespace=True)])
-    
-    #subformA = FieldList(FormField(deltaTwoForm))
-    subformB = wtforms.FormField(dataSubSet)
-
-    subformBsize = None
 
     submit = SubmitField("Submit")
+    entire = SubmitField("Get Model")
     create = SubmitField("Create")
-    addProp = SubmitField("Add")

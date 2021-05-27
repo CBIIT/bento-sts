@@ -963,7 +963,7 @@ class mdb:
 
         current_app.logger.warn('getting for tag {} in model {}'.format(dataset, model))
 
-        query_ = """
+        dataset_query_ = """
                 MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
                 WHERE toLower(n.model) = toLower($model)
                 AND   t.key = "submitter"
@@ -972,14 +972,37 @@ class mdb:
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
 
+        all_query_ = """
+                MATCH (n:node)-[np:has_property]->(p:property)
+                WHERE toLower(n.model) = toLower($model)
+                RETURN n.handle, n.nanoid, p.handle, p.nanoid, n.ONLYthisANDnothingMORE, n.QUOTHtheRAVENnevermore; 
+                """
+
+
         db_records = None
-        
-        db_records = tx.run(query_, dataset=dataset, model=model)
-        current_app.logger.warn(' point BB ... using model {}'.format(model))
-        for record in db_records:
-            result.append(record)
+
+        if (dataset == 'all') or dataset is None:
+            db_records = tx.run(all_query_, dataset=dataset, model=model)
+            current_app.logger.warn(' getting entire model {}'.format(model))
+            for record in db_records:
+                result.append(record)
+
+        else:
+            db_records = tx.run(dataset_query_, dataset=dataset, model=model)
+            current_app.logger.warn(' getting all tags w/ dataset ... using model {}'.format(model))
+            for record in db_records:
+                result.append(record)
+
+
+
+
 
         return result
+
+
+
+
+
 
     def get_dataset_tag_choices(self):
         with self.driver.session() as session:
