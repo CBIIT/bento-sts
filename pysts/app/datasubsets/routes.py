@@ -1,5 +1,6 @@
 # route.py
 
+from re import I
 from wtforms.fields.simple import SubmitField
 from app.datasubsets.forms import ChooseSubsetForm, dataSubSet
 from datetime import datetime
@@ -791,14 +792,18 @@ def add():
 
 
     if (entire):
-        if entire == 1:
-            add_from_model = True
-    if 'entire_model' in session:
+        #if entire > 0:
         add_from_model = True
         model_b = bset
+        print(' A: -3')
+    #if 'entire_model' in session:
+    #    add_from_model = True
+    #    model_b = bset
+    #    print(' A: -2')
     if tag_b == 'all':
         add_from_model = True
         model_b = bset
+        print(' A: -1')
 
     if (aset):
         current_app.logger.debug('add: aset is {}'.format(aset))
@@ -807,7 +812,7 @@ def add():
     
     print('logging point A4')
     print('model_a {}'.format(model_a))
-
+    print('model_b {}'.format(model_b))
 
     if add_id:
         current_app.logger.debug('add: add_id is {}'.format(add_id))
@@ -819,8 +824,14 @@ def add():
         session['model_a'] = model_a
         current_app.logger.debug('add: a tag is {}'.format(tag_a))
         current_app.logger.debug('add: a model is {}'.format(model_a))
-    
-    if (add_from_model is False) and (bset):
+
+    print('logging point A5')
+    print('model_a {}'.format(model_a))
+    print('model_b {}'.format(model_b))
+    print('add_from_model {}'.format(add_from_model))
+
+    if (add_from_model == False) and (bset):
+        print('logging point A6')
         current_app.logger.debug('add: bset is {}'.format(bset))
         model_b, tag_b = get_model_and_tag(bset)
         session['tag_b'] = tag_b
@@ -842,7 +853,7 @@ def add():
 
     if ( add_from_model is False) and (tag_a == tag_b):
         current_app.logger.debug('add: tag_a {} tab_b {} and model_a {} and model_b {}'.format(tag_a, tag_b, model_a, model_b))
-        flash('Sorry Charlie, tag already here....')
+        flash('Sorry Charlie, not adding from dataset back to itself (choose 2 different datasets from same model)')
         return redirect(url_for('datasubsets.edit'))
 
 

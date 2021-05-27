@@ -102,7 +102,7 @@
                                 {% if tagb == 'all' %}
                                     <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=modelb, entire=1, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
                                 {% else %}
-                                    <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=form.bset.data, entire=0, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
+                                    <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=form.bset.data, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
                                 {% endif %}
                             </td>
                         </tr>
