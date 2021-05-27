@@ -422,14 +422,24 @@ def edit():
     plan_b = None
     tag_b = None
     newtagid = None
+    entire_model = None
 
     ## now populate formA and formB if in session
     model_a = session.pop('model_a', None)
     tag_a = session.pop('tag_a', None)
     model_b = session.pop('model_b', None)
     tag_b = session.pop('tag_b', None)
-    entire_model = session.pop('entire_model', None)
+    
+    if 'entire_model' in session:
+        entire_model = session['entire_model']
 
+    if (1):
+        current_app.logger.info(' logging point E--13 ')
+        print('model_a {} '.format(model_a))
+        print('model_b {} '.format(model_b))
+        print('tag_a {} '.format(tag_a))
+        print('tag_b {} '.format(tag_b))
+        print('entire_model {}'.format(entire_model))
 
     m = app.mdb.mdb()
     optgroup_ = m.get_dataset_tag_choices()
@@ -444,7 +454,9 @@ def edit():
     oneform.newsubset_model.choices = possible_avail_models_
     oneform.entire_model.choices = possible_avail_models_
 
+    print('logging point E--7')
 
+    ## coming back around, now load the dataset tables....
     if (tag_a):
         #print('logging, now looking for model {} and tag {}'.format(model_a, tag_a))
         plan_a = m.get_dataset_tags(dataset=tag_a, model=model_a)
@@ -453,8 +465,9 @@ def edit():
         session['model_a'] = model_a
         if 'choice_a' in session:
             oneform.aset.data = session['choice_a']
+        print('logging point E--6')
 
-    if (tag_b):
+    if (tag_b) and (tag_b != 'all'):
         #print('logging, now looking for model {} and tag {}'.format(model_b, tag_b))
         plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
         #print('logging, now HAVE for model {} and tag {}'.format(model_b, tag_b))
@@ -462,8 +475,24 @@ def edit():
         session['model_b'] = model_b
         if 'choice_b' in session:
             oneform.bset.data = session['choice_b']
-
         print('logging point E--5')
+
+    if (entire_model) and (tag_b == 'all'): 
+        session['tag_b'] = tag_b
+        session['model_b'] = model_b
+        session['entire_model'] = entire_model
+        oneform.entire_model.data = model_b
+        plan_b = m.get_dataset_tags(dataset=tag_b, model=model_b)
+        print('logging point E--4')
+
+
+    if (1):
+        current_app.logger.info(' logging point E--3 ')
+        print('model_a {} '.format(model_a))
+        print('model_b {} '.format(model_b))
+        print('tag_a {} '.format(tag_a))
+        print('tag_b {} '.format(tag_b))
+        print('entire_model {}'.format(entire_model))
 
     pprint.pprint(' E0 >> ')
 
@@ -495,7 +524,10 @@ def edit():
             print('dumping oneform')
             print('done.')
 
+        pprint.pprint(' E2 ')
+
         if (oneform.submit.data):
+            pprint.pprint(' E3 ')
             # hack as a way to extract the model and tag from the choice/html form
             if (1):
                 print('GOOD VALIDATION')
@@ -526,8 +558,12 @@ def edit():
                 session['tag_b'] = tag_b
                 session['model_b'] = model_b
                 session['choice_b'] = oneform.bset.data
+                session['entire_model'] = None
                 
+        pprint.pprint(' E4 ')
+
         if 'entire' in request.form:
+            pprint.pprint(' E5 ')
             if request.form['entire'] == 'Get Model':
                 #tag = oneform.newsubset_tag.data.strip()
                 model_b = oneform.entire_model.data
@@ -538,8 +574,12 @@ def edit():
                 session['model_b'] = model_b
                 session['entire_model'] = model_b
                 session['choice_b'] = oneform.bset.data
+                pprint.pprint(' E8 ')
+
+        pprint.pprint(' E7 ')
 
         if (oneform.create.data):
+            print.pprint(' E8 ')
             tag = oneform.newsubset_tag.data.strip()
             if (oneform.newsubset_model.data is not None and tag is not None and tag != ''):
                 newtagid = m.create_submitter_tag_for_model(oneform.newsubset_model.data, oneform.newsubset_tag.data)
@@ -553,13 +593,20 @@ def edit():
         #    session['tag_b'] = tag_b
         #    session['model_b'] = model_b
 
-        pprint.pprint(' E4 >> ')
+        pprint.pprint(' E10 >> ')
 
-    pprint.pprint(' E5 ')
+    pprint.pprint(' E11 ')
     print(' tag_a is {} '.format(tag_a))
     print(' tag_b is {} '.format(tag_b))
+    print('model_a {} '.format(model_a))
+    print('model_b {} '.format(model_b))
+    print('entire_model {}'.format(entire_model))
+
     print(' new model id is {} '.format(oneform.newsubset_model.data))
     print(' new tag id is {} '.format(oneform.newsubset_tag.data))
+    print(' entire model id is {} '.format(oneform.entire_model.data))
+    
+    current_app.logger.info(' logging point E13 ')    
 
     return render_template(
         "edit.html",
@@ -649,6 +696,9 @@ def act():
             print(' ... create shortname {}'.format(oneform.create.type))
             print(' ... create type {}'.format(oneform.create.short_name))
 
+            print(' ... create data {}'.format(oneform.entire.data))
+            print(' ... create label {}'.format(oneform.entire.label))
+
             print('dumping oneform')
             print('done.')
 
@@ -683,9 +733,11 @@ def act():
                 session['tag_b'] = tag_b
                 session['model_b'] = model_b
                 session['choice_b'] = oneform.bset.data
+                session['entire_model'] = None
 
         if 'entire' in request.form:
-            if request.form['entire'] == 'Get Model':
+            print('.. detected entire')
+            if (request.form['entire']):
                 #tag = oneform.newsubset_tag.data.strip()
                 model_b = oneform.entire_model.data
                 tag_b = "all"
@@ -713,6 +765,8 @@ def act():
 @login_required
 def add():    
 
+    print('logging point A0')
+
     current_app.logger.info('Datasubset Add')
     current_app.logger.info('request_url is {}'.format(request.url))
      
@@ -725,15 +779,36 @@ def add():
     tag_b = None
     model_b = None
 
+    add_from_model = False
+
     add_id = request.args.get('add_id', None)
     aset = request.args.get('aset', None)
     bset = request.args.get('bset', None)
     bnode = request.args.get('bnode', None)
-    if (aset):
-         current_app.logger.debug('add: aset is {}'.format(aset))
-    if (bset):
-         current_app.logger.debug('add: bset is {}'.format(bset))
+    entire = request.args.get('entire', None)
     
+    print('logging point A3')
+
+
+    if (entire):
+        if entire == 1:
+            add_from_model = True
+    if 'entire_model' in session:
+        add_from_model = True
+        model_b = bset
+    if tag_b == 'all':
+        add_from_model = True
+        model_b = bset
+
+    if (aset):
+        current_app.logger.debug('add: aset is {}'.format(aset))
+    if (bset):
+        current_app.logger.debug('add: bset is {}'.format(bset))
+    
+    print('logging point A4')
+    print('model_a {}'.format(model_a))
+
+
     if add_id:
         current_app.logger.debug('add: add_id is {}'.format(add_id))
     
@@ -745,7 +820,7 @@ def add():
         current_app.logger.debug('add: a tag is {}'.format(tag_a))
         current_app.logger.debug('add: a model is {}'.format(model_a))
     
-    if bset:
+    if (add_from_model is False) and (bset):
         current_app.logger.debug('add: bset is {}'.format(bset))
         model_b, tag_b = get_model_and_tag(bset)
         session['tag_b'] = tag_b
@@ -754,13 +829,23 @@ def add():
         current_app.logger.debug('add: b node is {}'.format(bnode))
         current_app.logger.debug('add: b model is {}'.format(model_b))
 
-    if model_a != model_b:
+    print('logging point A10')
+    print('model_a {}'.format(model_a))
+    print('model_b {}'.format(model_b))
+    print('tag_a {}'.format(tag_a))
+    print('tag_b {}'.format(tag_b))
+    print('add_from_model{}'.format(add_from_model))
+
+    if (model_a != model_b):
         flash('Both Models must be the same')
         return redirect(url_for('datasubsets.edit'))
 
-    if tag_a == tag_b:
+    if ( add_from_model is False) and (tag_a == tag_b):
+        current_app.logger.debug('add: tag_a {} tab_b {} and model_a {} and model_b {}'.format(tag_a, tag_b, model_a, model_b))
         flash('Sorry Charlie, tag already here....')
         return redirect(url_for('datasubsets.edit'))
+
+
 
     m = app.mdb.mdb()
     m.add_submitter_tag_for_model_prop(model=model_a, nodenanoid=bnode, propnanoid=add_id, tag=tag_a)
@@ -809,13 +894,13 @@ def remove():
         current_app.logger.debug('remove: a tag is {}'.format(tag_a))
         current_app.logger.debug('remove: a model is {}'.format(model_a))
     
-    if bset:
-        current_app.logger.debug('remove: bset is {}'.format(bset))
-        model_b, tag_b = get_model_and_tag(bset)
-        session['tag_b'] = tag_b
-        session['model_b'] = model_b
-        current_app.logger.debug('remove: b tag is {}'.format(tag_b))
-        current_app.logger.debug('remove: b model is {}'.format(model_b))
+    #if bset:
+    #    current_app.logger.debug('remove: bset is {}'.format(bset))
+    #    model_b, tag_b = get_model_and_tag(bset)
+    #    session['tag_b'] = tag_b
+    #    session['model_b'] = model_b
+    #    current_app.logger.debug('remove: b tag is {}'.format(tag_b))
+    #    current_app.logger.debug('remove: b model is {}'.format(model_b))
 
     if (remove_id is not None and tag_a is not None and model_a is not None and anode is not None):
         m = app.mdb.mdb()

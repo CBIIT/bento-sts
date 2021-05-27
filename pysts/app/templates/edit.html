@@ -48,10 +48,8 @@
     <div class="container">     
          <div class="row w-100">
             <div class="col-6"> 
-                {% if formatteda %}
-                {% for tag in formatteda %}
-                <h2> MAIN: {{ taga }}</h2>
-                
+
+                <h3> Dataset: {{ taga }}</h3>
                 <table class="table table-striped">
                     <tr>
                             <th>Node</th>
@@ -59,6 +57,9 @@
                             <th>Remove</th>
                     </tr>
                 
+                    {% if formatteda %}
+                    {% for tag in formatteda %}
+
                     {% for row in formatteda[tag] %}
                         <tr>
                                 <td> <a href="{{url_for('main.nodes', id=row[1] ) }}">{{ row[0] }}</a> </td>
@@ -67,32 +68,42 @@
                                 </td>
                         </tr>
                    {% endfor %}
-                </table>
+                  <!--</table> -->
 
-                <br><br>
                 {% endfor %} 
                 {% else %}
-                No tags were found
                 {% endif %}
+            </table>
+
+            <br><br>
             </div>
 
             <div class="col-6">
-                {% if formattedb %}
-                {% for tag in formattedb %}
-                <h2> REF: {{ tagb }}</h2>
-            
+
+                {% if tagb == 'all' %}
+                    <h3> Entire Model: {{ modelb }}</h3>
+                {% else %}
+                    <h3> Reference Dataset: {{ tagb }} </h3>
+                {% endif %}
                 <table class="table table-striped">
                     <tr>
                         <th>Node</th>
                         <th>Property</th>
                         <th>Remove</th>
                     </tr>
+
+                {% if formattedb %}
+                {% for tag in formattedb %}
                     {% for row in formattedb[tag] %}
                         <tr>
                             <td> <a href="{{url_for('main.nodes', id=row[1] ) }}">{{ row[0] }}</a> </td>
                             <td> <a href="{{url_for('main.properties', id=row[3] ) }}">{{ row[2] }}</a> </td>
-                            <td> <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=form.bset.data, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
-
+                            <td> 
+                                {% if tagb == 'all' %}
+                                    <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=modelb, entire=1, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
+                                {% else %}
+                                    <a href="{{url_for('datasubsets.add',    add_id=row[3],    aset=form.aset.data, bset=form.bset.data, entire=0, bnode=row[1] ) }}" , class="badge badge-primary"><i class="bi bi-plus-circle-fill" style="color: white;"></i> Add</a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
@@ -101,7 +112,6 @@
                 <br><br>
                 {% endfor %} 
                 {% else %}
-                No tags were found
                 {% endif %}
             </div> <!-- end row-->
         </div>

@@ -39,12 +39,12 @@ class deltaThreeForm(FlaskForm):
         return cls
 
 class deltaOneForm(FlaskForm):
-    aset = SelectField("Edit Subset ", )
-    bset = SelectField("Ref Subset ", )    
-    entire_model = SelectField("Ref Model ", )
+    aset = SelectField("Edit Dataset ", )
+    bset = SelectField("Reference Dataset ", )    
+    entire_model = SelectField("Reference Model ", )
 
-    newsubset_model = SelectField("Model for New Subset ", )
-    newsubset_tag = StringField('Name of New Subset', [Optional(strip_whitespace=True)])
+    newsubset_model = SelectField("Model for New Dataset ", )
+    newsubset_tag = StringField('Name of New Dataset', [Optional(strip_whitespace=True)])
 
     submit = SubmitField("Submit")
     entire = SubmitField("Get Model")
