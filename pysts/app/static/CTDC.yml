@@ -1,0 +1,286 @@
+# CTDC
+Nodes:
+  arm:
+    Props:
+      - arm_drug
+      - arm_id
+      - arm_target
+      - arm_title
+      - dbgap_accession_number
+      - pubmed_id
+      - show_node
+  assignment_report:
+    Props:
+      - analysis_id
+      - assignment_logic
+      - assignment_outcome
+      - assignment_report_id
+      - show_node
+      - step_at_assignment
+      - treatment_outcome
+  case:
+    Props:
+      - case_id
+      - ctep_category
+      - ctep_subcategory
+      - current_step
+      - disease
+      - ecog_performance_status
+      - ethnicity
+      - extent_of_disease
+      - gender
+      - meddra_code
+      - patient_status
+      - prior_drugs
+      - race
+      - show_node
+      - source_id
+  clinical_trial:
+    Props:
+      - clinical_trial_description
+      - clinical_trial_designation
+      - clinical_trial_id
+      - clinical_trial_long_name
+      - clinical_trial_short_name
+      - clinical_trial_type
+      - dbgap_accession_number
+      - lead_organization
+      - principal_investigators
+      - show_node
+  copy_number_variant:
+    Props:
+      - chromosome
+      - external_variant_id
+      - gene
+      - oncomine_variant_class
+      - show_node
+      - tumor_suppressor
+      - variant_id
+  delins_variant:
+    Props:
+      - alternative
+      - amino_acid_change
+      - chromosome
+      - exon
+      - external_variant_id
+      - gene
+      - genomic_hgvs
+      - oncomine_variant_class
+      - position
+      - reference
+      - show_node
+      - transcript_hgvs
+      - transcript_id
+      - variant_classification
+      - variant_id
+  disease_eligibility_criterion:
+    Props:
+      - criterion_type
+      - ctep_category
+      - ctep_short_name
+      - ctep_subcategory
+      - disease_eligibility_criterion_id
+      - meddra_code
+      - show_node
+  drug_eligibility_criterion:
+    Props:
+      - criterion_type
+      - drug_eligibility_criterion_id
+      - drug_name
+      - show_node
+  file:
+    Props:
+      - file_description
+      - file_format
+      - file_location
+      - file_name
+      - file_size
+      - file_status
+      - file_type
+      - md5sum
+      - show_node
+      - uuid
+  gene_fusion_variant:
+    Props:
+      - external_variant_id
+      - gene1
+      - gene2
+      - oncomine_variant_class
+      - show_node
+      - variant_id
+  ihc_assay_report:
+    Props:
+      - ihc_assay_id
+      - ihc_test_gene
+      - ihc_test_result
+      - show_node
+  indel_variant:
+    Props:
+      - alternative
+      - amino_acid_change
+      - chromosome
+      - exon
+      - external_variant_id
+      - gene
+      - genomic_hgvs
+      - oncomine_variant_class
+      - position
+      - reference
+      - show_node
+      - transcript_hgvs
+      - transcript_id
+      - variant_classification
+      - variant_id
+  metastatic_site:
+    Props:
+      - met_site_id
+      - metastatic_site_name
+      - show_node
+  nucleic_acid:
+    Props:
+      - aliquot_id
+      - molecular_sequence_number
+      - nucleic_acid_concentration
+      - nucleic_acid_type
+      - nucleic_acid_volume
+      - show_node
+  sequencing_assay:
+    Props:
+      - experimental_method
+      - platform
+      - qc_result
+      - sequencing_assay_id
+      - show_node
+  snv_variant:
+    Props:
+      - alternative
+      - amino_acid_change
+      - chromosome
+      - exon
+      - external_variant_id
+      - gene
+      - genomic_hgvs
+      - oncomine_variant_class
+      - position
+      - reference
+      - show_node
+      - transcript_hgvs
+      - transcript_id
+      - variant_classification
+      - variant_id
+  specimen:
+    Props:
+      - biopsy_sequence_number
+      - show_node
+      - specimen_id
+      - specimen_type
+  variant_report:
+    Props:
+      - analysis_id
+      - cellularity
+      - mapd
+      - reference_genome
+      - show_node
+      - torrent_variant_caller_version
+      - variant_report_id
+Relationships:
+  copy_number_variant_of:
+    Mul: many_to_many
+    Ends: 
+      - Src: copy_number_variant
+        Dst: variant_report
+    Props:
+      - copy_number
+      - copy_number_ci_5
+      - copy_number_ci_95
+  delins_variant_of:
+    Mul: many_to_many
+    Ends: 
+      - Src: delins_variant
+        Dst: variant_report
+    Props:
+      - allele_frequency
+  gene_fusion_variant_of:
+    Mul: many_to_many
+    Ends: 
+      - Src: gene_fusion_variant
+        Dst: variant_report
+    Props:
+      - gene1_read_count
+      - gene2_read_count
+  indel_variant_of:
+    Mul: many_to_many
+    Ends: 
+      - Src: indel_variant
+        Dst: variant_report
+    Props:
+      - allele_frequency
+  met_site_of:
+    Mul: many_to_many
+    Ends: 
+      - Src: metastatic_site
+        Dst: case
+    Props: null
+  of_arm:
+    Mul: many_to_many
+    Ends: 
+      - Src: disease_eligibility_criterion
+        Dst: arm
+      - Src: assignment_report
+        Dst: arm
+      - Src: file
+        Dst: arm
+      - Src: case
+        Dst: arm
+      - Src: drug_eligibility_criterion
+        Dst: arm
+    Props: null
+  of_case:
+    Mul: many_to_one
+    Ends: 
+      - Src: specimen
+        Dst: case
+    Props: null
+  of_nucleic_acid:
+    Mul: many_to_one
+    Ends: 
+      - Src: sequencing_assay
+        Dst: nucleic_acid
+    Props: null
+  of_sequencing_assay:
+    Mul: many_to_one
+    Ends: 
+      - Src: file
+        Dst: sequencing_assay
+      - Src: variant_report
+        Dst: sequencing_assay
+    Props: null
+  of_specimen:
+    Mul: many_to_one
+    Ends: 
+      - Src: assignment_report
+        Dst: specimen
+      - Src: nucleic_acid
+        Dst: specimen
+      - Src: ihc_assay_report
+        Dst: specimen
+    Props: null
+  of_trial:
+    Mul: many_to_one
+    Ends: 
+      - Src: arm
+        Dst: clinical_trial
+    Props: null
+  of_variant_report:
+    Mul: many_to_one
+    Ends: 
+      - Src: assignment_report
+        Dst: variant_report
+    Props: null
+  snv_variant_of:
+    Mul: many_to_many
+    Ends: 
+      - Src: snv_variant
+        Dst: variant_report
+    Props:
+      - allele_frequency

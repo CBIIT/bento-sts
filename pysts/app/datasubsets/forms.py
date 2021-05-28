@@ -12,8 +12,15 @@ class ChooseSubsetForm(FlaskForm):
     submit = SubmitField("Select Data Subset")
 
 class gammaSubsetForm(FlaskForm):
+    """for selecting and exporting"""
     datasubsets = SelectField("Data Subset ", )
     submit = SubmitField("Select Data Subset")
+
+    exportcsv = SubmitField("Export CSV ")
+    exportjson = SubmitField("Export JSON")
+    exportyaml = SubmitField("Export Yaml")
+    exportxlsx = SubmitField("Export XLXS")
+
 
 
 class deltaTwoForm(FlaskForm):
@@ -39,13 +46,13 @@ class deltaThreeForm(FlaskForm):
         return cls
 
 class deltaOneForm(FlaskForm):
-    aset = SelectField("Edit Dataset ", )
-    bset = SelectField("Reference Dataset ", )    
+    aset = SelectField("Edit Data Subset ", )
+    bset = SelectField("Reference Data Subset ", )    
     entire_model = SelectField("Reference Model ", )
 
-    newsubset_model = SelectField("Model for New Dataset ", )
-    newsubset_tag = StringField('Name of New Dataset', [Optional(strip_whitespace=True)])
+    newsubset_model = SelectField("Model for New Data Subset ", )
+    newsubset_tag = StringField('Name of New Data Subset', [Optional(strip_whitespace=True)])
 
-    submit = SubmitField("Submit")
+    submit = SubmitField("Get Data Subsets")
     entire = SubmitField("Get Model")
     create = SubmitField("Create")

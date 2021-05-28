@@ -3,8 +3,11 @@
 
 {% block app_content %}
     <br>
-    <h1> {{ title }} </h1>
+    <h1> {{ title }}</h1>
     {% if display == 'detail'  %}
+    <div class="float-right">
+      <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+    </div>
     <br><br>
     <div>
       <h3> Details </h3>

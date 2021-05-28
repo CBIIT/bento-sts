@@ -5,34 +5,116 @@
     <br>
     <h1> {{ title }} {{ mdb.handle}} </h1>
     {% if display == 'detail'  %}
-    <br><br>
-    <div>
-      <h3> Details </h3>
-      <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
-      <table class="table-striped">
-         <tr>
-            <th style="width:300px"> Handle </th> 
-            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
-       </tr>
-        <tr>
-            <td> Id </td> <td>{{mdb.id}} </td>
-       </tr>
-        <tr>
-            <td> Model </td> <td>{{mdb.model}} </td>
-       </tr>
-       {% if mdb.value_domain %}
-       <tr>
-            <td> Value domain </td> <td>{{mdb.value_domain}} </td>
-       </tr>
-       {% endif %}
-       {% if mdb._for_nodehandle %}
-       <tr>
-         <td> For Node </td> <td><a href="{{url_for( 'main.nodes', id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
-       </tr>
-       {% endif %}
-      </table>
-      </div>
+    <div class="float-right">
+        <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
     </div>
+    <br><br>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-6">
+                            
+                            <h3> Property Details </h3>
+                            <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
+                            <table class="table table-striped">
+                                <tr>
+                                    <th scope="row" style="width:100px"> Handle </th> 
+                                    <th scope="row" style="width:250px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+                
+                            </tr>
+                                <tr>
+                                    <td> Id </td> <td>{{mdb.id}} </td> 
+                            </tr>
+                                <tr>
+                                    <td> Model </td> <td>{{mdb.model}} </td> 
+                            </tr>
+
+                            {% if mdb._for_nodehandle %}
+                            <tr>
+                                <td> For Node </td> <td><a href="{{url_for( 'main.nodes', id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
+                                
+                            </tr>
+                            {% endif %}
+
+                            </table>
+                            <div class="float-left">
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editTermModal">
+                                Edit Property
+                                </button>
+                                <!-- Button trigger modal -->
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecateTermModal">
+                                  Deprecate Property
+                                  </button>
+                               </div>   
+                            </div>
+
+                    </div>     <!-- end col-->
+
+
+                    <div class="col-lg-6">
+
+                        <h3> Property Attributes </h3>
+                        <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
+                        <table class="table table-striped">
+    
+                            <tbody>                               
+                            <tr>
+                                <th scope="row">Value Domain</th>
+                                <td>
+                                    {% if mdb.value_domain %}
+                                       {{ mdb.value_domain }}
+                                    {% endif %}
+                                </td>
+                                
+                          </tr> 
+        
+                              <tr>
+                                <td>Required</td>
+                                <td>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                                        <label class="custom-control-label" for="customSwitch1"></label>
+                                      </div>
+                                </td>
+                                
+                 
+                                <tr>
+                                    <td>Units</td>
+                                    <td>
+                                        <p class="text-muted"><em>empty</em></p>
+                                    </td>
+                                    
+        
+                                </tr>
+                                <tr>
+                                    <td>Description</td>
+                                    <td>
+                                        <p class="text-muted"><em>empty</em></p>
+                                    </td>
+                                    
+                                  </tr>  
+                                <tr>
+                                    <td>Instructions</td>
+                                    <td>
+                                        <p class="text-muted"><em>empty</em></p>
+                                    </td>
+                                    
+                                  </tr>
+                                
+                                <tr>
+                                    <td>Internal Comments</td>
+                                    <td>
+                                        <p class="text-muted"><em>empty</em></p>
+                                    </td>
+                        
+                                </tr>
+
+                            </tbody>
+                          </table>
+                        </div>
+                    </div>    <!-- end col--> 
+                </div> <!-- end row-->
+            </div> <!-- end container-->
+
 
     <br>    <br>
 
