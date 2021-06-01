@@ -5,6 +5,7 @@
     <br>
     <h1> {{ title }} </h1>
     {% if display == 'list' %}
+
     <br><br>
       <table class="table table-striped">
          <tr>
@@ -18,12 +19,17 @@
     {% endif %} 
 
     {% if display == 'detail' %}
+    <div class="float-right">
+        <a href="{{url_for( subtype, name=mdb.handle, format='yaml' ) }}" class="btn btn-outline-primary btn-sm"> Export Yaml</a>
+    </div>
         {% if mdb.handle == 'ICDC' %}
         <br>
         ICDC Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
         <br>
         View model in <a href="https://cbiit.github.io/icdc-model-tool/">Github</a>
         <br>
+        <br> 
+
         <br>
         <img src="/static/icdc-model.svg" alt="icdc-model" class="img-fluid" width="900">
         {% endif %}
@@ -35,6 +41,7 @@
         View model in <a href="https://cbiit.github.io/ctdc-model/">Github</a>
         <br>
         <br>
+        <br>
         <img src="/static/ctdc-model.svg" alt="ctdc-model" class="img-fluid" width="900">
         {% endif %}
         
@@ -43,6 +50,9 @@
         Bento Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
         <br>
         View model in <a href="https://github.com/CBIIT/BENTO-TAILORx-model">Github</a>
+        <br>
+        <br>
+
         {% endif %}
     {% endif %}
 

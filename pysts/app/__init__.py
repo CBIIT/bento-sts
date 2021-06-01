@@ -30,6 +30,9 @@ def create_app(config_class=Config):
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_class)
 
+    """ or set to None for default theme """
+    app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = 'spacelab' 
+
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
@@ -56,6 +59,9 @@ def create_app(config_class=Config):
 
     from app.datasubsets import bp as datasubsets_bp
     app.register_blueprint(datasubsets_bp)
+
+    from app.ver import bp as ver_bp
+    app.register_blueprint(ver_bp)
 
     if not app.debug and not app.testing:
         if app.config["MAIL_SERVER"]:

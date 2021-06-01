@@ -5,6 +5,12 @@
     <br>
     <h1> {{ title }}: {{mdb.handle}} </h1>
     {% if display == 'detail'  %}
+    <div class="float-right">
+      <div class="float-right">
+        <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+      </div>
+  
+      </div>
     <br><br>
     <div>
       <h3> Node Details </h3>
@@ -24,9 +30,15 @@
       </div>
     </div>
         <!-- Button trigger modal -->
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editNodeModal">
-            Edit Node
-            </button>
+            <div class="float-left">
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editNodeModal">
+                Edit Node
+                </button>
+                  <!-- Button trigger modal -->
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecateNodeModal">
+                    Deprecate Node
+                    </button>
+                 </div> 
             <br><br>
            
     <!-- Modal -->
