@@ -60,8 +60,8 @@ def create_app(config_class=Config):
     from app.datasubsets import bp as datasubsets_bp
     app.register_blueprint(datasubsets_bp)
 
-    from app.vis import bp as vis_bp
-    app.register_blueprint(vis_bp)
+    from app.ver import bp as ver_bp
+    app.register_blueprint(ver_bp)
 
     if not app.debug and not app.testing:
         if app.config["MAIL_SERVER"]:
