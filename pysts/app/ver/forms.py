@@ -8,7 +8,7 @@ from wtforms_components import SelectField
 class ModelVersioningForm(FlaskForm):
     #datasubsets = SelectField("Data Subset ",)
     
-    icdc_release = SelectField('ICDC', choices=[ ('1', 'Release 1'), ('2', 'nullo') ] )
+    releases = SelectField('Releases', choices=[ ] )
 
     report_format = SelectField('Report Format', choices=[ ('json', 'json'), ('csv', 'csv') ] )
 

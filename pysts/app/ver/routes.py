@@ -39,7 +39,15 @@ def versioning():
 
     current_app.logger.warn('versioning')
 
-    return "hello world"
+    m = app.mdb.mdb()
+    optgroup_ = m.get_dataset_tag_choices()
+
+    versionform = ModelVersioningForm()
+    versionform.releases.choices = optgroup_
+
+    return render_template(
+        "version-history-report.html",
+        form=versionform)
 
 @bp.route("/versioningicdc", methods=["GET", "POST"])
 @login_required
@@ -56,5 +64,5 @@ def versioningicdc():
 
 
     return render_template(
-        "version-history-report.html",
+        "version-history.html",
         form=versionform)
