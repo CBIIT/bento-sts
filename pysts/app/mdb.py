@@ -1001,6 +1001,62 @@ class mdb:
 
 
 
+    def get_dataset(self, dataset=None, model=None):
+        with self.driver.session() as session:
+            current_app.logger.warn('have model {}'.format(model))
+            tag_records = session.read_transaction(self._get_dataset_from_db, dataset, model)
+        return tag_records
+            #formatted_tags = self.format_tags_records(tag_records)
+        #return formatted_tags
+
+
+    @staticmethod
+    def _get_dataset_from_db(tx, dataset=None, model=None):
+        result = []
+
+        current_app.logger.warn('getting for tag {} in model {}'.format(dataset, model))
+
+        dataset_query_ = """
+                MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
+                WHERE toLower(n.model) = toLower($model)
+                AND   t.key = "submitter"
+                AND   t.value = $dataset
+                MATCH (n)-[z:in_dataset { dataset: $dataset } ]->(p)
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs:value_set)
+                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value, p.value_domain, vs.nanoid, p.required, p.units, p.description, p.instructions, p.internal_comments, p.example ;
+                """
+
+        all_query_ = """
+                MATCH (n:node)-[np:has_property]->(p:property)
+                WHERE toLower(n.model) = toLower($model)
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs:value_set)
+                RETURN n.handle, n.nanoid, p.handle, p.nanoid, n.ONLYthisANDnothingMORE, n.QUOTHtheRAVENnevermore, p.value_domain, vs.nanoid, p.required, p.units, p.description, p.instructions, p.internal_comments, p.example; 
+                """
+
+
+        db_records = None
+
+        if (dataset == 'all') or dataset is None:
+            db_records = tx.run(all_query_, dataset=dataset, model=model)
+            current_app.logger.warn(' getting entire model {}'.format(model))
+            for record in db_records:
+                _entry = []
+                for part in record:
+                    _entry.append(part)
+                #result.append(record)
+                result.append(_entry)
+
+        else:
+            db_records = tx.run(dataset_query_, dataset=dataset, model=model)
+            current_app.logger.warn(' getting all tags w/ dataset ... using model {}'.format(model))
+            for record in db_records:
+                #result.append(record)
+                _entry = []
+                for part in record:
+                    _entry.append(part)
+                result.append(_entry)
+
+        return result
 
 
 

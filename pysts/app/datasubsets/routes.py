@@ -23,6 +23,7 @@ from flask import (
     send_from_directory
 )
 from flask_login import current_user, login_required
+import flask_excel
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
@@ -86,13 +87,16 @@ def tagbeta():
         formatted_tags=plan_
     )
 
-
-@bp.route("/datasubsets", methods=["GET", "POST"])
+@bp.route("/datasubsets", defaults={'datasubsetid': None}, methods=["GET", "POST"])
+@bp.route("/datasubsets/<datasubsetid>", methods=["GET", "POST"])
 @login_required
-def datasubsets():
+def datasubsets(datasubsetid):
+
+    print('=-=-=-=-=-=-=-=-=-=-=-==-=-=-\n\n')
+    current_app.logger.warn('Gamma> datasubsetid is {}'.format(datasubsetid))
 
     model_ = None
-    plan_ = None
+    dataplan_ = None
     tag_ = None
 
     m = app.mdb.mdb()
@@ -102,12 +106,66 @@ def datasubsets():
     
     tagform.datasubsets.choices = optgroup_
 
+    if request.method == 'GET':
+        print('Gamma> GET 10 logging, now looking for datasubset {}'.format(datasubsetid))
+        current_app.logger.warn('Gamma> 11datasubsetid is {}'.format(datasubsetid))
+
+        if datasubsetid is None:
+            datasubsetid = session['datasubset']
+        
+        if (datasubsetid):
+            tagform.datasubsets.data = datasubsetid
+            model_, tag_ = get_model_and_tag(datasubsetid)
+            print('Gamma GET logging, now looking for model {} and tag {}'.format(model_, tag_))
+            dataplan_ = m.get_dataset(dataset=tag_, model=model_)
+            print('Gamma GET logging, now HAVE for A model {} and tag {}'.format(model_, tag_))
+            session['tag_'] = tag_
+            session['model_'] = model_
+            session['datasubset'] = datasubsetid
+            current_app.logger.warn(' .. Gamma GET point datasubsets... got... {}'.format(dataplan_))
+
     if tagform.validate_on_submit():
+
+        if tagform.submit.data:
+            datasubsetid = tagform.datasubsets.data
+            model_, tag_ = get_model_and_tag(datasubsetid)
+            session['datasubset'] = datasubsetid
+            #print('logging, now looking for model {} and tag {}'.format(model_, tag_))
+            #if model is None:
+            #    model = 'All Model'
+            plan_ = m.get_dataset_tags(dataset=tag_, model=model_)
+            current_app.logger.warn(' .. point submit... got... {}'.format(plan_))
+
+        if tagform.submit.data:
+            datasubsetid = tagform.datasubsets.data
+            model_, tag_ = get_model_and_tag(datasubsetid)
+            session['datasubset'] = datasubsetid
+            print('Gamma POST logging, now looking for model {} and tag {}'.format(model_, tag_))
+            dataplan_ = m.get_dataset(dataset=tag_, model=model_)
+            print('Gamma POST logging, now HAVE for A model {} and tag {}'.format(model_, tag_))
+            session['tag_'] = tag_
+            session['model_'] = model_
+            session['datasubset'] = datasubsetid
+            current_app.logger.warn(' .. Gamma POST point datasubsets... got... {}'.format(dataplan_))
+            return redirect(url_for('datasubsets.datasubsets', datasubsetid=datasubsetid))
 
         if (tagform.exportcsv.data):
             print('hello there csv!')
             #return render_template("export-csv.html")
-            return current_app.send_static_file('dataset-export.csv')
+            model_, tag_ = get_model_and_tag(tagform.datasubsets.data)
+            print('Gamma CSV logging, now looking for model {} and tag {}'.format(model_, tag_))
+            dataplan_ = m.get_dataset(dataset=tag_, model=model_)
+            import pprint
+            pprint.pprint('dataplan_ is')
+            pprint.pprint(dataplan_)
+            print('>git ut<')
+            print('Gamma CSV logging, now HAVE for A model {} and tag {}'.format(model_, tag_))
+            session['tag_'] = tag_
+            session['model_'] = model_
+            session['datasubset'] = tagform.datasubsets.data
+            current_app.logger.warn(' .. Gamma CSV point datasubsets... got... {}'.format(dataplan_))
+            return flask_excel.make_response_from_array(dataplan_, "csv")
+
         if (tagform.exportjson.data):
             print('general kenobi')
             #return render_template("export-json.html")
@@ -120,21 +178,15 @@ def datasubsets():
             print('xlsx')
             #return render_template("export-json.html")
             return current_app.send_static_file('dataset-export.xlsx')
-        if tagform.submit.data:
-            model_, tag_ = get_model_and_tag(tagform.datasubsets.data)
-            #print('logging, now looking for model {} and tag {}'.format(model_, tag_))
-            #if model is None:
-            #    model = 'All Model'
-            plan_ = m.get_dataset_tags(dataset=tag_, model=model_)
+                
 
-        #current_app.logger.warn('point 4 got... {}'.format(plan_))
-
+    print('Gamma < end')
     return render_template(
         "datasubsets.html",
         form=tagform,
         tag=tag_,
         model=model_,
-        formatted_tags=plan_
+        formatted_dataset=dataplan_
     )
 
 @bp.route("/tag-delta", methods=["GET", "POST"])
