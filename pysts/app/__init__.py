@@ -10,6 +10,7 @@ from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_dropzone import Dropzone
 from flask_wtf.csrf import CSRFProtect
+import flask_excel
 from elasticsearch import Elasticsearch
 from config import Config
 
@@ -40,6 +41,7 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     moment.init_app(app)
     csrf.init_app(app)
+    flask_excel.init_excel(app)
     app.elasticsearch = (
         Elasticsearch([app.config["ELASTICSEARCH_URL"]])
         if app.config["ELASTICSEARCH_URL"]
