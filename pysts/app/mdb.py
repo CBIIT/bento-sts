@@ -337,6 +337,35 @@ class mdb:
             # TODO update elasticsearch, remove old handle and add new
         return node_
 
+    
+    # ------------------------------------------------------------------------- #
+
+    @staticmethod
+    def _do_deprecate_node(tx, neo4jquery, nid):
+        print("deprecating node {}".format(nid))
+        result = []
+
+        answers = tx.run(neo4jquery, nid=nid)
+
+        for record in answers:
+            result.append(record)
+        return result
+
+    def get_query_to_deprecate_node(self):
+        return '''
+                MATCH (n:node)
+                WHERE n.nanoid = $nid and n._to IS NULL
+                SET n._to = ( n._from + 1 )
+                RETURN id(n);
+                '''
+
+    def deprecate_node(self, nid):
+        with self.driver.session() as session:
+            query = self.get_query_to_deprecate_node()
+            node_ = session.write_transaction(self._do_deprecate_node, query, nid)
+            # TODO update elasticsearch, remove old node
+        return node_
+
     # ############################################################################################### #
     # VALUESETS
     # ############################################################################################### #

@@ -40,20 +40,22 @@ class DeprecateTermForm(FlaskForm):
     submit = SubmitField("Deprecate Term")
 
 
-class DiffForm(FlaskForm):
-    mdf_a = SelectField("MDF file A", choices=[])
-    mdf_b = SelectField("MDF file B", choices=[])
-    submit = SubmitField("Get Diff")
-
-
 class EditNodeForm(FlaskForm):
     nodeHandle = StringField('Handle', validators=[InputRequired(message="cannot be blank"), Length(min=0, max=140, message="length of handle must be greater than 0 and less than 140 characters")])
     submit = SubmitField("Save Changes")
+
+class DeprecateNodeForm(FlaskForm):
+    submit = SubmitField("Deprecate Node")
 
 
 class EmptyForm(FlaskForm):
     submit = SubmitField("Submit")
 
+
+class DiffForm(FlaskForm):
+    mdf_a = SelectField("MDF file A", choices=[])
+    mdf_b = SelectField("MDF file B", choices=[])
+    submit = SubmitField("Get Diff")
 
 class PostForm(FlaskForm):
     post = TextAreaField("Say something", validators=[DataRequired()])

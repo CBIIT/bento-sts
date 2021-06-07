@@ -21,7 +21,8 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm, DiffForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
+from app.main.forms import EditNodeForm, DeprecateNodeForm
 from app.main.forms import EditPropForm, DeprecatePropForm
 import app.search
 from app.models import User, Post, Entity
@@ -100,7 +101,7 @@ def nodes(nodeid):
         if id_ is not None:
             id = id_
 
-    current_app.logger.warn('> NODES id {} and id_{} and nodeid {}'.format(id, id_, nodeid ))
+    current_app.logger.warn('> NODES id {} and id_{} and nodeid {}'.format(id, id_, nodeid))
 
     m = app.mdb.mdb()
 
@@ -110,10 +111,17 @@ def nodes(nodeid):
         # FIXME check that id actually exists - handle error
 
         form = EditNodeForm()
+        deprecateform = DeprecateNodeForm()
+
         if form.validate_on_submit():
             m.update_node_by_id(id, form.nodeHandle.data)
             flash("Your changes have been saved.")
             return redirect(url_for("main.nodes", id=id))
+
+        elif deprecateform.validate_on_submit():
+            m.deprecate_node(id)
+            flash("Node has been deprecated.")
+            return redirect(url_for("main.nodes"))
 
         elif request.method == "GET":
             form.nodeHandle.data = node_['handle']
@@ -128,6 +136,7 @@ def nodes(nodeid):
                     subtype="main.nodes",
                     display="detail",
                     form=form,
+                    deprecateform=deprecateform,
                 )
 
     # B: filter by model
