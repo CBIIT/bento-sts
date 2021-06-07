@@ -4,6 +4,12 @@
 {% block app_content %}
     <br>
     <h1> {{ title }} </h1>
+    <div class="float-right">
+      <a href="{{url_for( subtype ) }}" class="btn btn-outline-primary btn-sm"> All Models </a>
+      <a href="{{url_for( subtype, model='Bento' ) }}" class="btn btn-outline-primary btn-sm"> Bento  </a>
+      <a href="{{url_for( subtype, model='CTDC' ) }}" class="btn btn-outline-primary btn-sm"> CTDC  </a>
+      <a href="{{url_for( subtype, model='ICDC' ) }}" class="btn btn-outline-primary btn-sm"> ICDC  </a>
+    </div> 
     {% if display == 'list'  %}
     <br><br>
     <div id="listall" name="listall" style="margin:20px; padding:20x">
