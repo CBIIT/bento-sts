@@ -968,10 +968,14 @@ class mdb:
 
         query_against_all_models = """
                 MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
+                WHERE n._to IS NULL 
+                AND   p._to IS NULL
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
         query_against_specific_model = """
                 MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
+                WHERE n._to IS NULL 
+                AND   p._to IS NULL
                 WHERE toLower(n.model) = toLower($model)
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
@@ -1062,6 +1066,8 @@ class mdb:
                 WHERE toLower(n.model) = toLower($model)
                 AND   t.key = "submitter"
                 AND   t.value = $dataset
+                AND   n._to IS NULL
+                AND   p._to IS NULL
                 MATCH (n)-[z:in_dataset { dataset: $dataset } ]->(p)
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
@@ -1069,6 +1075,8 @@ class mdb:
         all_query_ = """
                 MATCH (n:node)-[np:has_property]->(p:property)
                 WHERE toLower(n.model) = toLower($model)
+                AND   n._to IS NULL
+                AND   p._to IS NULL
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, n.ONLYthisANDnothingMORE, n.QUOTHtheRAVENnevermore; 
                 """
 
@@ -1115,6 +1123,8 @@ class mdb:
                 WHERE toLower(n.model) = toLower($model)
                 AND   t.key = "submitter"
                 AND   t.value = $dataset
+                AND   n._to IS NULL
+                AND   p._to IS NULL
                 MATCH (n)-[z:in_dataset { dataset: $dataset } ]->(p)
                 OPTIONAL MATCH (p)-[:has_value_set]->(vs:value_set)
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value, p.value_domain, vs.nanoid, p.required, p.units, p.description, p.instructions, p.internal_comments, p.example ;
@@ -1123,6 +1133,8 @@ class mdb:
         all_query_ = """
                 MATCH (n:node)-[np:has_property]->(p:property)
                 WHERE toLower(n.model) = toLower($model)
+                AND   n._to IS NULL
+                AND   p._to IS NULL
                 OPTIONAL MATCH (p)-[:has_value_set]->(vs:value_set)
                 RETURN n.handle, n.nanoid, p.handle, p.nanoid, n.ONLYthisANDnothingMORE, n.QUOTHtheRAVENnevermore, p.value_domain, vs.nanoid, p.required, p.units, p.description, p.instructions, p.internal_comments, p.example; 
                 """
@@ -1167,6 +1179,8 @@ class mdb:
         OLD_query_all_models_and_tag_choices = """
             MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
             WHERE t.key = "submitter"
+            AND   n._to IS NULL
+            AND   p._to IS NULL
             AND EXISTS (np.dataset)
             RETURN distinct n.model, t.value
             ORDER by n.model ASC, t.value ASC
@@ -1326,6 +1340,7 @@ class mdb:
 
         add_tag_query_ = """
                 MATCH (n:node { model:$model, nanoid:$nodenanoid })-[np:has_property]->(p:property { nanoid:$propnanoid, model:$model })
+                WHERE n._to IS NULL AND p._to IS NULL
                 MATCH (t:tag {key:'submitter', model:$model, value:$tag})
                 MERGE (p)-[r:has_tag]->(t);
                 """
@@ -1346,6 +1361,7 @@ class mdb:
         add_tag_query_ = """
                 MATCH (n:node { model:$model, nanoid:$nodenanoid })-[np:has_property]->(p:property { nanoid:$propnanoid, model:$model })
                 -[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag})
+                WHERE n._to IS NULL AND p._to IS NULL
                 MERGE (n)-[z:in_dataset { dataset: $tag } ]->(p);
                 """
                 #MERGE (p)-[r:has_tag]->(t);
@@ -1375,6 +1391,7 @@ class mdb:
 
         count_nodetag_query_ = """
                 MATCH (t:tag { value: $tag })<-[r:has_tag]-(p:property {nanoid: $propnanoid })<-[np:has_property]-(n:node)
+                WHERE n._to IS NULL AND p._to IS NULL
                 with p,count(n) as rels
                 return rels;
                 """
@@ -1387,6 +1404,7 @@ class mdb:
         if result == 1:
             remove_both_query_ = """
                     MATCH (n:node { model:$model, nanoid:$nodenanoid })-[z:in_dataset { dataset: $tag } ]->(p:property { nanoid:$propnanoid, model:$model })-[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag}) 
+                    WHERE n._to IS NULL AND p._to IS NULL
                     DELETE r, z
                     """
 
@@ -1397,6 +1415,7 @@ class mdb:
         if result > 1:
             remove_node_query_ = """
                     MATCH (n:node { model:$model, nanoid:$nodenanoid })-[z:in_dataset { dataset: $tag } ]->(p:property { nanoid:$propnanoid, model:$model })-[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag}) 
+                    WHERE n._to IS NULL AND p._to IS NULL
                     DELETE z
                     """
 
