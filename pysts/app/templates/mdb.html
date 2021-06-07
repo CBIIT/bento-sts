@@ -9,6 +9,8 @@
       <a href="{{url_for( subtype, model='Bento' ) }}" class="btn btn-outline-primary btn-sm"> Bento  </a>
       <a href="{{url_for( subtype, model='CTDC' ) }}" class="btn btn-outline-primary btn-sm"> CTDC  </a>
       <a href="{{url_for( subtype, model='ICDC' ) }}" class="btn btn-outline-primary btn-sm"> ICDC  </a>
+      &nbsp;&nbsp;&nbsp;
+      <a href="{{url_for( subtype,  format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON (All) </a>
     </div> 
     {% if display == 'list'  %}
     <br><br>
