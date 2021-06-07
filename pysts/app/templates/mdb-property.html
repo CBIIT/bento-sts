@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form, render_field %}
+{% from 'bootstrap/form.html' import render_form, render_field , render_hidden_errors %}
 
 {% block app_content %}
     <br>
@@ -36,17 +36,76 @@
                             {% endif %}
 
                             </table>
+
+                            <!-- START -->
                             <div class="float-left">
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editTermModal">
-                                Edit Property
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPropModal">
+                                    Edit Property
                                 </button>
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecateTermModal">
-                                  Deprecate Property
-                                  </button>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecatePropModal">
+                                    Deprecate Property
+                                </button>
                                </div>   
-                            </div>
+                            <!-- END -->
+                            
+                                <!-- Edit Modal -->
+                                <div class="modal fade" id="editPropModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form class="form" method="post" role="editform">
+                                
+                                        <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <h3 class="modal-title" id="exampleModalLabel">Edit Property</h3>
+                                        </div>
+                                        <div class="modal-body">
 
+                                                    {{ editform.hidden_tag() }}
+                                                    {{ render_hidden_errors(editform) }}
+                                                    {{ render_field(editform.prophandle) }}
+                                        </div>
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        {{ render_field(editform.submit) }}
+                                        </div>
+                                        </form>
+                                    </div>
+                                    </div>
+                                </div>
+                                <!-- End Edit Modal-->
+
+                                <!-- Deprecate Modal -->
+                                <div class="modal fade" id="deprecatePropModal" tabindex="-1" aria-labelledby="deprecateModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form class="form" method="post" role="deprecateform">
+                                
+                                        <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <h3 class="modal-title" id="deprecateModalLabel">Deprecate Property</h3>
+                                        </div>
+                                        <div class="modal-body">
+                                
+                                                    {{ deprecateform.hidden_tag() }}
+                                                    {{ render_hidden_errors(deprecateform) }}
+                                                    Do you want to deprecate the property {{ mdb.value }} ?
+                                        </div>
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        {{ render_field(deprecateform.submit) }}
+                                        </div>
+                                        </form>
+                                    </div>
+                                    </div>
+                                </div>
+                                <!-- End Deprecate Modal-->
+
+                            </div>
                     </div>     <!-- end col-->
 
 

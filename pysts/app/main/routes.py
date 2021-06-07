@@ -22,6 +22,7 @@ from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, EditNodeForm, DeprecateTermForm, DiffForm
+from app.main.forms import EditPropForm, DeprecatePropForm
 import app.search
 from app.models import User, Post, Entity
 from app.main import bp
@@ -181,6 +182,25 @@ def properties(propid):
     if id is not None:
         p_ = m.get_property_by_id(id, model)
 
+        editform = EditPropForm()
+        deprecateform = DeprecatePropForm()
+
+        if editform.validate_on_submit():
+            # go and make actual changes ...
+            m.update_property_by_id(id, editform.prophandle.data)
+            flash("Your changes have been saved.")
+            return redirect(url_for("main.properties", id=id))
+
+        elif deprecateform.validate_on_submit():
+            m.deprecate_property(id)
+            flash("Property has been deprecated.")
+            return redirect(url_for("main.properties"))
+
+        # pre-populate edit form with current handle/value
+        if request.method == "GET":
+            editform.prophandle.data = p_['handle']
+
+        # FIX (not being hit)
         if p_ is None or not bool(p_):
             return render_template('/errors/400.html'), 400
 
@@ -193,6 +213,8 @@ def properties(propid):
                 mdb=p_,
                 subtype="main.properties",
                 display="detail",
+                editform=editform,
+                deprecateform=deprecateform,
             )
 
     # they didn't give an id, so list all properties

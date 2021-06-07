@@ -155,9 +155,7 @@ def datasubsets(datasubsetid):
             model_, tag_ = get_model_and_tag(tagform.datasubsets.data)
             print('Gamma CSV logging, now looking for model {} and tag {}'.format(model_, tag_))
             dataplan_ = m.get_dataset(dataset=tag_, model=model_)
-            import pprint
-            pprint.pprint('dataplan_ is')
-            pprint.pprint(dataplan_)
+
             print('>git ut<')
             print('Gamma CSV logging, now HAVE for A model {} and tag {}'.format(model_, tag_))
             session['tag_'] = tag_

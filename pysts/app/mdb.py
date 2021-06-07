@@ -720,7 +720,7 @@ class mdb:
             answers = tx.run(
                 """
                 MATCH (n:node)-[:has_property]->(p:property)
-                WHERE p._to IS NULL and n._to IS NULL
+                WHERE p._to IS NULL AND n._to IS NULL
                 RETURN DISTINCT
                 p.nanoid as id,
                 p.handle as handle,
@@ -734,7 +734,8 @@ class mdb:
             answers = tx.run(
                 """
                 MATCH (n:node)-[:has_property]->(p:property)
-                WHERE toLower(p.model) = toLower($model) and p._to IS NULL and n._to IS NULL
+                WHERE toLower(p.model) = toLower($model) 
+                AND p._to IS NULL and n._to IS NULL
                 RETURN DISTINCT
                 p.nanoid as id,
                 p.handle as handle,
@@ -768,9 +769,10 @@ class mdb:
                 """
                 MATCH (p:property)
                 WHERE p.nanoid = $pid
-                OPTIONAL MATCH (n)-[:has_property]->(p)
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                AND   p._to IS NULL
+                OPTIONAL MATCH (n)-[:has_property]->(p) WHERE n._to IS NULL
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs) WHERE vs._to IS NULL
+                OPTIONAL MATCH (vs)-[:has_term]->(t:term) WHERE t._to IS NULL
                 RETURN DISTINCT
                 p.nanoid as id,
                 p.handle as handle,
@@ -791,10 +793,11 @@ class mdb:
                 """
                 MATCH (p:property)
                 WHERE p.nanoid = $pid
-                WHERE n.model = $model
-                OPTIONAL MATCH (n)-[:has_property]->(p)
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs)
-                OPTIONAL MATCH (vs)-[:has_term]->(t:term)
+                WHERE p.model = $model
+                AND   p._to IS NULL
+                OPTIONAL MATCH (n)-[:has_property]->(p) WHERE n._to IS NULL
+                OPTIONAL MATCH (p)-[:has_value_set]->(vs) WHERE vs._to IS NULL
+                OPTIONAL MATCH (vs)-[:has_term]->(t:term) WHERE t._to IS NULL
                 RETURN DISTINCT
                 p.nanoid as id,
                 p.handle as handle,
@@ -861,10 +864,101 @@ class mdb:
             property_ = session.read_transaction(self._get_property_by_id_query, pid, model)
         return property_
 
+        # ======================================================================= #
+
+    @staticmethod
+    def _do_update_property(tx, neo4jquery, pid, phandle):
+        print("working with pid {} for {}".format(pid, phandle))
+        result = []
+
+        answers = tx.run(neo4jquery, pid=pid, phandle=phandle)
+
+        for record in answers:
+            # row = {record["id(t2)"]: record["handle"]}
+            result.append(record)
+        return result
+
+    def get_query_to_update_property(self):
+        return '''
+                MATCH (p1:property)
+                WHERE p1.nanoid = $pid AND p1._to IS NULL
+                CALL apoc.refactor.cloneNodesWithRelationships([p1])
+                YIELD input, output
+                MATCH (p2:property)
+                where p2.nanoid = $pid and p2._to IS NULL and id(p1) <> id (p2)
+                SET p1._to = ( p1._from + 1 ), p2._from = (p1._from + 1), p2.handle = $phandle
+                RETURN id(p2)
+                '''
+
+    def update_property_by_id(self, pid, phandle):
+        with self.driver.session() as session:
+            query = self.get_query_to_update_property()
+            property_ = session.write_transaction(self._do_update_property, query, pid, phandle)
+            # TODO update elasticsearch, remove old term and add new term
+        return property_
+
+    # ------------------------------------------------------------------------- #
+
+    @staticmethod
+    def _do_create_property(tx, neo4jquery, phandle):
+        print("working with for {}".format(phandle))
+        result = []
+
+        answers = tx.run(neo4jquery, phandle=phandle)
+
+        for record in answers:
+            result.append(record)
+        return result
+
+    def get_query_to_create_property(self):
+        return '''
+                MATCH (p1:property)
+                WHERE p1.handle = $phandle and p1._to IS NULL
+                SET p1._to = ( p1._from + 1 ), p2._from = (p1._from + 1), p2.handle = $phandle
+                RETURN id(p2);
+                '''
+
+    def create_property(self, phandle):
+        with self.driver.session() as session:
+            query = self.get_query_to_create_property()
+            property_ = session.write_transaction(self._do_create_property, query, phandle)
+            # TODO update elasticsearch add new term
+        return property_
+
+    # ------------------------------------------------------------------------- #
+
+    @staticmethod
+    def _do_deprecate_property(tx, neo4jquery, pid):
+        print("deprecating property {}".format(pid))
+        result = []
+
+        answers = tx.run(neo4jquery, pid=pid)
+
+        for record in answers:
+            result.append(record)
+        return result
+
+    def get_query_to_deprecate_property(self):
+        return '''
+                MATCH (p:property)
+                WHERE p.nanoid = $pid and p._to IS NULL
+                SET p._to = ( p._from + 1 )
+                RETURN id(p);
+                '''
+
+    def deprecate_property(self, pid):
+        with self.driver.session() as session:
+            query = self.get_query_to_deprecate_property()
+            property_ = session.write_transaction(self._do_deprecate_property, query, pid)
+            # TODO update elasticsearch, remove old term
+        return property_
 
 
 
 
+    # ############################################################################################### #
+    # DATA SUBSETS / TAGS
+    # ############################################################################################### #
 
     @staticmethod
     def _get_tags_from_db(tx, model=None):
