@@ -29,3 +29,6 @@ class Config(object):
     DROPZONE_ALLOWED_FILE_CUSTOM = True
     DROPZONE_ALLOWED_FILE_TYPE = 'text/*, .yml, .yaml'
     JSONIFY_PRETTYPRINT_REGULAR = True
+    LOGIN_DISABLED = True
+    
+pass
