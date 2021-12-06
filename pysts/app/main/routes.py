@@ -18,6 +18,7 @@ from flask import (
     send_from_directory
 )
 from flask_login import current_user, login_required
+from flask_paginate import Pagination, get_page_parameter
 from werkzeug.utils import secure_filename
 from guess_language import guess_language
 from app import db, logging
@@ -95,6 +96,7 @@ def nodes(nodeid):
     format = request.args.get("format")
     model = request.args.get("model")
     id_ = request.args.get("id")
+    page = request.args.get(get_page_parameter(), type=int, default=1)
 
     id = nodeid
     if nodeid is None:
@@ -147,12 +149,16 @@ def nodes(nodeid):
         if format == "json":
             return jsonify(nodes_)
         else:
+            pagination = Pagination(page=page,total=len(nodes_),record_name='nodes')
             return render_template(
                 "mdb.html",
                 title="Nodes in Model {}".format(model),
                 mdb=nodes_,
                 subtype="main.nodes",
                 display="tuple",
+                first=(pagination.page-1)*pagination.per_page,
+                last=min((pagination.page)*pagination.per_page,len(nodes_)),
+                pagination=pagination,
             )
 
     # C: plain list
@@ -160,12 +166,16 @@ def nodes(nodeid):
     if format == "json":
         return jsonify(nodes_)
     else:
+        pagination = Pagination(page=page,total=len(nodes_),record_name='nodes')
         return render_template(
             "mdb.html",
             title="Nodes",
             mdb=nodes_,
             subtype="main.nodes",
             display="tuple",  # from list
+            first=(pagination.page-1)*pagination.per_page,
+            last=min((pagination.page)*pagination.per_page,len(nodes_)),
+            pagination=pagination,
         )
 
 
@@ -177,7 +187,8 @@ def properties(propid):
     format = request.args.get("format")  # for returning in json format
     model = request.args.get("model")    # to filter by model
     id_ = request.args.get("id")
-
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    
     id = propid
     if propid is None:
         if id_ is not None:
@@ -232,12 +243,16 @@ def properties(propid):
         if format == "json":
             return jsonify(p_)
         else:
+            pagination = Pagination(page=page,total=len(p_),record_name='properties')
             return render_template(
                 "mdb.html",
                 title="Properties",
                 mdb=p_,
                 subtype="main.properties",
                 display="prop-tuple",  # from list
+                first=(pagination.page-1)*pagination.per_page,
+                last=min((pagination.page)*pagination.per_page,len(p_)),
+                pagination=pagination,
             )
 
 
@@ -250,7 +265,7 @@ def valuesets(valuesetid):
     model = request.args.get("model")
 
     id_ = request.args.get("id")
-
+    page = request.args.get(get_page_parameter(), type=int, default=1)
     id = valuesetid
     if valuesetid is None:
         if id_ is not None:
@@ -280,6 +295,7 @@ def valuesets(valuesetid):
 
     else:
         vs_ = m.get_list_of_valuesets(model)
+        pagination = Pagination(page=page,total=len(vs_),record_name='valuesets')
         if format == "json":
             return jsonify(vs_)
         else:
@@ -289,6 +305,9 @@ def valuesets(valuesetid):
                 mdb=vs_,
                 subtype="main.valuesets",
                 display="list",
+                first=(pagination.page-1)*pagination.per_page,
+                last=min((pagination.page)*pagination.per_page,len(vs_)),
+                pagination=pagination,
             )
 
 
@@ -300,7 +319,8 @@ def terms(termid):
     format = request.args.get("format")
     model = request.args.get("model")    # to filter by model
     id_ = request.args.get("id")
-
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    
     id = termid
     if termid is None:
         if id_ is not None:
@@ -347,12 +367,16 @@ def terms(termid):
         if format == "json":
             return jsonify(terms_)
         else:
+            pagination = Pagination(page=page,total=len(term_),record_name='terms')
             return render_template(
                 "mdb.html",
                 title="Terms",
                 mdb=terms_,
                 subtype="main.terms",
                 display="term-tuple",
+                first=(pagination.page-1)*pagination.per_page,
+                last=min((pagination.page)*pagination.per_page,len(terms_)),
+                pagination=pagination,
             )
 
 
@@ -382,6 +406,9 @@ def origins(originid):
         mdb=origins_,
         subtype="main.origins",
         display="list",
+        pagination=None,
+        first=0,
+        last=len(origins_)
     )
 
 

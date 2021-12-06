@@ -15,28 +15,35 @@
     {% if display == 'list'  %}
     <br><br>
     <div id="listall" name="listall" style="margin:20px; padding:20x">
+      {% if pagination %}
+      {{ pagination.info }}
+      {{ pagination.links }}
+      {% endif %}
       <table class="table table-striped">
          <tr>
              <th> Name </th>
          </tr>
-         {% for dict_item in mdb %}
-         {% for key, value in dict_item.items() %}
+	 {% for dict_item in mdb[first:last] %}
+	 {% for key, value in dict_item.items() %}
          <tr> <td> <a href="{{url_for( subtype, id=key) }}">{{ value }}</a> </td> </tr>
          {% endfor %}
          {% endfor %}
-       </table>      
+       </table>
+       {% if pagination %}
+       {{ pagination.links }}
+       {% endif %}
       </div> 
        <br><br>
     {% endif %}
 
     {% if display == 'model'  %}
     <br><br>
-    <div id="allModel" name="allModel" style="margin:20px; padding:20x">
+    <div id="allModel" name="allModel" style="margin:20px;padding:20x">
       <table class="table table-striped">
          <tr>
              <th> Name </th>
          </tr>
-         {% for item in mdb %}
+         {% for item in mdb[first:last] %}
          <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
          {% endfor %}
        </table>
@@ -46,62 +53,71 @@
 
     {% if display == 'tuple'  %}
     <br><br>
-    <div id="listall" name="listall" style="margin:20px; padding:20x">
-      <table class="table-striped">
+       <div id="listall" name="listall" style="margin:20px; padding:20x">
+	 {{ pagination.info }}
+	 {{ pagination.links }}
+	 <table class="table-striped">
          <tr>
              <th style="width:300px"> Name </th> <th style="width:300px"> Model</th>
-         </tr>
-         {% for entry in mdb %}
-              <tr> 
-                <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-                <td> {{ entry[2] }} </td>
-              </tr>
-         {% endfor %}
-       </table>      
+	   </tr>
+         {% for entry in mdb[first:last] %}
+	 <tr>
+	   <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	   <td> {{ entry[2] }} </td>
+	 </tr>
+	 {% endfor %}
+       </table>
+	 {{ pagination.links }}
       </div> 
        <br><br>
     {% endif %}
 
     {% if display == 'prop-tuple'  %}
     <br><br>
-    <div id="listall" name="listall" style="margin:20px; padding:20x">
-      <table class="table-striped">
-         <tr>
-             <th style="width:300px"> Name </th> 
-             <th style="width:300px"> Node</th> 
-             <th style="width:300px"> Model</th>
-         </tr>
-         {% for entry in mdb %}
-              <tr> 
-                <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-                <td> <a href="{{url_for('main.nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
-                <td> {{ entry[2] }} </td>
-              </tr>
-         {% endfor %}
-       </table>      
+      <div id="listall" name="listall" style="margin:20px; padding:20x">
+	{{pagination.info}}
+	{{pagination.links}}
+	<table class="table-striped">
+	  <tr>
+	    <th style="width:300px"> Name </th> 
+	    <th style="width:300px"> Node</th> 
+	    <th style="width:300px"> Model</th>
+	  </tr>
+         {% for entry in mdb[first:last] %}
+	  <tr> 
+	    <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	    <td> <a href="{{url_for('main.nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
+	    <td> {{ entry[2] }} </td>
+	  </tr>
+	  {% endfor %}
+	</table>
+	{{pagination.links}}
       </div> 
        <br><br>
     {% endif %}
 
     {% if display == 'term-tuple'  %}
     <br><br>
-    <div id="listall" name="listall" style="margin:20px; padding:20x">
-      <table class="table-striped">
-         <tr>
-             <th style="width:300px"> Name </th> 
-             <th style="width:300px"> Property</th> 
-             <th style="width:300px"> Model</th>
-         </tr>
-         {% for entry in mdb %}
-              <tr> 
-                <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-                <td> <a href="{{url_for('main.properties', id=entry[4] ) }}">{{ entry[3] }} </td>
-                <td> {{ entry[2] }} </td>
-              </tr>
-         {% endfor %}
-       </table>      
+      <div id="listall" name="listall" style="margin:20px; padding:20x">
+	{{pagination.info}}
+	{{pagination.links}}
+	<table class="table-striped">
+	  <tr>
+	    <th style="width:300px"> Name </th> 
+	    <th style="width:300px"> Property</th> 
+	    <th style="width:300px"> Model</th>
+	  </tr>
+	  {% for entry in mdb[first:last] %}
+	  <tr> 
+	    <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	    <td> <a href="{{url_for('main.properties', id=entry[4] ) }}">{{ entry[3] }} </td>
+	    <td> {{ entry[2] }} </td>
+	  </tr>
+	  {% endfor %}
+	</table>
+	{{pagination.links}}
       </div> 
-       <br><br>
+      <br><br>
     {% endif %}
 
 {% endblock %}
