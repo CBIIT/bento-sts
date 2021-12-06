@@ -367,7 +367,7 @@ def terms(termid):
         if format == "json":
             return jsonify(terms_)
         else:
-            pagination = Pagination(page=page,total=len(term_),record_name='terms')
+            pagination = Pagination(page=page,total=len(terms_),record_name='terms')
             return render_template(
                 "mdb.html",
                 title="Terms",

@@ -109,9 +109,9 @@
 	  </tr>
 	  {% for entry in mdb[first:last] %}
 	  <tr> 
-	    <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-	    <td> <a href="{{url_for('main.properties', id=entry[4] ) }}">{{ entry[3] }} </td>
-	    <td> {{ entry[2] }} </td>
+	    <td> <a href="{{url_for( subtype, id=entry.id ) }}">{{ entry.value }}</a> </td> 
+	    <td> <a href="{{url_for('main.properties', id=entry.propid ) }}">{{ entry.property }} </td>
+	    <td> {{ entry.model }} </td>
 	  </tr>
 	  {% endfor %}
 	</table>

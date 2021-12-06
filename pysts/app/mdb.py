@@ -234,8 +234,9 @@ class mdb:
         result = []
         for p in t_result:
             result.extend([{"id":x["nanoid"], "value":x["value"],
-                            "property":p["prop"]["handle"], "model":p["prop"]["model"]} for x in p["terms"]])
-                            #  ,p["prop"]["nanoid"]) for x in p["terms"]])
+                            "property":p["prop"]["handle"],
+                            "model":p["prop"]["model"],"propid":p["prop"]["nanoid"]}
+                            for x in p["terms"]])
         result.sort(key=lambda x: (x["model"], x["property"], x["value"]))
         return result
     # ------------------------------------------------------------------------- #
