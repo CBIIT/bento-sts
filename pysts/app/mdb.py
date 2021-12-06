@@ -26,7 +26,7 @@ class mdb:
     
     def get_model_by_name(self, name):
         ObjectMap.clear_cache()
-        model = Model(name, self.driver)
+        model = Model(name, self.mdb.driver)
         # if you dont call dget, it wont be populated...
         model.dget()
         return model
@@ -37,15 +37,18 @@ class mdb:
     def get_node_by_id(self, nid, model=None):
         props_result = self.mdb.get_node_and_props_by_node_id(nid)
         edges_result = self.mdb.get_node_edges_by_node_id(nid)
-        result = {"id": nid, "has_properties": [],
+        result = {"id": nid,
+                  "handle": props_result[0]["handle"],
+                  "model": props_result[0]["model"],
+                  "has_properties": [],
                   "has_relationship_to_nodes": [],
-                  "has_reationship_from_nodes": []}
+                  "has_relationship_from_nodes": []}
         to_nodes = {}
         from_nodes = {}
         if not props_result and not edges_result:
             return {}
         if (props_result):
-            for p in props_result[0]:
+            for p in props_result[0]["props"]:
                 result["has_properties"].append({
                     "id": p["nanoid"],
                     "handle": p["handle"],
@@ -227,13 +230,14 @@ class mdb:
     # ========================================================================= #
 
     def get_list_of_terms(self, model=None):
-        t_result = self.mdb.get_prop_terms_by_model(model)
+        t_result = self.mdb.get_props_and_terms_by_model(model)
         result = []
         for p in t_result:
-            result.extend([(x["nanoid"], x["value"],
-                            p["prop"]["handle"], p["prop"]["model"],
-                            p["prop"]["nanoid"]) for x in p["terms"]])
-        return result.sort(key=lambda x: (x[3], x[2], x[1]))
+            result.extend([{"id":x["nanoid"], "value":x["value"],
+                            "property":p["prop"]["handle"], "model":p["prop"]["model"]} for x in p["terms"]])
+                            #  ,p["prop"]["nanoid"]) for x in p["terms"]])
+        result.sort(key=lambda x: (x["model"], x["property"], x["value"]))
+        return result
     # ------------------------------------------------------------------------- #
 
     @staticmethod

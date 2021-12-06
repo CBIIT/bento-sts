@@ -1,6 +1,7 @@
 alembic==0.9.6
 Babel==2.5.1
 blinker==1.4
+bento_meta>=0.0.3
 Bootstrap-Flask==1.5.2
 certifi==2017.7.27.1
 chardet==3.0.4
