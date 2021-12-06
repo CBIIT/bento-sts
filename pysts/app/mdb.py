@@ -333,8 +333,7 @@ class mdb:
 
     def get_list_of_origins(self):
         origins = self.mdb.get_origins()
-        result = [{"id":x["o"]["nanoid"],
-                   "name":x["o"]["name"]}
+        result = [{x["o"]["nanoid"]:x["o"]["name"]}
                    for x in origins]
         return result
     
