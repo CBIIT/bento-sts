@@ -31,5 +31,6 @@ class Config(object):
     JSONIFY_PRETTYPRINT_REGULAR = True
     LOGIN_DISABLED = True
     SHOW_SINGLE_PAGE = True
+    EDITING_FORMS = False
     
 pass

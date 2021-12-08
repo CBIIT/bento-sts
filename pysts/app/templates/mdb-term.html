@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form, render_field, render_hidden_errors %}
 
 {% block app_content %}
     <br>
@@ -33,76 +32,9 @@
       </table>
       </div>
     </div>
-    
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editTermModal">
-    Edit Term
-    </button>
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecateTermModal">
-      Deprecate Term
-      </button>
+{% block edit_functions %}
+{% endblock edit_functions %}
     <br><br>
-   
-    <!-- Edit Modal -->
-<div class="modal fade" id="editTermModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form class="form" method="post" role="form">
-   
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          <h3 class="modal-title" id="exampleModalLabel">Edit Term</h3>
-        </div>
-        <div class="modal-body">
-
-                    {{ form.hidden_tag() }}
-                    {{ render_hidden_errors(form) }}
-                    {{ render_field(form.termvalue) }}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          {{ render_field(form.submit) }}
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
-<!-- End Edit Modal-->
-    
-    <!-- Deprecate Modal -->
-    <div class="modal fade" id="deprecateTermModal" tabindex="-1" aria-labelledby="deprecateModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form class="form" method="post" role="deprecateform">
-     
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h3 class="modal-title" id="deprecateModalLabel">Deprecate Term</h3>
-          </div>
-          <div class="modal-body">
-  
-                      {{ deprecateform.hidden_tag() }}
-                      {{ render_hidden_errors(deprecateform) }}
-                      Do you want to deprecate the term {{ mdb.value }} ?
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            {{ render_field(deprecateform.submit) }}
-          </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  <!-- End Deprecate Modal-->
-      
-
-    <br><br>
-
     <div>
         {% if mdb.has_origin %}
         <h3> Origin  </h3>
