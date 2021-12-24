@@ -177,7 +177,6 @@ could be used here for write and tag functionality."""
                             "model": p["prop"]["model"],
                             "propid": p["prop"]["nanoid"]}
                            for x in p["terms"]])
-        result.sort(key=lambda x: (x["model"], x["property"], x["value"]))
         return result
 
     # ####################################################################### #

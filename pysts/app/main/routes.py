@@ -83,7 +83,7 @@ def models(name=None):
         return render_template(
             "mdb-model.html",
             title="Models",
-            mdb=models_,
+            mdb=sorted(models_),
             subtype="main.models",
             display="list",
         )
@@ -153,7 +153,7 @@ def nodes(nodeid):
             return render_template(
                 "mdb.html",
                 title="Nodes in Model {}".format(model),
-                mdb=nodes_,
+                mdb=sorted(nodes_,key=lambda x: x[1]),
                 subtype="main.nodes",
                 display="tuple",
                 first=(pagination.page-1)*pagination.per_page,
@@ -170,7 +170,7 @@ def nodes(nodeid):
         return render_template(
             "mdb.html",
             title="Nodes",
-            mdb=nodes_,
+            mdb=sorted(nodes_,key=lambda x:x[1]),
             subtype="main.nodes",
             display="tuple",  # from list
             first=(pagination.page-1)*pagination.per_page,
@@ -247,7 +247,7 @@ def properties(propid):
             return render_template(
                 "mdb.html",
                 title="Properties",
-                mdb=p_,
+                mdb=sorted(p_, key=lambda x: (x[1],x[2],x[3])),
                 subtype="main.properties",
                 display="prop-tuple",  # from list
                 first=(pagination.page-1)*pagination.per_page,
@@ -302,7 +302,7 @@ def valuesets(valuesetid):
             return render_template(
                 "mdb.html",
                 title="Value Sets",
-                mdb=vs_,
+                mdb=sorted(vs_, key=lambda x: x["handle"]),
                 subtype="main.valuesets",
                 display="list",
                 first=(pagination.page-1)*pagination.per_page,
@@ -371,7 +371,7 @@ def terms(termid):
             return render_template(
                 "mdb.html",
                 title="Terms",
-                mdb=terms_,
+                mdb=sorted(terms_,key=lambda x: (x["model"], x["property"], x["value"])),
                 subtype="main.terms",
                 display="term-tuple",
                 first=(pagination.page-1)*pagination.per_page,
@@ -403,7 +403,7 @@ def origins(originid):
     return render_template(
         "mdb.html",
         title="Origins",
-        mdb=origins_,
+        mdb=sorted(origins_,key=lambda x:list(x.values())[0]),
         subtype="main.origins",
         display="list",
         pagination=None,
