@@ -1,5 +1,5 @@
 import os
-from flask import url_for
+from flask import url_for, current_app
 from bento_meta.mdb import MDB
 from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
@@ -9,9 +9,9 @@ class mdb():
     """Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
 could be used here for write and tag functionality."""
     def __init__(self):
-        self.mdb = MDB(os.environ.get("NEO4J_MDB_URI"),
-                       user=os.environ.get("NEO4J_MDB_USER"),
-                       password=os.environ.get("NEO4J_MDB_PASS"))
+        self.mdb = MDB(current_app.config["NEO4J_MDB_URI"],
+                       user=current_app.config["NEO4J_MDB_USER"],
+                       password=current_app.config["NEO4J_MDB_PASS"])
 
     def close(self):
         self.mdb.close()

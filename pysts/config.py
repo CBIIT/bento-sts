@@ -11,6 +11,9 @@ class Config(object):
         "DATABASE_URL"
     ) or "sqlite:///" + os.path.join(basedir, "app.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    NEO4J_MDB_URI = os.environ.get("NEO4J_MDB_URI")
+    NEO4J_MDB_USER = os.environ.get("NEO4J_MDB_USER")
+    NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = int(os.environ.get("MAIL_PORT") or 25)
     MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") is not None
