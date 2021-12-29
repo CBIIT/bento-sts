@@ -83,7 +83,7 @@ def models(name=None):
         return render_template(
             "mdb-model.html",
             title="Models",
-            mdb=sorted(models_),
+            mdb=sorted(models_, key=lambda x:x["name"]),
             subtype="main.models",
             display="list",
         )

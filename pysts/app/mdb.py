@@ -17,7 +17,8 @@ could be used here for write and tag functionality."""
         self.mdb.close()
 
     def get_list_of_models(self):
-        return self.mdb.get_model_handles()
+        models = self.mdb.get_model_nodes()
+        return [x["m"] for x in models]
 
     """
     In [4]: m.get_model_by_name('ICDC')
@@ -25,9 +26,11 @@ could be used here for write and tag functionality."""
     """
     def get_model_by_name(self, name):
         ObjectMap.clear_cache()
-        model = Model(name, self.mdb.driver)
+        model = Model(name, self.mdb)
+        model_node = self.mdb.get_model_nodes(model=name)
         # if you dont call dget, it wont be populated...
         model.dget()
+        model.repository = model_node[0]["m"]["repository"]
         return model
 
     # ####################################################################### #
