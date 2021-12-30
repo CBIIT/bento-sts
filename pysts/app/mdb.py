@@ -18,7 +18,10 @@ could be used here for write and tag functionality."""
 
     def get_list_of_models(self):
         models = self.mdb.get_model_nodes()
-        return [x["m"] for x in models]
+        if models:
+            return [x["m"] for x in models]
+        else:
+            return []
 
     """
     In [4]: m.get_model_by_name('ICDC')
@@ -39,16 +42,16 @@ could be used here for write and tag functionality."""
     def get_node_by_id(self, nid, model=None):
         props_result = self.mdb.get_node_and_props_by_node_id(nid)
         edges_result = self.mdb.get_node_edges_by_node_id(nid)
+        to_nodes = {}
+        from_nodes = {}
+        if not props_result and not edges_result:
+            return {}
         result = {"id": nid,
                   "handle": props_result[0]["handle"],
                   "model": props_result[0]["model"],
                   "has_properties": [],
                   "has_relationship_to_nodes": [],
                   "has_relationship_from_nodes": []}
-        to_nodes = {}
-        from_nodes = {}
-        if not props_result and not edges_result:
-            return {}
         if (props_result):
             for p in props_result[0]["props"]:
                 result["has_properties"].append({
@@ -98,7 +101,10 @@ could be used here for write and tag functionality."""
          {'nUoHJH': 'diagnosis
         """
         result = self.mdb.get_nodes_by_model(model)
-        return [(x["nanoid"], x["handle"], x["model"]) for x in result]
+        if result:
+            return [(x["nanoid"], x["handle"], x["model"]) for x in result]
+        else:
+            return []
 
     # ####################################################################### #
     # VALUESETS
@@ -157,7 +163,7 @@ could be used here for write and tag functionality."""
     def get_term_by_id(self, tid):
         t_result = self.mdb.get_term_by_id(tid)
         if not t_result:
-            return None
+            return {}
         result = t_result[0]["term"]
         result["id"] = result["nanoid"]
         del result["nanoid"]
@@ -195,7 +201,10 @@ could be used here for write and tag functionality."""
         origins = self.mdb.get_origins()
         result = [{x["o"]["nanoid"]:x["o"]["name"]}
                   for x in origins]
-        return result
+        if result:
+            return result
+        else:
+            return []
 
     # ####################################################################### #
     # PROPERTIES
