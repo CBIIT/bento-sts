@@ -17,34 +17,26 @@ from flask import (
     abort,
     send_from_directory
 )
-from flask_login import current_user, login_required
 from flask_paginate import Pagination, get_page_parameter
-from werkzeug.utils import secure_filename
-from guess_language import guess_language
 from app import db, logging
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
-from app.main.forms import EditNodeForm, DeprecateNodeForm
-from app.main.forms import EditPropForm, DeprecatePropForm
+from app.main.forms import SearchForm
+# from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
+# from app.main.forms import EditNodeForm, DeprecateNodeForm
+# from app.main.forms import EditPropForm, DeprecatePropForm
 import app.search
-from app.models import User, Post, Entity
 from app.main import bp
 from app.util import get_yaml_for
 import app.mdb
 from app.arc import diff_mdf
 
-
 @bp.before_app_request
 def before_request():
-    if current_user.is_authenticated:
-        current_user.last_seen = datetime.utcnow()
-        db.session.commit()
-        g.search_form = SearchForm()
+    g.search_form = SearchForm()
     g.locale = 'EN_US'
 
 
 @bp.route('/', methods=['GET', 'POST'])
 @bp.route("/index", methods=["GET", "POST"])
-@login_required
 def index():
     return render_template(
         "index.html",
@@ -57,7 +49,6 @@ def index():
 
 @bp.route("/models/<name>")
 @bp.route("/models")
-@login_required
 def models(name=None):
     format = request.args.get("format")
     m = app.mdb.mdb()
@@ -90,7 +81,7 @@ def models(name=None):
 
 @bp.route("/nodes", defaults={'nodeid': None}, methods=['GET', 'POST'])
 @bp.route('/nodes/<nodeid>', methods=['GET', 'POST'])
-@login_required
+
 def nodes(nodeid):
 
     format = request.args.get("format")
@@ -112,20 +103,7 @@ def nodes(nodeid):
         node_ = m.get_node_by_id(id)
         # FIXME check that id actually exists - handle error
 
-        form = EditNodeForm()
-        deprecateform = DeprecateNodeForm()
-
-        if form.validate_on_submit():
-            m.update_node_by_id(id, form.nodeHandle.data)
-            flash("Your changes have been saved.")
-            return redirect(url_for("main.nodes", id=id))
-
-        elif deprecateform.validate_on_submit():
-            m.deprecate_node(id)
-            flash("Node has been deprecated.")
-            return redirect(url_for("main.nodes"))
-
-        elif request.method == "GET":
+        if request.method == "GET":
             form.nodeHandle.data = node_['handle']
 
             if format == "json":
@@ -181,7 +159,7 @@ def nodes(nodeid):
 
 @bp.route("/properties", defaults={'propid': None}, methods=['GET', 'POST'])
 @bp.route('/properties/<propid>', methods=['GET', 'POST'])
-@login_required
+
 def properties(propid):
 
     format = request.args.get("format")  # for returning in json format
@@ -202,24 +180,6 @@ def properties(propid):
     if id is not None:
         p_ = m.get_property_by_id(id, model)
 
-        editform = EditPropForm()
-        deprecateform = DeprecatePropForm()
-
-        if editform.validate_on_submit():
-            # go and make actual changes ...
-            m.update_property_by_id(id, editform.prophandle.data)
-            flash("Your changes have been saved.")
-            return redirect(url_for("main.properties", id=id))
-
-        elif deprecateform.validate_on_submit():
-            m.deprecate_property(id)
-            flash("Property has been deprecated.")
-            return redirect(url_for("main.properties"))
-
-        # pre-populate edit form with current handle/value
-        if request.method == "GET":
-            editform.prophandle.data = p_['handle']
-
         # FIX (not being hit)
         if p_ is None or not bool(p_):
             return render_template('/errors/400.html'), 400
@@ -233,8 +193,6 @@ def properties(propid):
                 mdb=p_,
                 subtype="main.properties",
                 display="detail",
-                editform=editform,
-                deprecateform=deprecateform,
             )
 
     # they didn't give an id, so list all properties
@@ -258,7 +216,7 @@ def properties(propid):
 
 @bp.route("/valuesets", defaults={'valuesetid': None}, methods=['GET', 'POST'])
 @bp.route('/valuesets/<valuesetid>', methods=['GET', 'POST'])
-@login_required
+
 def valuesets(valuesetid):
 
     format = request.args.get("format")
@@ -313,7 +271,7 @@ def valuesets(valuesetid):
 
 @bp.route("/terms", defaults={'termid': None}, methods=['GET', 'POST'])
 @bp.route('/terms/<termid>', methods=['GET', 'POST'])
-@login_required
+
 def terms(termid):
 
     format = request.args.get("format")
@@ -332,24 +290,7 @@ def terms(termid):
 
     if id is not None:
         term_ = m.get_term_by_id(id)
-
-        editform = EditTermForm()
-        deprecateform = DeprecateTermForm()
-        
-        if editform.validate_on_submit():
-            # go and make actual changes ...
-            m.update_term_by_id(id, editform.termvalue.data)
-            flash("Your changes have been saved.")
-            return redirect(url_for("main.terms", id=id))
-
-        elif deprecateform.validate_on_submit():
-            m.deprecate_term(id)
-            flash("Term has been deprecated.")
-            return redirect(url_for("main.terms"))
-
-        if request.method == "GET":
-            editform.termvalue.data = term_['value']
-
+        if term_:
             if format == "json":
                 return jsonify(term_)
             else:
@@ -359,8 +300,6 @@ def terms(termid):
                     mdb=term_,
                     subtype="main.terms",
                     display="detail",
-                    form=editform,
-                    deprecateform=deprecateform,
                 )
     else:
         terms_ = m.get_list_of_terms(model)
@@ -382,7 +321,7 @@ def terms(termid):
 
 @bp.route("/origins", defaults={'originid': None}, methods=['GET', 'POST'])
 @bp.route('/origins/<originid>', methods=['GET', 'POST'])
-@login_required
+
 def origins(originid):
     format = request.args.get("format")
     id_ = request.args.get("id")
@@ -413,53 +352,8 @@ def origins(originid):
 
 
 # ---------------------------------------------------------------------------
-@bp.route("/user/<username>")
-@login_required
-def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    page = request.args.get("page", 1, type=int)
-    posts = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, current_app.config["POSTS_PER_PAGE"], False
-    )
-    next_url = (
-        url_for("main.user", username=user.username, page=posts.next_num)
-        if posts.has_next
-        else None
-    )
-    prev_url = (
-        url_for("main.user", username=user.username, page=posts.prev_num)
-        if posts.has_prev
-        else None
-    )
-    form = EmptyForm()
-    return render_template(
-        "user.html",
-        user=user,
-        posts=posts.items,
-        next_url=next_url,
-        prev_url=prev_url,
-        form=form,
-    )
-
-
-@bp.route("/edit_profile", methods=["GET", "POST"])
-@login_required
-def edit_profile():
-    form = EditProfileForm(current_user.username)
-    if form.validate_on_submit():
-        current_user.username = form.username.data
-        current_user.about_me = form.about_me.data
-        db.session.commit()
-        flash("Your changes have been saved.")
-        return redirect(url_for("main.edit_profile"))
-    elif request.method == "GET":
-        form.username.data = current_user.username
-        form.about_me.data = current_user.about_me
-    return render_template("edit_profile.html", title="Edit Profile", form=form)
-
-
 @bp.route("/search")
-@login_required
+
 def search():
 
     if not g.search_form.validate():
@@ -488,112 +382,19 @@ def search():
     )
 
 @bp.route("/about-mdb")
-@login_required
+
 def about_mdb():
     return render_template("about-mdb.html", title="About MDB")
 
 
 @bp.route("/about-sts")
-@login_required
+
 def about_sts():
     return render_template("about-sts.html", title="About STS")
 
 @bp.errorhandler(413)
 def too_large(e):
     return "File is too large", 413
-
-
-@bp.route("/diff", methods=['GET', 'POST'])
-@login_required
-def diff():
-    '''stub for yaml diff functionality'''
-    current_app.logger.warn('>>>now in diff')
-    # simple check of app.config
-    file_choices = [('', '')]
-    APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
-    APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
-    files = os.listdir(APP_UPLOAD_PATH)
-    current_app.logger.warn('the APP_ROOT is at: {}'.format(APP_ROOT))
-    current_app.logger.warn('the uploads dir is at: {}'.format(APP_UPLOAD_PATH))
-    current_app.logger.warn('the uploads dir has: {}'.format(files))
-    current_app.logger.warn('the uploads dir is {}'.format(current_app.config['UPLOAD_PATH']))
-
-    # create set of files in dir for dropdown, but exclude .gitkeep file, which is needed to keep dir in git
-    for _file in files:
-        current_app.logger.warn('... Adding a new file')
-        if _file == '.gitkeep' or _file == '.gitignore':
-            continue
-        tup = (_file, _file)
-        file_choices.append(tup)
-
-    current_app.logger.warn('the options for file_choices is {}'.format(file_choices))
-
-    dform = DiffForm()
-    dform.mdf_a.choices = file_choices
-    dform.mdf_b.choices = file_choices
-
-    mdf_diff = ''
-    if dform.validate_on_submit():
-        current_app.logger.info('  CLICK !!!! ')
-
-        mdf_a = dform.mdf_a.data
-        mdf_b = dform.mdf_b.data
-
-        if (mdf_a and mdf_b):
-            # simple bento_meta/diff poc using stub/test yaml
-            _diff = app.arc.diff_mdf(mdf_a, mdf_b)
-            mdf_diff = pprint.pformat(_diff)
-            current_app.logger.info('Lastly diff output is {}'.format(mdf_diff))
-
-    elif (request.method == 'POST'):
-        current_app.logger.warn(' >>> now is INTERNAL ')
-
-        uploaded_file = request.files.get('file')
-
-        if (uploaded_file):
-            filename = secure_filename(uploaded_file.filename)
-            current_app.logger.info(' >>> upload_files() has filename {}'.format(filename))
-
-            if filename != '':
-                file_ext = os.path.splitext(filename)[1]
-                if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-                    return "Invalid yaml", 400
-
-                APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   
-                APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
-                uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
-                current_app.logger.info(' >>> upload_files() -- save')
-
-    return render_template('diff.html', form=dform, mdf_diff=mdf_diff)
-
-
-@bp.route("/upload_files", methods=['POST'])
-@login_required
-def upload_files():
-    current_app.logger.warn(' > now is upload_files()')
-
-    uploaded_file = request.files.get('file')
-
-    if (uploaded_file):
-        filename = secure_filename(uploaded_file.filename)
-        current_app.logger.info(' > upload_files() has filename {}'.format(filename))
-
-        if filename != '':
-            file_ext = os.path.splitext(filename)[1]
-            if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-                return "Invalid yaml", 400
-
-            APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
-            APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
-            uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
-            current_app.logger.info('> upload_files() -- save()')
-    return redirect(url_for('main.diff'))
-
-@bp.route('/uploads/<filename>')
-def upload(filename):
-    current_app.logger.warn('>>>now in upload')
-    return send_from_directory(current_app.config['UPLOAD_PATH'], filename)
-
 
 @bp.route('/reports', methods=['GET', 'POST'])
 def reports():

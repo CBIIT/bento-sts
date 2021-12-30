@@ -14,12 +14,6 @@ class Config(object):
     NEO4J_MDB_URI = os.environ.get("NEO4J_MDB_URI")
     NEO4J_MDB_USER = os.environ.get("NEO4J_MDB_USER")
     NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
-    MAIL_SERVER = os.environ.get("MAIL_SERVER")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT") or 25)
-    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") is not None
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    ADMINS = ["your-email@example.com"]
     LANGUAGES = ["en"]
     MS_TRANSLATOR_KEY = os.environ.get("MS_TRANSLATOR_KEY")
     ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
@@ -32,7 +26,6 @@ class Config(object):
     DROPZONE_ALLOWED_FILE_CUSTOM = True
     DROPZONE_ALLOWED_FILE_TYPE = 'text/*, .yml, .yaml'
     JSONIFY_PRETTYPRINT_REGULAR = True
-    LOGIN_DISABLED = True
     SHOW_SINGLE_PAGE = True
     EDITING_FORMS = False
     

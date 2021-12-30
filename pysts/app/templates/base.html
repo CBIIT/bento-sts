@@ -52,7 +52,8 @@
                     </div>
                         
 
-                        <ul class="navbar-nav justify-content-end">    
+                <ul class="navbar-nav justify-content-end">
+		  {#
                             {% if current_user.is_anonymous %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('auth.login') }}">{{ 'Login' }}</a>
@@ -64,7 +65,8 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('auth.logout') }}">{{ 'Logout' }}</a>
                             </li>
-                            {% endif %}
+                          {% endif %}
+			  #}
                         </ul>
 
                         {% if g.search_form %}
