@@ -40,13 +40,13 @@
                                 <a class="nav-link" href="{{ url_for('main.models') }}">{{ 'Models' }}</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.nodes') }}">{{ 'Nodes' }}</a>
+                                <a class="nav-link" href="{{ url_for('main.entities',entities='nodes') }}">{{ 'Nodes' }}</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.properties') }}">{{ 'Properties' }}</a>
+                                <a class="nav-link" href="{{ url_for('main.entities',entities='properties') }}">{{ 'Properties' }}</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.terms') }}">{{ 'Terms' }}</a>
+                                <a class="nav-link" href="{{ url_for('main.entities',entities='terms') }}">{{ 'Terms' }}</a>
                             </li>
                         </ul>
                     </div>

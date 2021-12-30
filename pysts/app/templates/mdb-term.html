@@ -5,7 +5,7 @@
     <h1> {{ title }}</h1>
     {% if display == 'detail'  %}
     <div class="float-right">
-      <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+      <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
     </div>
     <br><br>
     <div>
@@ -15,7 +15,7 @@
           <thead>
          <tr>
             <th style="width:300px"> Term Value </th> 
-            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.value}} </a>        </th>
+            <th style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.value}} </a>        </th>
        </tr>
           </thead>
           </tbody>

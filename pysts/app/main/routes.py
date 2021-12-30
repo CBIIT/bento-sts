@@ -23,10 +23,11 @@ from app.main.forms import SearchForm
 # from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
 # from app.main.forms import EditNodeForm, DeprecateNodeForm
 # from app.main.forms import EditPropForm, DeprecatePropForm
+from app.main.forms import SelectModelForm
 import app.search
 from app.main import bp
 from app.util import get_yaml_for
-import app.mdb
+from app.mdb import mdb
 from app.arc import diff_mdf
 
 @bp.before_app_request
@@ -51,7 +52,7 @@ def index():
 @bp.route("/models")
 def models(name=None):
     format = request.args.get("format")
-    m = app.mdb.mdb()
+    m = mdb()
 
     if name is not None:
         model_ = m.get_model_by_name(name)
@@ -79,245 +80,101 @@ def models(name=None):
             display="list",
         )
 
-@bp.route("/nodes", defaults={'nodeid': None}, methods=['GET', 'POST'])
-@bp.route('/nodes/<nodeid>', methods=['GET', 'POST'])
+@bp.route("/<entities>", defaults={'id': None}, methods=['GET', 'POST'])
+@bp.route('/<entities>/<id>', methods=['GET', 'POST'])
 
-def nodes(nodeid):
+def entities(entities, id):
 
     format = request.args.get("format")
     model = request.args.get("model")
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
 
-    id = nodeid
-    if nodeid is None:
+    id = id
+    if id is None:
         if id_ is not None:
             id = id_
 
-    current_app.logger.warn('> NODES id {} and id_{} and nodeid {}'.format(id, id_, nodeid))
+    m = mdb()
+    dispatch = {
+        "nodes": {
+            "title": "Node",
+            "list_title": "Nodes",
+            "template": "mdb-node.html",
+            "subtype": "nodes",
+            "sort_key": lambda x:x[1],
+            "get_by_id": m.get_node_by_id,
+            "get_list":m.get_list_of_nodes,
+        },
+        "properties": {
+            "title": "Property",
+            "list_title": "Properties",
+            "template": "mdb-property.html",
+            "subtype": "properties",
+            "sort_key": lambda x: (x[1],x[2],x[3]),
+            "display": "prop-tuple",
+            "get_by_id": m.get_property_by_id,
+            "get_list": m.get_list_of_properties,
+        },
+        "valuesets": {
+            "title": "Value Set",
+            "list_title": "Value Sets",
+            "template": "mdb-valueset.html",
+            "subtype": "valuesets",
+            "sort_key": lambda x: x["handle"],
+            "display": "list",
+            "get_by_id": m.get_valueset_by_id,
+            "get_list": m.get_list_of_valuesets,
+        },
+        "terms": {
+            "title": "Term",
+            "list_title": "Terms",
+            "template": "mdb-term.html",
+            "subtype": "terms",
+            "sort_key": lambda x: (x["model"], x["property"], x["value"] if type(x["value"]) == str else ""),
+            "display": "term-tuple",
+            "get_by_id": m.get_term_by_id,
+            "get_list": m.get_list_of_terms,
+        },
+        }
 
-    m = app.mdb.mdb()
-
-    # A: single node
+    # A: single entity
     if id is not None:
-        node_ = m.get_node_by_id(id)
-        # FIXME check that id actually exists - handle error
-
+        ent_ = dispatch[entities]["get_by_id"](id)
+        if ent_ is None or not bool(ent_):
+            return render_template('/errors/400.html'), 400
+        if ent_.get("has_properties"): # nodes only kludge
+            ent_['has_properties'].sort(key=lambda x:x['handle'])
         if request.method == "GET":
-            form.nodeHandle.data = node_['handle']
-
             if format == "json":
-                return jsonify(node_)
+                return jsonify(ent_)
             else:
                 return render_template(
-                    "mdb-node.html",
-                    title="Node",
-                    mdb=node_,
-                    subtype="main.nodes",
+                    dispatch[entities]["template"],
+                    title=dispatch[entities]["title"],
+                    mdb=ent_,
+                    subtype=dispatch[entities]["subtype"],
                     display="detail",
-                    form=form,
-                    deprecateform=deprecateform,
                 )
 
     # B: filter by model
-    if model is not None:
+    ents_ = dispatch[entities]["get_list"](model)
 
-        nodes_ = m.get_list_of_nodes(model)
-
-        if format == "json":
-            return jsonify(nodes_)
-        else:
-            pagination = Pagination(page=page,total=len(nodes_),record_name='nodes')
-            return render_template(
-                "mdb.html",
-                title="Nodes in Model {}".format(model),
-                mdb=sorted(nodes_,key=lambda x: x[1]),
-                subtype="main.nodes",
-                display="tuple",
-                first=(pagination.page-1)*pagination.per_page,
-                last=min((pagination.page)*pagination.per_page,len(nodes_)),
-                pagination=pagination,
-            )
-
-    # C: plain list
-    nodes_ = m.get_list_of_nodes()
     if format == "json":
-        return jsonify(nodes_)
+        return jsonify(ents_)
     else:
-        pagination = Pagination(page=page,total=len(nodes_),record_name='nodes')
+        pagination = Pagination(page=page,total=len(ents_),record_name=entities)
         return render_template(
             "mdb.html",
-            title="Nodes",
-            mdb=sorted(nodes_,key=lambda x:x[1]),
-            subtype="main.nodes",
-            display="tuple",  # from list
+            title=dispatch[entities]["list_title"],
+            mdb=sorted(ents_,
+                       key=dispatch[entities]["sort_key"]),
+            subtype=dispatch[entities]["subtype"],
+            display=dispatch[entities].get("display") or "tuple",
             first=(pagination.page-1)*pagination.per_page,
-            last=min((pagination.page)*pagination.per_page,len(nodes_)),
+            last=min((pagination.page)*pagination.per_page,len(ents_)),
             pagination=pagination,
         )
-
-
-@bp.route("/properties", defaults={'propid': None}, methods=['GET', 'POST'])
-@bp.route('/properties/<propid>', methods=['GET', 'POST'])
-
-def properties(propid):
-
-    format = request.args.get("format")  # for returning in json format
-    model = request.args.get("model")    # to filter by model
-    id_ = request.args.get("id")
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    
-    id = propid
-    if propid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> PROP id {} and id_{} and propid {}'.format(id, id_, propid ))
-
-    m = app.mdb.mdb()
-
-    # they specify property by id
-    if id is not None:
-        p_ = m.get_property_by_id(id, model)
-
-        # FIX (not being hit)
-        if p_ is None or not bool(p_):
-            return render_template('/errors/400.html'), 400
-
-        if format == "json":
-            return jsonify(p_)
-        else:
-            return render_template(
-                "mdb-property.html",
-                title="Property: ",
-                mdb=p_,
-                subtype="main.properties",
-                display="detail",
-            )
-
-    # they didn't give an id, so list all properties
-    else:
-        p_ = m.get_list_of_properties(model)
-        if format == "json":
-            return jsonify(p_)
-        else:
-            pagination = Pagination(page=page,total=len(p_),record_name='properties')
-            return render_template(
-                "mdb.html",
-                title="Properties",
-                mdb=sorted(p_, key=lambda x: (x[1],x[2],x[3])),
-                subtype="main.properties",
-                display="prop-tuple",  # from list
-                first=(pagination.page-1)*pagination.per_page,
-                last=min((pagination.page)*pagination.per_page,len(p_)),
-                pagination=pagination,
-            )
-
-
-@bp.route("/valuesets", defaults={'valuesetid': None}, methods=['GET', 'POST'])
-@bp.route('/valuesets/<valuesetid>', methods=['GET', 'POST'])
-
-def valuesets(valuesetid):
-
-    format = request.args.get("format")
-    model = request.args.get("model")
-
-    id_ = request.args.get("id")
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    id = valuesetid
-    if valuesetid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> VS id {} and id_{} and valuesetid {}'.format(id, id_, valuesetid))
-
-    m = app.mdb.mdb()
-
-    if id is not None:
-        vs_ = m.get_valueset_by_id(id, model)
-
-        if vs_ is None or not bool(vs_):
-            return render_template('/errors/400.html'), 400
-
-        # TODO check that id actually exists - handle error
-        if format == "json":
-            return jsonify(vs_)
-        else:
-            return render_template(
-                "mdb-valueset.html",
-                title="Value Set: ",
-                mdb=vs_,
-                subtype="main.valuesets",
-                display="detail",
-            )
-
-    else:
-        vs_ = m.get_list_of_valuesets(model)
-        pagination = Pagination(page=page,total=len(vs_),record_name='valuesets')
-        if format == "json":
-            return jsonify(vs_)
-        else:
-            return render_template(
-                "mdb.html",
-                title="Value Sets",
-                mdb=sorted(vs_, key=lambda x: x["handle"]),
-                subtype="main.valuesets",
-                display="list",
-                first=(pagination.page-1)*pagination.per_page,
-                last=min((pagination.page)*pagination.per_page,len(vs_)),
-                pagination=pagination,
-            )
-
-
-@bp.route("/terms", defaults={'termid': None}, methods=['GET', 'POST'])
-@bp.route('/terms/<termid>', methods=['GET', 'POST'])
-
-def terms(termid):
-
-    format = request.args.get("format")
-    model = request.args.get("model")    # to filter by model
-    id_ = request.args.get("id")
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    
-    id = termid
-    if termid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> TERMS id {} and id_{} and termid {}'.format(id, id_, termid))
-
-    m = app.mdb.mdb()
-
-    if id is not None:
-        term_ = m.get_term_by_id(id)
-        if term_:
-            if format == "json":
-                return jsonify(term_)
-            else:
-                return render_template(
-                    "mdb-term.html",
-                    title="Term",
-                    mdb=term_,
-                    subtype="main.terms",
-                    display="detail",
-                )
-    else:
-        terms_ = m.get_list_of_terms(model)
-        if format == "json":
-            return jsonify(terms_)
-        else:
-            pagination = Pagination(page=page,total=len(terms_),record_name='terms')
-            return render_template(
-                "mdb.html",
-                title="Terms",
-                mdb=sorted(terms_,key=lambda x: (x["model"], x["property"], x["value"])),
-                subtype="main.terms",
-                display="term-tuple",
-                first=(pagination.page-1)*pagination.per_page,
-                last=min((pagination.page)*pagination.per_page,len(terms_)),
-                pagination=pagination,
-            )
-
 
 @bp.route("/origins", defaults={'originid': None}, methods=['GET', 'POST'])
 @bp.route('/origins/<originid>', methods=['GET', 'POST'])
@@ -330,8 +187,6 @@ def origins(originid):
     if originid is None:
         if id_ is not None:
             id = id_
-
-    current_app.logger.warn('> ORIGIN id {} and id_{} and originid {}'.format(id, id_, originid))
 
     m = app.mdb.mdb()
 

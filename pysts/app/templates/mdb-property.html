@@ -5,7 +5,7 @@
     <h1> {{ title }} {{ mdb.handle}} </h1>
     {% if display == 'detail'  %}
     <div class="float-right">
-        <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+        <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
     </div>
     <br><br>
     <div class="container-fluid">
@@ -17,7 +17,7 @@
             <table class="table table-striped">
               <tr>
                 <th scope="row" style="width:100px"> Handle </th> 
-                <th scope="row" style="width:250px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+                <th scope="row" style="width:250px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
                 
               </tr>
               <tr>
@@ -29,7 +29,7 @@
 	      
               {% if mdb._for_nodehandle %}
                 <tr>
-                  <td> For Node </td> <td><a href="{{url_for( 'main.nodes', id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
+                  <td> For Node </td> <td><a href="{{url_for( 'main.entities', entities='nodes',id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
                   
                 </tr>
               {% endif %}
@@ -122,7 +122,7 @@
             </tr>    
             {% for term_item in mdb.has_terms %}
               <tr>
-                <td> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </td>
+                <td> <a href="{{url_for( 'main.entities', entities='terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </td>
                 <td> {{ term_item.id }} </td>
               </tr>
             {% endfor %}

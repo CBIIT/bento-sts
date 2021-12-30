@@ -32,11 +32,11 @@
 
     {% if display == 'detail' %}
      <div class="float-right">
-       <a href="{{url_for( subtype, name=mdb.handle, format='yaml' ) }}" class="btn btn-outline-primary btn-sm"> Export Yaml</a>
+       <a href="{{url_for( 'main.entities', entities=subtype, name=mdb.handle, format='yaml' ) }}" class="btn btn-outline-primary btn-sm"> Export Yaml</a>
      </div>
      <br>
      <ul>
-    <li><a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> Nodes </a></li>
+    <li><a href="{{url_for( 'main.enitities', entities='nodes', model=mdb.handle ) }}"> Nodes </a></li>
      <br>
     <li><a href="{{mdb.repository}}">Model repository</a></li>
     <ul>

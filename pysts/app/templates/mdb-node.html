@@ -6,7 +6,7 @@
     {% if display == 'detail'  %}
       <div class="float-right">
 	<div class="float-right">
-          <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+          <a href="{{url_for('main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
 	</div>
   
       </div>
@@ -17,7 +17,7 @@
 	  <table class="table-striped">
             <tr>
               <th style="width:300px"> Name </th> 
-              <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+              <th style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
 	    </tr>
          <tr>
            <td> Id </td> <td>{{mdb.id}} </td>
@@ -37,14 +37,14 @@
 	  <div id="nodeProperties" name="nodeProperties" style="margin:20px; padding:20x">
             <table class="table-striped" >
               <tr> 
-		<th style="width:300px"> Node Name </th>   
+		<th style="width:300px"> Property </th>   
 		<th style="width:300px"> Id </th>
               <th style="width:300px"> Value Domain </th>
               </tr>
               
               {% for property_item in mdb.has_properties %}
 		<tr>
-              <td> <a href="{{url_for( 'main.properties', id=property_item.id ) }}"> {{property_item.handle }}</a> </td>
+              <td> <a href="{{url_for( 'main.entities', entities='properties', id=property_item.id ) }}"> {{property_item.handle }}</a> </td>
               <td> {{ property_item.id }} </td> 
               <td> {{ property_item.value_domain }}</td>
 		</tr>
@@ -69,7 +69,7 @@
 	      
               {% for node_item in mdb.has_relationship_from_nodes %}
 		<tr>
-                 <td> <a href="{{url_for( subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </td>
+                 <td> <a href="{{url_for( 'main.entities', entities=subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </td>
                  <td> {{ node_item.id }} </td>
                  <td> {{ node_item.relationship.handle }}</td>
 		</tr>
@@ -96,7 +96,7 @@
               
               {% for node_item in mdb.has_relationship_to_nodes %}
 		<tr>
-                  <td> <a href="{{url_for( subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </th>
+                  <td> <a href="{{url_for( 'main.entities', entities=subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </th>
 <td> {{ node_item.id }} </td>
 <td> {{node_item.relationship.handle }}</td>
 </tr>

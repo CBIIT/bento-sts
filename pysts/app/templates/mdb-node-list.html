@@ -12,7 +12,7 @@
          </tr>
          {% for dict_item in mdb %}
          {% for key, value in dict_item.items() %}
-         <tr> <td> <a href="{{url_for( subtype, id=key) }}">{{ value }}</a> </td> </tr>
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, id=key) }}">{{ value }}</a> </td> </tr>
          {% endfor %}
          {% endfor %}
        </table>
@@ -27,7 +27,7 @@
          </tr>
          {% for dict_item in mdb %}
          {% for key, value in dict_item.items() %}
-         <tr> <td> <a href="{{url_for( subtype, id=key ) }}">{{ value }}</a> </td> </tr>
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, id=key ) }}">{{ value }}</a> </td> </tr>
          {% endfor %}
          {% endfor %}
        </table>
@@ -41,7 +41,7 @@
              <th> Name </th>
          </tr>
          {% for item in mdb %}
-         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, name=item ) }}">{{ item }}</a> </td> </tr>
          {% endfor %}
        </table>
        <br><br>

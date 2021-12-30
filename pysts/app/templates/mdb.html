@@ -5,12 +5,13 @@
     <br>
     <h1> {{ title }} </h1>
     <div class="float-right">
-      <a href="{{url_for( subtype ) }}" class="btn btn-outline-primary btn-sm"> All Models </a>
-      <a href="{{url_for( subtype, model='Bento' ) }}" class="btn btn-outline-primary btn-sm"> Bento  </a>
-      <a href="{{url_for( subtype, model='CTDC' ) }}" class="btn btn-outline-primary btn-sm"> CTDC  </a>
-      <a href="{{url_for( subtype, model='ICDC' ) }}" class="btn btn-outline-primary btn-sm"> ICDC  </a>
+      <a href="{{url_for( 'main.entities', entities=subtype ) }}" class="btn btn-outline-primary btn-sm"> All Models </a>
+{#      <a href="{{url_for( 'main.entities', entities=subtype, model='Bento' ) }}" class="btn btn-outline-primary btn-sm"> Bento  </a>
+      <a href="{{url_for( 'main.entities', entities=subtype, model='CTDC' ) }}" class="btn btn-outline-primary btn-sm"> CTDC  </a>
+      <a href="{{url_for( 'main.entities', entities=subtype, model='ICDC' ) }}" class="btn
+      btn-outline-primary btn-sm"> ICDC  </a> #}
       &nbsp;&nbsp;&nbsp;
-      <a href="{{url_for( subtype,  format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON (All) </a>
+      <a href="{{url_for( 'main.entities', entities=subtype,  format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON (All) </a>
     </div> 
     {% if display == 'list'  %}
     <br><br>
@@ -25,7 +26,7 @@
          </tr>
 	 {% for dict_item in mdb[first:last] %}
 	 {% for key, value in dict_item.items() %}
-         <tr> <td> <a href="{{url_for( subtype, id=key) }}">{{ value }}</a> </td> </tr>
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, id=key) }}">{{ value }}</a> </td> </tr>
          {% endfor %}
          {% endfor %}
        </table>
@@ -44,7 +45,7 @@
              <th> Name </th>
          </tr>
          {% for item in mdb[first:last] %}
-         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a> </td> </tr>
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, name=item ) }}">{{ item }}</a> </td> </tr>
          {% endfor %}
        </table>
        </div>
@@ -62,7 +63,7 @@
 	   </tr>
          {% for entry in mdb[first:last] %}
 	 <tr>
-	   <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	   <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
 	   <td> {{ entry[2] }} </td>
 	 </tr>
 	 {% endfor %}
@@ -85,8 +86,8 @@
 	  </tr>
          {% for entry in mdb[first:last] %}
 	  <tr> 
-	    <td> <a href="{{url_for( subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-	    <td> <a href="{{url_for('main.nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
 	    <td> {{ entry[2] }} </td>
 	  </tr>
 	  {% endfor %}
@@ -109,8 +110,8 @@
 	  </tr>
 	  {% for entry in mdb[first:last] %}
 	  <tr> 
-	    <td> <a href="{{url_for( subtype, id=entry.id ) }}">{{ entry.value }}</a> </td> 
-	    <td> <a href="{{url_for('main.properties', id=entry.propid ) }}">{{ entry.property }} </td>
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.id ) }}">{{ entry.value }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='properties', id=entry.propid ) }}">{{ entry.property }} </td>
 	    <td> {{ entry.model }} </td>
 	  </tr>
 	  {% endfor %}

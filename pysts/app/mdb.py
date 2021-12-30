@@ -55,7 +55,8 @@ could be used here for write and tag functionality."""
                     "id": p["nanoid"],
                     "handle": p["handle"],
                     "type": "property",
-                    "link": url_for("main.properties", id=p["nanoid"]),
+                    "link": url_for("main.entities", entities='properties',
+                                    id=p["nanoid"]),
                     "value_domain": p["value_domain"]
                     })
         if (edges_result):
@@ -72,7 +73,8 @@ could be used here for write and tag functionality."""
                 add_to[node["nanoid"]] = {
                     "id": node["nanoid"],
                     "handle": node["handle"],
-                    "link": url_for("main.nodes", id=node["nanoid"]),
+                    "link": url_for("main.entities", entities='nodes',
+                                    id=node["nanoid"]),
                     "type": "node",
                     "relationship": {
                         "id": rln["nanoid"],
@@ -113,7 +115,8 @@ could be used here for write and tag functionality."""
             "url": vs_result[0]["url"],
             "desc": vs_result[0]["desc"],
             "type": "valueset",
-            "link": url_for("main.valuesets", id=vs_result[0]["nanoid"]),
+            "link": url_for("main.entities", entities='valuesets',
+                            id=vs_result[0]["nanoid"]),
             "_for_propertyhandle": "_for_propertyhandle",  # kludge
             "_for_propertyid": "_for_propertyid"  # kludge
             }
@@ -123,7 +126,8 @@ could be used here for write and tag functionality."""
                                   for x in vs_result[0].props]
         result["has_terms"] = [{"id": x["nanoid"], "value": x["value"],
                                 "type": "term",
-                                "link":url_for('main_terms', id=x["nanoid"])}
+                                "link":url_for('main.entities', entities='terms',
+                                               id=x["nanoid"])}
                                for x in vs_result[0].terms]
         if model:
             result["has_property"] = [x for x in result["has_property"]
@@ -158,7 +162,8 @@ could be used here for write and tag functionality."""
         result["id"] = result["nanoid"]
         del result["nanoid"]
         result["type"] = "term"
-        result["link"] = url_for("main.terms", id=result["id"],
+        result["link"] = url_for("main.entities", entities='terms',
+                                 id=result["id"],
                                  _external=False)
         result["has_origin"] = {}
         origin = t_result[0]["origin"]
@@ -227,12 +232,14 @@ could be used here for write and tag functionality."""
             result["has_valueset"] = {
                 "id": pr["value_set"]["nanoid"],
                 "type": "valueset",
-                "link": url_for("main.valuesets", id=pr["value_set"]["nanoid"])
+                "link": url_for("main.entities", entities='valuesets',
+                                id=pr["value_set"]["nanoid"])
                 }
         if pr["terms"]:
             result["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
                                     "type": "term",
-                                    "link": url_for("main.terms",
+                                    "link": url_for("main.entities",
+                                                    entities='terms',
                                                     id=t["nanoid"])}
                                    for t in pr["terms"]]
         return result
