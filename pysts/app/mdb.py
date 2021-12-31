@@ -197,7 +197,7 @@ could be used here for write and tag functionality."""
     # ORIGINS
     # ####################################################################### #
 
-    def get_list_of_origins(self):
+    def get_list_of_origins(self, dummy=None):
         origins = self.mdb.get_origins()
         result = [{x["o"]["nanoid"]:x["o"]["name"]}
                   for x in origins]

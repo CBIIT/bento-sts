@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
+from bento_meta.mdb import MDB
 from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -28,6 +29,11 @@ def create_app(config_class=Config):
     """ or set to None for default theme """
     app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = 'spacelab' 
 
+    mdb = MDB(app.config["NEO4J_MDB_URI"],
+              user=app.config["NEO4J_MDB_USER"],
+              password=app.config["NEO4J_MDB_PASS"])
+    app.config['MODEL_LIST'] = [x["m"] for x in mdb.get_model_nodes()]
+
     db.init_app(app)
     migrate.init_app(app, db)
     bootstrap.init_app(app)
@@ -39,6 +45,7 @@ def create_app(config_class=Config):
         if app.config["ELASTICSEARCH_URL"]
         else None
     )
+    
 
     dropzone = Dropzone(app)
 

@@ -19,7 +19,7 @@ from flask import (
 )
 from flask_paginate import Pagination, get_page_parameter
 from app import db, logging
-from app.main.forms import SearchForm
+from app.main.forms import SearchForm, SelectModelForm
 # from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
 # from app.main.forms import EditNodeForm, DeprecateNodeForm
 # from app.main.forms import EditPropForm, DeprecatePropForm
@@ -85,11 +85,21 @@ def models(name=None):
 
 def entities(entities, id):
 
-    format = request.args.get("format")
-    model = request.args.get("model")
+    if request.form.get("format"):
+        format = request.args.get("format")
+    elif request.form.get("export"):
+        format = "json"
+    else:
+        format = ""
+
+    model = request.form.get("model_hdl")
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
-
+    select_form = SelectModelForm()
+    select_form.model_hdl.choices = [(x['handle'],x['handle']) for x
+                                     in current_app.config["MODEL_LIST"]]
+    current_app.logger.info("model: {}, format: {}".format(model, format))
+    current_app.logger.info(list(request.args.keys()))
     id = id
     if id is None:
         if id_ is not None:
@@ -136,7 +146,16 @@ def entities(entities, id):
             "get_by_id": m.get_term_by_id,
             "get_list": m.get_list_of_terms,
         },
-        }
+        "origins": {
+            "title": "Origin",
+            "list_title": "Origins",
+            "template": "mdb-origin.html",
+            "subtype": "origins",
+            "sort_key": lambda x:list(x.values())[0],
+            "display": "list",
+            "get_list": m.get_list_of_origins,
+        },
+    }
 
     # A: single entity
     if id is not None:
@@ -158,7 +177,7 @@ def entities(entities, id):
                 )
 
     # B: filter by model
-    ents_ = dispatch[entities]["get_list"](model)
+    ents_ = dispatch[entities]["get_list"]( None if model == 'All' else model)
 
     if format == "json":
         return jsonify(ents_)
@@ -174,38 +193,8 @@ def entities(entities, id):
             first=(pagination.page-1)*pagination.per_page,
             last=min((pagination.page)*pagination.per_page,len(ents_)),
             pagination=pagination,
+            form=select_form,
         )
-
-@bp.route("/origins", defaults={'originid': None}, methods=['GET', 'POST'])
-@bp.route('/origins/<originid>', methods=['GET', 'POST'])
-
-def origins(originid):
-    format = request.args.get("format")
-    id_ = request.args.get("id")
-
-    id = originid
-    if originid is None:
-        if id_ is not None:
-            id = id_
-
-    m = app.mdb.mdb()
-
-    origins_ = m.get_list_of_origins()
-    if format == "json":
-        return jsonify(origins_)
-
-    return render_template(
-        "mdb.html",
-        title="Origins",
-        mdb=sorted(origins_,key=lambda x:list(x.values())[0]),
-        subtype="main.origins",
-        display="list",
-        pagination=None,
-        first=0,
-        last=len(origins_)
-    )
-
-
 # ---------------------------------------------------------------------------
 @bp.route("/search")
 

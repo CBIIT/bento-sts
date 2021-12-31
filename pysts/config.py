@@ -15,6 +15,7 @@ class Config(object):
     NEO4J_MDB_USER = os.environ.get("NEO4J_MDB_USER")
     NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
     LANGUAGES = ["en"]
+    MODEL_LIST = [] # set by MDB query in __init__
     MS_TRANSLATOR_KEY = os.environ.get("MS_TRANSLATOR_KEY")
     ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
     POSTS_PER_PAGE = 25

@@ -5,13 +5,10 @@
     <br>
     <h1> {{ title }} </h1>
     <div class="float-right">
-      <a href="{{url_for( 'main.entities', entities=subtype ) }}" class="btn btn-outline-primary btn-sm"> All Models </a>
-{#      <a href="{{url_for( 'main.entities', entities=subtype, model='Bento' ) }}" class="btn btn-outline-primary btn-sm"> Bento  </a>
-      <a href="{{url_for( 'main.entities', entities=subtype, model='CTDC' ) }}" class="btn btn-outline-primary btn-sm"> CTDC  </a>
-      <a href="{{url_for( 'main.entities', entities=subtype, model='ICDC' ) }}" class="btn
-      btn-outline-primary btn-sm"> ICDC  </a> #}
-      &nbsp;&nbsp;&nbsp;
-      <a href="{{url_for( 'main.entities', entities=subtype,  format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON (All) </a>
+      {{ render_form(form, form_type='inline', action=url_for('main.entities', entities=subtype)) }}
+      <!--
+      <button type="submit" class="btn btn-outline-primary btn-sm">Filter</button>
+      <button type="submit" class="btn btn-outline-primary btn-sm">Export JSON</button> -->
     </div> 
     {% if display == 'list'  %}
     <br><br>

@@ -43,7 +43,8 @@
             <table  class="table-striped">
                 <thead>
                 <tr> <th style="width:300px"> Origin Name  </th>  
-                     <th style="width:300px"> <a href="{{url_for( 'main.origins', id=mdb.has_origin.id ) }}"> {{ mdb.has_origin.name }}</a> </th>
+		<th style="width:300px">
+		  <a href="{{url_for( 'main.entities', entities='origins',id=mdb.has_origin.id ) }}"> {{ mdb.has_origin.name }}</a> </th>
                 </tr>
                 </thead>
                 <tbody>
