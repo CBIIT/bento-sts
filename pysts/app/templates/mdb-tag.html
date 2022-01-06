@@ -1,0 +1,54 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %}
+{% block app_content %}
+  <br>
+  <h1> {{title}} </h1>
+  <div class="float-right">
+    <a href="{{url_for( 'main.tags', key=key, value=value,
+	     model=model, format='json' ) }}" class="btn
+	     btn-outline-primary btn-sm">
+	     Export JSON </a>
+  </div>
+  {% if display == 'tags' %}
+    <table class="table-bordered">
+      <tr>
+	<th class="px-2">Key</th>
+	<th class="px-2">Value</th>
+      </tr>
+      {% for item in ents %}
+	<tr>
+	  <th class="px-2" rowspan={{ item['values']|length + 1}}>
+	   <a href={{ url_for('main.tags',key=item.key)}}> {{ item.key }}</a>
+	  </th>
+	  </tr>
+	{% for val in item['values'] %}
+	  <tr>
+	    <td class="px-2">
+	      <a href={{ url_for('main.tags',key=item.key,value=val)}} >{{val}}</a>
+	    <td>
+	  </tr>
+        {% endfor %}
+
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  {% if display == 'entities' %}
+    <table class='table-striped table-bordered'>
+      <tr>
+	<th class="px-2">Tag Key</th><th class="px-2">Tag Value</th>
+	<th class="px-2">Entity</th><th class="px-2">Handle</th><th class="px-2">Model</th>
+      </tr>
+      {% for item in ents %}
+	{% for ent in item['entities'] %}
+	<tr>
+	  <td class="px-2">{{item.tag_key}}</td>
+	  <td class="px-2">{{item.tag_value}}</td>
+	  <td class="px-2">{{item.entity}}</td>
+	  <td class="px-2"><a href={{ url_for('main.entities', entities=[item.entity,'s']|join(''), id=ent.nanoid)}}>{{ ent.handle }}</a></td>
+	  <td class="px-2"><a href={{ url_for('main.models', name=ent.model)}}>{{ ent.model }}</a></td>
+	  </tr>
+	{% endfor %}
+      {% endfor %}
+  {% endif %}
+{% endblock %}
