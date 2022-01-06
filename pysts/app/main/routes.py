@@ -222,7 +222,21 @@ def tags(key=None,value=None,model=None):
     if format == "json":
         return jsonify(ents)
     else:
-        return "bugger me, format was {}".format(format)
+        if key:
+            return render_template(
+                "mdb-tag.html",
+                title="Tagged Entities",
+                key=key,
+                value=val,
+                model=model,
+                ents=ents,
+                display='entities')
+        else:
+            return render_template(
+                "mdb-tag.html",
+                title="Tags",
+                ents=ents,
+                display='tags')
 
 @bp.route("/search")
 def search():
