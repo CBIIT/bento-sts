@@ -196,8 +196,35 @@ def entities(entities, id):
             form=select_form,
         )
 # ---------------------------------------------------------------------------
-@bp.route("/search")
 
+@bp.route("/tags", defaults={'key':None,'value':None},methods=['GET','POST'])
+@bp.route("/tags/<key>", methods=['GET','POST'], defaults={'value':None})
+@bp.route("/tags/<key>/<value>", methods=['GET','POST'])
+def tags(key=None,value=None,model=None):
+    key = key or request.args.get("key")
+    val = value or request.args.get("value")
+    model = model or request.args.get("model")
+    ents = []
+    m = mdb()
+    format = request.args.get("format")
+    if request.form.get("format"):
+        format = request.args.get("format")
+    elif request.form.get("export"):
+        format = "json"
+    else:
+        pass
+
+    if key:
+        ents = m.get_tagged_entities(key, val, model)
+    else:
+        ents = m.get_tags_and_values()
+
+    if format == "json":
+        return jsonify(ents)
+    else:
+        return "bugger me, format was {}".format(format)
+
+@bp.route("/search")
 def search():
 
     if not g.search_form.validate():

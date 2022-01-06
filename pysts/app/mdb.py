@@ -252,3 +252,11 @@ could be used here for write and tag functionality."""
                                                     id=t["nanoid"])}
                                    for t in pr["terms"]]
         return result
+
+    def get_tagged_entities(self, tag_key, tag_value=None, model=None):
+        ents_by_tag = self.mdb.get_entities_by_tag(tag_key, tag_value, model)
+        return ents_by_tag
+
+    def get_tags_and_values(self):
+        tags = self.mdb.get_tags_and_values()
+        return tags
