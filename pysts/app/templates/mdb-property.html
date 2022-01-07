@@ -1,8 +1,9 @@
+<!-- -*-jinja2-*- -->
 {% extends "base.html" %}
 
 {% block app_content %}
     <br>
-    <h1> {{ title }} {{ mdb.handle}} </h1>
+    <h1> {{ title }} <i>{{ mdb.handle}}</i> </h1>
     {% if display == 'detail'  %}
     <div class="float-right">
         <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
@@ -17,11 +18,11 @@
             <table class="table table-striped">
               <tr>
                 <th scope="row" style="width:100px"> Handle </th> 
-                <th scope="row" style="width:250px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+                <th scope="row" style="width:250px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.prop['nanoid'] ) }}"> {{mdb.prop['handle']}} </a>  </th>
                 
               </tr>
               <tr>
-                <td> Id </td> <td>{{mdb.id}} </td> 
+                <td> Id </td> <td>{{mdb.prop['nanoid']}} </td> 
               </tr>
               <tr>
                 <td> Model </td> <td>{{mdb.model}} </td> 
@@ -51,54 +52,27 @@
                 <tr>
                   <th scope="row">Value Domain</th>
                   <td>
-                    {% if mdb.value_domain %}
-                      {{ mdb.value_domain }}
-                    {% endif %}
+                      {{ mdb.prop["value_domain"] }}
                   </td>
-                  
                 </tr> 
 		
                 <tr>
                   <td>Required</td>
                   <td>
-                    <div class="custom-control custom-switch">
-                      <input type="checkbox" class="custom-control-input" id="customSwitch1">
-                      <label class="custom-control-label" for="customSwitch1"></label>
-                    </div>
+		    {{ mdb.prop["is_required"] if mdb.prop["is_required"] else 'false' }}
                   </td>
-                  
-                  
+                  {% if mdb.prop["units"] %}
                   <tr>
                     <td>Units</td>
-                    <td>
-                      <p class="text-muted"><em>empty</em></p>
-                    </td>
-                    
-		    
+                    <td> {{mdb.prop["units"]}} </td>
                   </tr>
+		  {% endif %}
                 <tr>
                   <td>Description</td>
                   <td>
-                    <p class="text-muted"><em>empty</em></p>
+		    {{ mdb.prop["desc"] }}
                   </td>
-                  
                 </tr>  
-                <tr>
-                  <td>Instructions</td>
-                  <td>
-                    <p class="text-muted"><em>empty</em></p>
-                  </td>
-                  
-                </tr>
-                
-                <tr>
-                  <td>Internal Comments</td>
-                  <td>
-                    <p class="text-muted"><em>empty</em></p>
-                  </td>
-                  
-                </tr>
-		
               </tbody>
             </table>
           </div>

@@ -20,7 +20,7 @@
       {% endif %}
       <table class="table table-striped">
          <tr>
-             <th> Name </th>
+             <th> {{ "Value" if subtype == "terms" else "Handle" }}</th>
          </tr>
 	 {% for dict_item in mdb[first:last] %}
 	 {% for key, value in dict_item.items() %}
@@ -40,7 +40,7 @@
     <div id="allModel" name="allModel" style="margin:20px;padding:20x">
       <table class="table table-striped">
          <tr>
-             <th> Name </th>
+             <th> {{ "Value" if subtype == "terms" else "Handle" }} </th>
          </tr>
          {% for item in mdb[first:last] %}
          <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, name=item ) }}">{{ item }}</a> </td> </tr>
@@ -57,7 +57,7 @@
 	 {{ pagination.links }}
 	 <table class="table-striped">
          <tr>
-             <th style="width:300px"> Name </th> <th style="width:300px"> Model</th>
+             <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> <th style="width:300px"> Model</th>
 	   </tr>
          {% for entry in mdb[first:last] %}
 	 <tr>
@@ -78,7 +78,7 @@
 	{{pagination.links}}
 	<table class="table-striped">
 	  <tr>
-	    <th style="width:300px"> Name </th> 
+	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }} </th> 
 	    <th style="width:300px"> Node</th> 
 	    <th style="width:300px"> Model</th>
 	  </tr>
@@ -102,7 +102,7 @@
 	{{pagination.links}}
 	<table class="table-striped">
 	  <tr>
-	    <th style="width:300px"> Name </th> 
+	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> 
 	    <th style="width:300px"> Property</th> 
 	    <th style="width:300px"> Model</th>
 	  </tr>

@@ -227,11 +227,8 @@ could be used here for write and tag functionality."""
             return {}
         pr = p_result[0]
         result = {
-            "id": pr["id"],
-            "handle": pr["handle"],
             "model": pr["model"],
-            "value_domain": pr["value_domain"],
-            "is_required": pr["prop"].get("is_required"),
+            "prop":pr["prop"],
             "type": "property",
             "link": "/properties/{}".format(pr["id"]),
             "_for_nodehandle": pr["node"]["handle"],

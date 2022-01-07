@@ -1,8 +1,9 @@
+<!-- -*-jinja2-*- -->
 {% extends "base.html" %}
 
 {% block app_content %}
     <br>
-    <h1> {{ title }}: {{mdb.handle}} </h1>
+    <h1> {{ title }} <i>{{mdb.handle}}</i> </h1>
     {% if display == 'detail'  %}
       <div class="float-right">
 	<div class="float-right">
