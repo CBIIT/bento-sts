@@ -228,7 +228,7 @@ could be used here for write and tag functionality."""
         pr = p_result[0]
         result = {
             "model": pr["model"],
-            "prop":pr["prop"],
+            "prop": pr["prop"],
             "type": "property",
             "link": "/properties/{}".format(pr["id"]),
             "_for_nodehandle": pr["node"]["handle"],
