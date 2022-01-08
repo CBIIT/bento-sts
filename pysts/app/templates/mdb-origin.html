@@ -1,0 +1,24 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %}
+
+{% block app_content %}
+  <br>
+  <h1> {{title}} </h1>
+  <h3> Origin Details </h3>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th><td>{{mdb[0].name}}</td>
+    </tr>
+    <tr>
+      <th>Id</th><td>{{mdb[0].nanoid}}</td>
+    </tr>
+    <tr>
+      <th>Description</th><td>{% if mdb[0].desc %} {{mdb[0].desc}} {%
+      else %} <i>none</i> {% endif %}</td>
+    </tr>
+    <tr>
+      <th>URL</th><td>{% if mdb[0].url %} <a href={{mdb[0].url}}>{{mdb[0].url}}</a> {%
+      else %} <i>none</i> {% endif %}</td>
+    </tr>
+  </table>
+{% endblock %}

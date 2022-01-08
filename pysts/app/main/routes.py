@@ -154,6 +154,7 @@ def entities(entities, id):
             "sort_key": lambda x:list(x.values())[0],
             "display": "list",
             "get_list": m.get_list_of_origins,
+            "get_by_id": m.get_origin_by_id
         },
     }
 
@@ -162,7 +163,7 @@ def entities(entities, id):
         ent_ = dispatch[entities]["get_by_id"](id)
         if ent_ is None or not bool(ent_):
             return render_template('/errors/400.html'), 400
-        if ent_.get("has_properties"): # nodes only kludge
+        if type(ent_) == dict and ent_.get("has_properties"): # nodes only kludge
             ent_['has_properties'].sort(key=lambda x:x['handle'])
         if request.method == "GET":
             if format == "json":
@@ -240,30 +241,69 @@ def tags(key=None,value=None,model=None):
 
 @bp.route("/search")
 def search():
-
     if not g.search_form.validate():
         return redirect(url_for("main.index"))
-    page = request.args.get("page", 1, type=int)
+    m = mdb()
+    format = request.args.get("format")
+    if request.form.get("format"):
+        format = request.args.get("format")
+    elif request.form.get("export"):
+        format = "json"
+    else:
+        pass
 
-    hits, total = Entity.search(
-        g.search_form.q.data, page, current_app.config["POSTS_PER_PAGE"]
-    )
-    next_url = (
-        url_for("main.search", q=g.search_form.q.data, page=page + 1)
-        if total > page * current_app.config["POSTS_PER_PAGE"]
-        else None
-    )
-    prev_url = (
-        url_for("main.search", q=g.search_form.q.data, page=page - 1)
-        if page > 1
-        else None
-    )
+    qstring = request.args.get("qstring")
+    ents = []
+    thing = ""
+    if request.args.get("terms"):
+        ents = m.search_terms(qstring)
+        thing = "terms"
+    elif request.args.get("models"):
+        ents = m.search_entity_handles(qstring)
+        thing = "models"
+    else:
+        abort(400)
+    if format == 'json':
+        return jsonify(ents)
+
+    pagination = Pagination(
+        page=request.args.get("page", 1, type=int),
+        record_name="Hits",
+        per_page=current_app.config["HITS_PER_PAGE"]
+        )
+    first = {}
+    last = {}
+    if thing == "terms":
+        pagination.total = len(ents)
+        first["terms"] = (pagination.page-1)*pagination.per_page
+        last["terms"] = min(pagination.page*pagination.per_page, len(ents))
+    elif thing == "models":
+        pagination.total = max(len(ents["nodes"]), len(ents["properties"]),
+                               len(ents["relationships"]))
+        pp = round(pagination.per_page/3)
+        first["nodes"] = min(len(ents["nodes"])-pp,
+                             pagination.page-1*pp)
+        last["nodes"] = min(len(ents["nodes"]),
+                            pagination.page*pp)
+        first["properties"] = min(len(ents["properties"])-pp,
+                                  pagination.page-1*pp)
+        last["properties"] = min(len(ents["properties"]),
+                                 pagination.page*pp)
+        first["relationships"] = min(len(ents["relationships"])-pp,
+                                     pagination.page-1*pp)
+        last["relationships"] = min(len(ents["relationships"]),
+                                    pagination.page*pp)
+    else:
+        raise RuntimeError("Huh???")
+    
     return render_template(
         "search.html",
         title="Search",
-        hits=hits,
-        next_url=next_url,
-        prev_url=prev_url,
+        ents=ents,
+        thing=thing,
+        pagination=pagination,
+        first=first,
+        last=last,
     )
 
 @bp.route("/about-mdb")

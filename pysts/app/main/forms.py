@@ -4,8 +4,9 @@ from wtforms import StringField, SubmitField, TextAreaField, SelectField
 from wtforms.validators import ValidationError, DataRequired, Length, InputRequired
 
 class SearchForm(FlaskForm):
-    q = StringField("Search", validators=[DataRequired()])
-
+    qstring = StringField("Query", validators=[DataRequired()])
+    terms = SubmitField('Search Terms')
+    models = SubmitField('Search Models')
     def __init__(self, *args, **kwargs):
         if "formdata" not in kwargs:
             kwargs["formdata"] = request.args

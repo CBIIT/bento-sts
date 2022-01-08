@@ -1,6 +1,6 @@
 import os
 from flask import url_for, current_app
-from bento_meta.mdb import MDB
+from bento_meta.mdb import SearchableMDB
 from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
 
@@ -9,7 +9,7 @@ class mdb():
     """Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
 could be used here for write and tag functionality."""
     def __init__(self):
-        self.mdb = MDB(current_app.config["NEO4J_MDB_URI"],
+        self.mdb = SearchableMDB(current_app.config["NEO4J_MDB_URI"],
                        user=current_app.config["NEO4J_MDB_USER"],
                        password=current_app.config["NEO4J_MDB_PASS"])
 
@@ -206,6 +206,10 @@ could be used here for write and tag functionality."""
         else:
             return []
 
+    def get_origin_by_id(self, oid):
+        result = self.mdb.get_origin_by_id(oid)
+        return result
+
     # ####################################################################### #
     # PROPERTIES
     # ####################################################################### #
@@ -250,6 +254,8 @@ could be used here for write and tag functionality."""
                                    for t in pr["terms"]]
         return result
 
+    # TAGS
+    
     def get_tagged_entities(self, tag_key, tag_value=None, model=None):
         ents_by_tag = self.mdb.get_entities_by_tag(tag_key, tag_value, model)
         return ents_by_tag
@@ -257,3 +263,13 @@ could be used here for write and tag functionality."""
     def get_tags_and_values(self):
         tags = self.mdb.get_tags_and_values()
         return tags
+
+    # SEARCH
+
+    def search_entity_handles(self, qstring):
+        return self.mdb.search_entity_handles(qstring)
+
+    def search_terms(self, qstring, search_values=True,
+                     search_definitions=True):
+        return self.mdb.search_terms(qstring, search_values=search_values,
+                                     search_definitions=search_definitions)
