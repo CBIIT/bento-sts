@@ -1,298 +1,96 @@
 import os
-import pprint
-import json
-from collections import namedtuple
-from operator import attrgetter
-from app import db, logging
 from flask import url_for, current_app
-from neo4j import GraphDatabase
+from bento_meta.mdb import SearchableMDB
 from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
 
 
-class mdb:
+class mdb():
+    """Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
+could be used here for write and tag functionality."""
     def __init__(self):
-        # self.uri = uri if uri is not None else os.environ.get('NEO4J_MDB_URI')
-        # self.user = user if user is not None else os.environ.get('NEO4J_MDB_USER')
-        # self.password = password if password is not None else os.environ.get('NEO4J_MDB_PASS')
-        self.uri = os.environ.get("NEO4J_MDB_URI")
-        self.user = os.environ.get("NEO4J_MDB_USER")
-        self.password = os.environ.get("NEO4J_MDB_PASS")
-
-        self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+        self.mdb = SearchableMDB(current_app.config["NEO4J_MDB_URI"],
+                       user=current_app.config["NEO4J_MDB_USER"],
+                       password=current_app.config["NEO4J_MDB_PASS"])
 
     def close(self):
-        self.driver.close()
-
-    @staticmethod
-    def _get_models_query(tx):
-        list_of_models = []
-        result = tx.run("MATCH (n:node) WHERE n._to IS NULL RETURN DISTINCT n.model as model")
-        for record in result:
-            list_of_models.append(record["model"])
-        return list_of_models
-
-    """
-    In [5]: m.get_list_of_models()
-    Out[5]: ['ICDC', 'CTDC']
-    """
+        self.mdb.close()
 
     def get_list_of_models(self):
-        with self.driver.session() as session:
-            models = session.read_transaction(self._get_models_query)
-        return models
+        models = self.mdb.get_model_nodes()
+        if models:
+            return [x["m"] for x in models]
+        else:
+            return []
 
     """
     In [4]: m.get_model_by_name('ICDC')
     Out[4]: <bento_meta.model.Model at 0x110378450>
     """
-
     def get_model_by_name(self, name):
         ObjectMap.clear_cache()
-        model = Model(name, self.driver)
+        model = Model(name, self.mdb)
+        model_node = self.mdb.get_model_nodes(model=name)
         # if you dont call dget, it wont be populated...
         model.dget()
+        model.repository = model_node[0]["m"]["repository"]
         return model
 
-    # ############################################################################################### #
+    # ####################################################################### #
     # NODES
-    # ############################################################################################### #
-    @staticmethod
-    def _get_node_by_id_query(tx, nid, model=None):
-
-        # // idea: n3 -> n1 --> n2
-        result = {}
-        _seen_properties = []   # for convenience tracking
-
-        query = ""
-
-        if model is not None:
-            query = """
-            MATCH (n1:node)
-            WHERE n1.nanoid = $nid
-            WHERE toLower(n1.model) = toLower($model)
-            AND n1._to IS NULL
-            OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
-                WHERE NOT (n2._to is NOT NULL) and NOT (r12._to IS NOT NULL)
-            OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
-                WHERE NOT (n3._to is NOT NULL) and NOT (r31._to IS NOT NULL)
-            OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
-                WHERE NOT (p1._to is NOT NULL)
-            OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
-                WHERE NOT (c1._to IS NOT NULL)
-            OPTIONAL MATCH (ct:term)-[:represents]->(c1)
-                WHERE NOT (ct._to IS NOT NULL)
-            OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-                WHERE NOT (o._to IS NOT NULL)
-            RETURN DISTINCT n1.nanoid as n1_id,
-                        n1.handle as n1_handle,
-                        n1.model as n1_model,
-                        r12.nanoid as r12_id,
-                        r12.handle as r12_handle,
-                        n2.nanoid as n2_id,
-                        n2.handle  as n2_handle,
-                        n2.model   as n2_model,
-                        r31.nanoid    as r31_id,
-                        r31.handle as r31_handle,
-                        n3.nanoid as n3_id,
-                        n3.handle  as n3_handle,
-                        n3.model   as n3_model,
-                        p1.nanoid as p1_id,
-                        p1.handle  as p1_handle,
-                        p1.value_domain as p1_value_domain,
-                        p1.model as p1_model
-                        """
-        else:
-            query = """
-            MATCH (n1:node)
-            WHERE n1.nanoid = $nid
-            AND n1._to IS NULL
-            OPTIONAL MATCH (n1)<-[:has_src]-(r12:relationship)-[:has_dst]->(n2:node)
-                WHERE NOT (n2._to is NOT NULL) and NOT (r12._to IS NOT NULL)
-            OPTIONAL MATCH (n3)<-[:has_src]-(r31:relationship)-[:has_dst]->(n1:node)
-                WHERE NOT (n3._to is NOT NULL) and NOT (r31._to IS NOT NULL)
-            OPTIONAL MATCH (n1)-[:has_property]->(p1:property)
-                WHERE NOT (p1._to is NOT NULL)
-            OPTIONAL MATCH (n1)-[:has_concept]->(c1:concept)
-                WHERE NOT (c1._to IS NOT NULL)
-            OPTIONAL MATCH (ct:term)-[:represents]->(c1)
-                WHERE NOT (ct._to IS NOT NULL)
-            OPTIONAL MATCH (ct)-[:has_origin]->(o:origin)
-                WHERE NOT (o._to IS NOT NULL)
-            RETURN DISTINCT n1.nanoid as n1_id,
-                        n1.handle as n1_handle,
-                        n1.model as n1_model,
-                        r12.nanoid as r12_id,
-                        r12.handle as r12_handle,
-                        n2.nanoid as n2_id,
-                        n2.handle  as n2_handle,
-                        n2.model   as n2_model,
-                        r31.nanoid    as r31_id,
-                        r31.handle as r31_handle,
-                        n3.nanoid as n3_id,
-                        n3.handle  as n3_handle,
-                        n3.model   as n3_model,
-                        p1.nanoid as p1_id,
-                        p1.handle  as p1_handle,
-                        p1.value_domain as p1_value_domain,
-                        p1.model as p1_model
-                        """
-
-        answer = tx.run(query, nid=nid, model=model)
-
-        for record in answer:
-
-            # A. if result{} is empty (first time through) then initialize
-            if not bool(result):
-                result = {
-                    "id": record["n1_id"],
-                    "handle": record["n1_handle"],
-                    "model": record["n1_model"],
-                    "desc": "desc",
-                    "link": url_for('main.nodes', id=record["n1_id"]),
-                    "type": "node",
-                }
-
-            # B. if "from node" exists
-            if bool(record["n3_id"]):
-                if "has_relationship_from_nodes" not in result.keys():
-                    result["has_relationship_from_nodes"] = []
-
-                from_node = {
-                    "id": record["n3_id"],
-                    "handle": record["n3_handle"],
-                    "link": url_for('main.nodes', id=record["n3_id"]),
-                    "type": "node",
-                    "relationship": {
-                        "id": record["r31_id"],
-                        "handle": record["r31_handle"],
-                        "link": "/relationships/" + record["r31_id"],
-                        "type": "relationship",
-                    },
-                }
-
-                # see if we need to add this node
-                unique = True
-                from_node_ = json.dumps(from_node, sort_keys=True)
-                for other_node in result["has_relationship_from_nodes"]:
-                    other_node_ = json.dumps(other_node, sort_keys=True)
-                    if other_node_ == from_node_:
-                        unique = False
-                        break
-                if unique:
-                    result["has_relationship_from_nodes"].append(from_node)
-
-            # C. if "to node" exists
-            if bool(record["n2_id"]):
-                if "has_relationship_to_nodes" not in result.keys():
-                    result["has_relationship_to_nodes"] = []
-
-                to_node = {
-                    "id": record["n2_id"],
-                    "handle": record["n2_handle"],
-                    "link": url_for('main.nodes', id=record["n2_id"]),
-                    "type": "node",
-                    "relationship": {
-                        "id": record["r12_id"],
-                        "handle": record["r12_handle"],
-                        "link": "/relationships/" + record["r12_id"],
-                        "type": "relationship",
-                    },
-                }
-
-                # see if we need to add this node
-                unique = True
-                to_node_ = json.dumps(to_node, sort_keys=True)
-                for other_node in result["has_relationship_to_nodes"]:
-                    other_node_ = json.dumps(other_node, sort_keys=True)
-                    if other_node_ == to_node_:
-                        unique = False
-                        break
-                if unique:
-                    result["has_relationship_to_nodes"].append(to_node)
-
-            # D. if there are properties
-            if record["p1_id"]:
-
-                if "has_properties" not in result.keys():
-                    result["has_properties"] = []
-
-                if record["p1_id"] not in _seen_properties:
-                    property_ = {
-                        "id": record["p1_id"],
-                        "handle": record["p1_handle"],
-                        "type": "property",
-                        "link": url_for('main.properties', id=record["p1_id"]),
-                        "value_domain": record["p1_value_domain"]
-                    }
-                    _seen_properties.append(record["p1_id"])
-                    result["has_properties"].append(property_)
-
-        return result
-
+    # ####################################################################### #
     def get_node_by_id(self, nid, model=None):
-        with self.driver.session() as session:
-            node_ = session.read_transaction(self._get_node_by_id_query, nid, model)
-        return node_
-
-    # ------------------------------------------------------------------------- #
-    def get_list_of_nodes_bento(self):
-        """
-        In [3]: m.get_list_of_nodes()
-        {'ICDC': {'case': <bento_meta.objects.Node at 0x110226bd0>,
-        'off_study': <bento_meta.objects.Node at 0x110194b10>,
-        'file': <bento_meta.objects.Node at 0x1101fb1d0>,
-        'diagnosis': <bento_meta.objects.Node at 0x1101f91d0>,
-        'image': <bento_meta.objects.Node at 0x110194690>,
-        'assay': <bento_meta.objects.Node at 0x1101f7f90>,
-        'prior_surgery': <bento_meta.objects.Node at 0x1102>},
-        'CTDC': {'sequencing_assay': <bento_meta.objects.Node at 0x1102e8350>,
-        'nucleic_acid': <bento_meta.objects.Node at 0x1102eb650>,
-        """
-        result = {}
-        ObjectMap.clear_cache()
-        models = self.get_list_of_models()
-        for model in models:
-            localmodel = self.get_model_by_name(model)
-            result[model] = localmodel.nodes
+        props_result = self.mdb.get_node_and_props_by_node_id(nid)
+        edges_result = self.mdb.get_node_edges_by_node_id(nid)
+        to_nodes = {}
+        from_nodes = {}
+        if not props_result and not edges_result:
+            return {}
+        result = {"id": nid,
+                  "handle": props_result[0]["handle"],
+                  "model": props_result[0]["model"],
+                  "has_properties": [],
+                  "has_relationship_to_nodes": [],
+                  "has_relationship_from_nodes": []}
+        if (props_result):
+            for p in props_result[0]["props"]:
+                result["has_properties"].append({
+                    "id": p["nanoid"],
+                    "handle": p["handle"],
+                    "type": "property",
+                    "link": url_for("main.entities", entities='properties',
+                                    id=p["nanoid"]),
+                    "value_domain": p["value_domain"]
+                    })
+        if (edges_result):
+            for e in edges_result:
+                node = e["far_node"]
+                rln = e["rln"]
+                add_to = None
+                if e["far_type"] == "has_src":
+                    add_to = from_nodes
+                elif e["far_type"] == "has_dst":
+                    add_to = to_nodes
+                else:
+                    RuntimeError("What?")
+                add_to[node["nanoid"]] = {
+                    "id": node["nanoid"],
+                    "handle": node["handle"],
+                    "link": url_for("main.entities", entities='nodes',
+                                    id=node["nanoid"]),
+                    "type": "node",
+                    "relationship": {
+                        "id": rln["nanoid"],
+                        "handle": rln["handle"],
+                        "link": "/relationships/{}".format(rln["nanoid"]),
+                        "type": "relationship"
+                        }
+                    }
+            result["has_relationship_to_nodes"].extend(to_nodes.values())
+            result["has_relationship_from_nodes"].extend(from_nodes.values())
         return result
 
-    # ------------------------------------------------------------------------- #
-    @staticmethod
-    def _get_list_of_nodes_query(tx, model=None):
-        result = []
-
-        # swap handle to property.handle (vs.handle is null)
-        if model is None:
-            answers = tx.run(
-                """
-                MATCH (n:node)
-                WHERE n._to IS NULL
-                RETURN DISTINCT
-                    n.nanoid as id,
-                    n.handle as handle,
-                    n.model as model
-                ORDER BY n.model, n.handle
-                """
-            )
-        else:
-            answers = tx.run(
-                """
-                MATCH (n:node)
-                WHERE toLower(n.model) = toLower($model) AND n._to IS NULL
-                RETURN DISTINCT
-                    n.nanoid as id,
-                    n.handle as handle,
-                    n.model as model
-                ORDER BY n.model, n.handle
-                """, model=model
-            )
-
-        for record in answers:
-            # row = {record["id"]: record["handle"]}
-            row = (record["id"], record["handle"], record['model'])
-            result.append(row)
-        return result
+    # ----------------------------------------------------------------------- #
 
     def get_list_of_nodes(self, model=None):
         """
@@ -302,1153 +100,176 @@ class mdb:
          {'N0Qx7Z': 'off_study'},
          {'nUoHJH': 'diagnosis
         """
-        with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_nodes_query, model)
-        return list_o_dicts
-
-    # ========================================================================= #
-    @staticmethod
-    def _do_update_node(tx, neo4jquery, nid, nhandle):
-        result = []
-
-        answers = tx.run(neo4jquery, nid=nid, nhandle=nhandle)
-
-        for record in answers:
-            result.append(record)
-        return result
-
-    def get_query_to_update_node(self):
-        return '''
-                MATCH (n1:node)
-                WHERE n1.nanoid = $nid and n1._to IS NULL
-                CALL apoc.refactor.cloneNodesWithRelationships([n1])
-                YIELD input, output
-                MATCH (n2:node)
-                where n2.nanoid = $nid and n2._to IS NULL and id(n1) <> id(n2)
-                SET n1._to = ( n1._from + 1 ), n2._from = (n1._from + 1), n2.handle = $nhandle
-                RETURN id(n2)
-                '''
-
-    def update_node_by_id(self, nid, nhandle):
-        with self.driver.session() as session:
-            pprint.pprint('trying to run update node on {} and {}'.format(nid, nhandle))
-            query = self.get_query_to_update_node()
-            node_ = session.write_transaction(self._do_update_node, query, nid, nhandle)
-            # TODO update elasticsearch, remove old handle and add new
-        return node_
-
-    
-    # ------------------------------------------------------------------------- #
-
-    @staticmethod
-    def _do_deprecate_node(tx, neo4jquery, nid):
-        print("deprecating node {}".format(nid))
-        result = []
-
-        answers = tx.run(neo4jquery, nid=nid)
-
-        for record in answers:
-            result.append(record)
-        return result
-
-    def get_query_to_deprecate_node(self):
-        return '''
-                MATCH (n:node)
-                WHERE n.nanoid = $nid and n._to IS NULL
-                SET n._to = ( n._from + 1 )
-                RETURN id(n);
-                '''
-
-    def deprecate_node(self, nid):
-        with self.driver.session() as session:
-            query = self.get_query_to_deprecate_node()
-            node_ = session.write_transaction(self._do_deprecate_node, query, nid)
-            # TODO update elasticsearch, remove old node
-        return node_
-
-    # ############################################################################################### #
-    # VALUESETS
-    # ############################################################################################### #
-    def get_query_for_valueset_by_id(self, model=None):
-        querystring = ""
-
-        if model is None:
-            querystring = """
-            MATCH (vs:value_set)
-            WHERE vs.nanoid = $vsid and vs._to IS NULL
-            MATCH (p:property)-[:has_value_set]->(vs) 
-                WHERE NOT (p._to IS NOT NULL)
-            OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
-                WHERE NOT (p._to IS NOT NULL) AND NOT (cp._to IS NOT NULL)
-            OPTIONAL MATCH (ct:term)-[:represents]->(cp)
-                WHERE NOT (ct._to IS NOT NULL)
-            OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-                WHERE NOT (t._to IS NOT NULL)
-            OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
-                WHERE NOT (cto._to IS NOT NULL)
-            OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
-                WHERE NOT (vso._to IS NOT NULL)
-            RETURN DISTINCT
-                p.nanoid as property_id,
-                p.handle as property_handle,
-                p.model as property_model,
-                vs.nanoid as vs_id,
-                vs.url as vs_url,
-                vs.handle as vs_handle,
-                t.nanoid as term_id,
-                t.value as term_value
-            """
+        result = self.mdb.get_nodes_by_model(model)
+        if result:
+            return [(x["nanoid"], x["handle"], x["model"]) for x in result]
         else:
-            querystring = """
-            MATCH (vs:value_set)
-            WHERE vs.nanoid = $vsid and vs._to IS NULL
-            MATCH (p:property)-[:has_value_set]->(vs)
-            WHERE toLower(p.model) = toLower($model) AND NOT (p._to IS NOT NULL)
-            OPTIONAL MATCH (p)-[:has_concept]->(cp:concept)
-                WHERE NOT (p._to IS NOT NULL) AND NOT (cp._to IS NOT NULL)
-            OPTIONAL MATCH (ct:term)-[:represents]->(cp)
-                WHERE NOT (ct._to IS NOT NULL)
-            OPTIONAL MATCH (vs)-[:has_term]->(t:term)
-                WHERE NOT (t._to IS NOT NULL)
-            OPTIONAL MATCH (ct)-[:has_origin]->(cto:origin)
-                WHERE NOT (cto._to IS NOT NULL)
-            OPTIONAL MATCH (vs)-[:has_origin]->(vso:origin)
-                WHERE NOT (vso._to IS NOT NULL)
-            RETURN DISTINCT
-                p.nanoid as property_id,
-                p.handle as property_handle,
-                p.model as property_model,
-                vs.nanoid as vs_id,
-                vs.url as vs_url,
-                vs.handle as vs_handle,
-                t.nanoid as term_id,
-                t.value as term_value
-            """
-        return querystring
+            return []
 
-    @staticmethod
-    def _do_query_for_valueset_by_id(tx, neo4jquery, vsid, model=None):
-        result = {}
-        _seen_terms = []  # for convenience tracking
-
-        answers = tx.run(neo4jquery, vsid=vsid, model=model)
-
-        for record in answers:
-
-            # A. if result{} is empty (first time through) then initialize
-            if not bool(result):
-                result = {
-                    "id": record["vs_id"],
-                    "handle": record["property_handle"],
-                    "model": record["property_model"],
-                    "url": record["vs_url"],
-                    "desc": "desc",
-                    "type": "valueset",
-                    "link": url_for('main.valuesets', id=record["vs_id"]),
-                    "_for_propertyhandle": record["property_handle"],
-                    "_for_propertyid": record["property_id"]
-                }
-
-            # B. add property
-            if record["property_id"]:
-                if "has_property" not in result.keys():
-                    result["has_property"] = {
-                        "id": record["property_id"],
-                        "handle": record["property_handle"],
-                        "type": "property",
-                        "link": "/properties/" + record["property_id"],
-                    }
-
-            # C. skip origin
-
-            # D. add terms
-            if record["term_id"]:
-
-                if "has_terms" not in result.keys():
-                    result["has_terms"] = []
-
-                if record["term_id"] not in _seen_terms:
-                    term_ = {
-                        "id": record["term_id"],
-                        "value": record["term_value"],
-                        "type": "term",
-                        "link": url_for('main.terms', id=record["term_id"]),
-                    }
-                    _seen_terms.append(record["term_id"])
-                    result["has_terms"].append(term_)
-
-        return result
+    # ####################################################################### #
+    # VALUESETS
+    # ####################################################################### #
 
     def get_valueset_by_id(self, vsid, model=None):
-        with self.driver.session() as session:
-            query = self.get_query_for_valueset_by_id(model)
-            vs = session.read_transaction(self._do_query_for_valueset_by_id, query, vsid, model)
-        return vs
-
-    # ------------------------------------------------------------------------- #
-    @staticmethod
-    def _do_query_for_list_of_valuesets(tx, neo4jquery, model):
-        result = []
-
-        answers = tx.run(neo4jquery, model=model)
-
-        for record in answers:
-            row = {record["id"]: record["handle"]}
-            result.append(row)
-
+        vs_result = self.mdb.get_valueset_by_id(vsid)
+        if not vs_result:
+            return {}
+        result = {
+            "id": vs_result[0]["nanoid"],
+            "handle": vs_result[0]["handle"],
+            "model": model,  # kludge
+            "url": vs_result[0]["url"],
+            "desc": vs_result[0]["desc"],
+            "type": "valueset",
+            "link": url_for("main.entities", entities='valuesets',
+                            id=vs_result[0]["nanoid"]),
+            "_for_propertyhandle": "_for_propertyhandle",  # kludge
+            "_for_propertyid": "_for_propertyid"  # kludge
+            }
+        result["has_property"] = [{"id": x["nanoid"], "handle": x["handle"],
+                                   "type": "property", "model": x["model"],
+                                   "link": "/properties/{}".format(x["nanoid"])}
+                                  for x in vs_result[0].props]
+        result["has_terms"] = [{"id": x["nanoid"], "value": x["value"],
+                                "type": "term",
+                                "link":url_for('main.entities', entities='terms',
+                                               id=x["nanoid"])}
+                               for x in vs_result[0].terms]
+        if model:
+            result["has_property"] = [x for x in result["has_property"]
+                                      if x["model"] == model]
+        # kludge - original assumption is that a valueset has only one
+        # associated property, but this is not necessarily true.
+        if result["has_property"]:
+            result["_for_propertyhandle"] = result["has_property"][0]["handle"]
+            result["_for_propertyid"] = result["has_property"][0]["nanoid"]
         return result
 
-    def get_query_for_list_of_valuesets(self, model):
-        if model is None:
-            return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
-                      WHERE vs._to IS NULL and p._to IS NULL
-                      RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
-        else:
-            return """MATCH (vs:value_set)<-[:has_value_set]-(p:property)
-                      WHERE toLower(p.model) = toLower($model) and vs._to IS NULL and p._to IS NULL
-                      RETURN DISTINCT vs.nanoid as id, p.handle as handle"""
+    # ----------------------------------------------------------------------- #
 
     def get_list_of_valuesets(self, model=None):
-        with self.driver.session() as session:
-            query = self.get_query_for_list_of_valuesets(model)
-            list_o_dicts = session.read_transaction(self._do_query_for_list_of_valuesets, query, model)
-        return list_o_dicts
+        vs_result = self.mdb.get_valuesets_by_model(model)
+        if not vs_result:
+            return []
+        # kludge assuming that there is only one property assoc with each
+        # valueset:
+        return [{"id": x["value_set"]["nanoid"],
+                 "handle": x["props"][0]["handle"]}
+                for x in vs_result]
 
-    # ############################################################################################### #
+    # ####################################################################### #
     # TERMS
-    # ############################################################################################### #
-
-    @staticmethod
-    def _get_term_by_id_query(tx, tid):
-        result = {}
-        answer = tx.run(
-            """
-            MATCH (t:term) 
-            WHERE t.nanoid = $tid AND t._to IS NULL
-            OPTIONAL MATCH (t)-[:has_origin]->(to:origin)
-            WHERE to._to IS NULL
-            RETURN DISTINCT
-                t.nanoid as id,
-                t.value as value,
-                t.desc as desc,
-                t.origin_definition as origin_definition,
-                t.origin_id as origin_id,
-                to.nanoid as originid,
-                to.name as originname
-            """,
-            tid=tid,
-        )
-
-        for record in answer:
-            # format into json structure
-            result = {
-                "id": record["id"],
-                "value": record["value"],
-                "desc": record["desc"],
-                "origin_definition": record["origin_definition"],
-                "origin_id": record["origin_id"],
-                "type": "term",
-                "link": url_for("main.terms", id=record["id"], _external=False),
-                "has_origin": {
-                    "id": record["originid"],
-                    "name": record["originname"],
-                    "type": "origin",
-                    "link": "/origins/" + record["originid"],
-                },
-            }
-        return result
-    # ------------------------------------------------------------------------- #
-
+    # ####################################################################### #
     def get_term_by_id(self, tid):
-        with self.driver.session() as session:
-            term_ = session.read_transaction(self._get_term_by_id_query, tid)
-        return term_
-
-    # ========================================================================= #
-
-    @staticmethod
-    def _get_list_of_terms_query(tx, model=None):
-        result = []
-
-        if model is None:
-            answers = tx.run(
-                """
-                MATCH (p)-[:has_value_set]->(vs)
-                MATCH (vs)-[:has_term]->(t:term)
-                WHERE p._to IS NULL and vs._to IS NULL and t._to IS NULL
-                RETURN DISTINCT
-                    t.nanoid as id,
-                    t.value as value,
-                    p.handle as handle,
-                    p.model as model,
-                    p.nanoid as pid
-                ORDER BY model, handle, value
-                """
-            )
-        else:
-            answers = tx.run(
-                """
-                MATCH (p)-[:has_value_set]->(vs)
-                MATCH (vs)-[:has_term]->(t:term)
-                WHERE p._to IS NULL and vs._to IS NULL and t._to IS NULL and toLower(p.model) = toLower($model)
-                RETURN DISTINCT
-                    t.nanoid as id,
-                    t.value as value,
-                    p.handle as handle,
-                    p.model as model,
-                    p.nanoid as pid
-                ORDER BY model, handle, value
-                """, model=model
-            )
-
-        for record in answers:
-            # row = {record["id"]: record["value"]}
-            row = (record["id"], record["value"], record['model'], record['handle'], record['pid'])
-            result.append(row)
+        t_result = self.mdb.get_term_by_id(tid)
+        if not t_result:
+            return {}
+        result = t_result[0]["term"]
+        result["id"] = result["nanoid"]
+        del result["nanoid"]
+        result["type"] = "term"
+        result["link"] = url_for("main.entities", entities='terms',
+                                 id=result["id"],
+                                 _external=False)
+        result["has_origin"] = {}
+        origin = t_result[0]["origin"]
+        if origin:
+            origin["id"] = origin["nanoid"]
+            origin["type"] = "origin"
+            origin["link"] = "/origins/{}".format(origin["nanoid"])
+            result["has_origin"] = origin
         return result
+
+    # ======================================================================= #
 
     def get_list_of_terms(self, model=None):
-        with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_terms_query, model)
-        return list_o_dicts
-
-    # ------------------------------------------------------------------------- #
-
-    @staticmethod
-    def _do_update_term(tx, neo4jquery, tid, tvalue):
-        print("working with tid {} for {}".format(tid, tvalue))
+        t_result = self.mdb.get_props_and_terms_by_model(model)
         result = []
-
-        answers = tx.run(neo4jquery, tid=tid, tvalue=tvalue)
-
-        for record in answers:
-            # row = {record["id(t2)"]: record["handle"]}
-            result.append(record)
+        for p in t_result:
+            result.extend([{"id": x["nanoid"], "value": x["value"],
+                            "property": p["prop"]["handle"],
+                            "model": p["prop"]["model"],
+                            "propid": p["prop"]["nanoid"]}
+                           for x in p["terms"]])
         return result
 
-    def get_query_to_update_term(self):
-        return '''
-                MATCH (t1:term)
-                WHERE t1.nanoid = $tid and t1._to IS NULL
-                CALL apoc.refactor.cloneNodesWithRelationships([t1])
-                YIELD input, output
-                MATCH (t2:term)
-                where t2.nanoid = $tid and t2._to IS NULL and id(t1) <> id (t2)
-                SET t1._to = ( t1._from + 1 ), t2._from = (t1._from + 1), t2.value = $tvalue
-                RETURN id(t2)
-                '''
-
-    def update_term_by_id(self, tid, tvalue):
-        with self.driver.session() as session:
-            query = self.get_query_to_update_term()
-            term_ = session.write_transaction(self._do_update_term, query, tid, tvalue)
-            # TODO update elasticsearch, remove old term and add new term
-        return term_
-
-    # ------------------------------------------------------------------------- #
-
-    @staticmethod
-    def _do_create_term(tx, neo4jquery, tvalue):
-        print("working with for {}".format(tvalue))
-        result = []
-
-        answers = tx.run(neo4jquery, tvalue=tvalue)
-
-        for record in answers:
-            result.append(record)
-        return result
-
-    def get_query_to_create_term(self):
-        return '''
-                MATCH (t1:term)
-                WHERE t1.value = $tvalue and t1._to IS NULL
-                SET t1._to = ( t1._from + 1 ), t2._from = (t1._from + 1), t2.value = $tvalue
-                RETURN id(t2);
-                '''
-
-    def create_term(self, tvalue):
-        with self.driver.session() as session:
-            query = self.get_query_to_create_term()
-            term_ = session.write_transaction(self._do_create_term, query, tvalue)
-            # TODO update elasticsearch add new term
-        return term_
-
-    # ------------------------------------------------------------------------- #
-
-    @staticmethod
-    def _do_deprecate_term(tx, neo4jquery, tid):
-        print("deprecating term {}".format(tid))
-        result = []
-
-        answers = tx.run(neo4jquery, tid=tid)
-
-        for record in answers:
-            result.append(record)
-        return result
-
-    def get_query_to_deprecate_term(self):
-        return '''
-                MATCH (t1:term)
-                WHERE t1.nanoid = $tid and t1._to IS NULL
-                SET t1._to = ( t1._from + 1 )
-                RETURN id(t1);
-                '''
-
-    def deprecate_term(self, tid):
-        with self.driver.session() as session:
-            query = self.get_query_to_deprecate_term()
-            term_ = session.write_transaction(self._do_deprecate_term, query, tid)
-            # TODO update elasticsearch, remove old term
-        return term_
-
-    # ############################################################################################### #
+    # ####################################################################### #
     # ORIGINS
-    # ############################################################################################### #
+    # ####################################################################### #
 
-    @staticmethod
-    def _get_list_of_origins_query(tx):
-        result = []
-        # only get those terms associated with valuesets (some terms assoc w/ concepts)
-        answers = tx.run(
-            "MATCH (o:origin)"
-            "RETURN DISTINCT"
-            "    o.nanoid as id, "
-            "    o.name as name "
-        )
-        for record in answers:
-            # pprint.pprint("---")
-            # pprint.pprint(record['id'])
-            # pprint.pprint(record['value'])
-            row = {record["id"]: record["name"]}
-            result.append(row)
-        return result
-
-    """
-    In [3]: m.get_list_of_origins()
-    Out[3]:
-    [{'kcmuEa': 'ICDC'},
-     {'2vT78W': 'CTDC'},
-     {'8YaZWJ': 'NCIT'},
-     {'pqZesz': 'BRIDG'}]
-    """
-
-    def get_list_of_origins(self):
-        with self.driver.session() as session:
-            list_o_dicts = session.read_transaction(self._get_list_of_origins_query)
-        return list_o_dicts
-
-    # ############################################################################################### #
-    # PROPERTIES
-    # ############################################################################################### #
-
-    @staticmethod
-    def _get_list_of_properties_query(tx, model=None):
-        result = []
-
-        if model is None:
-            answers = tx.run(
-                """
-                MATCH (n:node)-[:has_property]->(p:property)
-                WHERE p._to IS NULL AND n._to IS NULL
-                RETURN DISTINCT
-                p.nanoid as id,
-                p.handle as handle,
-                p.model as property_model,
-                n.nanoid as nid,
-                n.handle as nhandle
-                ORDER BY property_model, handle
-                """
-            )
+    def get_list_of_origins(self, dummy=None):
+        origins = self.mdb.get_origins()
+        result = [{x["o"]["nanoid"]:x["o"]["name"]}
+                  for x in origins]
+        if result:
+            return result
         else:
-            answers = tx.run(
-                """
-                MATCH (n:node)-[:has_property]->(p:property)
-                WHERE toLower(p.model) = toLower($model) 
-                AND p._to IS NULL and n._to IS NULL
-                RETURN DISTINCT
-                p.nanoid as id,
-                p.handle as handle,
-                p.model as property_model,
-                n.nanoid as nid,
-                n.handle as nhandle
-                ORDER BY property_model, handle
-                """, model=model
-            )
+            return []
 
-        for record in answers:
-            # row = {record["id"]: record["handle"]}
-            row = (record["id"], record["handle"], record['property_model'], record['nhandle'], record['nid'])
-            result.append(row)
+    def get_origin_by_id(self, oid):
+        result = self.mdb.get_origin_by_id(oid)
         return result
+
+    # ####################################################################### #
+    # PROPERTIES
+    # ####################################################################### #
 
     def get_list_of_properties(self, model=None):
-        with self.driver.session() as session:
-            
-            list_o_dicts = session.read_transaction(self._get_list_of_properties_query, model)
-        return list_o_dicts
-
-    @staticmethod
-    def _get_property_by_id_query(tx, pid, model=None):
-        result = {}
-        _seen_terms = []
-
-        # only get those terms associated with valuesets (some terms assoc w/ concepts)
-        if model is None:
-            answers = tx.run(
-                """
-                MATCH (p:property)
-                WHERE p.nanoid = $pid
-                AND   p._to IS NULL
-                OPTIONAL MATCH (n)-[:has_property]->(p) WHERE n._to IS NULL
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs) WHERE vs._to IS NULL
-                OPTIONAL MATCH (vs)-[:has_term]->(t:term) WHERE t._to IS NULL
-                RETURN DISTINCT
-                p.nanoid as id,
-                p.handle as handle,
-                p.model as model,
-                p.value_domain as value_domain,
-                p.is_required as isrequired,
-                n.handle as nodehandle,
-                n.nanoid as nodeid,
-                vs.nanoid as valueset_id,
-                t.nanoid as term_id,
-                t.value as term_value,
-                COUNT(DISTINCT(t.nanoid))
-                """,
-                pid=pid,
-            )
-        else:
-            answers = tx.run(
-                """
-                MATCH (p:property)
-                WHERE p.nanoid = $pid
-                WHERE p.model = $model
-                AND   p._to IS NULL
-                OPTIONAL MATCH (n)-[:has_property]->(p) WHERE n._to IS NULL
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs) WHERE vs._to IS NULL
-                OPTIONAL MATCH (vs)-[:has_term]->(t:term) WHERE t._to IS NULL
-                RETURN DISTINCT
-                p.nanoid as id,
-                p.handle as handle,
-                p.model as model,
-                p.value_domain as value_domain,
-                p.is_required as isrequired,
-                n.handle as nodehandle,
-                n.nanoid as nodeid,
-                vs.nanoid as valueset_id,
-                t.nanoid as term_id,
-                t.value as term_value,
-                COUNT(DISTINCT(t.nanoid))
-                """,
-                pid=pid, model=model
-            )
-
-        for record in answers:
-
-            # A. if result{} is empty (first time through) then initialize
-            if not bool(result):
-                result = {
-                    "id": record["id"],
-                    "handle": record["handle"],
-                    "model": record["model"],
-                    "value_domain": record["value_domain"],
-                    "is_required": record["isrequired"],
-                    "type": "property",
-                    "link": "/properties/" + record["id"],
-                    "_for_nodehandle": record["nodehandle"],
-                    "_for_nodeid": record["nodeid"],
-                }
-
-            # B. add valueset
-            if record["valueset_id"]:
-                if "has_valueset" not in result.keys():
-                    result["has_valueset"] = {
-                        "id": record["valueset_id"],
-                        "type": "valueset",
-                        "link": url_for("main.valuesets", id=record["valueset_id"]),
-                    }
-
-            # C. skip origin
-
-            # D. add terms
-            if record["term_id"]:
-
-                if "has_terms" not in result.keys():
-                    result["has_terms"] = []
-
-                if record["term_id"] not in _seen_terms:
-                    term_ = {
-                        "id": record["term_id"],
-                        "value": record["term_value"],
-                        "type": "term",
-                        "link": url_for("main.terms", id=record["term_id"]),
-                    }
-                    _seen_terms.append(record["term_id"])
-                    result["has_terms"].append(term_)
-
+        np_result = self.mdb.get_nodes_and_props_by_model(model)
+        if not np_result:
+            return []
+        result = []
+        for np in np_result:
+            result.extend([(p["nanoid"], p["handle"],
+                            np["model"], np["handle"], np["id"])
+                           for p in np["props"]])
         return result
 
     def get_property_by_id(self, pid, model=None):
-        with self.driver.session() as session:
-            property_ = session.read_transaction(self._get_property_by_id_query, pid, model)
-        return property_
-
-        # ======================================================================= #
-
-    @staticmethod
-    def _do_update_property(tx, neo4jquery, pid, phandle):
-        print("working with pid {} for {}".format(pid, phandle))
-        result = []
-
-        answers = tx.run(neo4jquery, pid=pid, phandle=phandle)
-
-        for record in answers:
-            # row = {record["id(t2)"]: record["handle"]}
-            result.append(record)
+        p_result = self.mdb.get_prop_node_and_domain_by_prop_id(pid)
+        if not p_result:
+            return {}
+        pr = p_result[0]
+        result = {
+            "model": pr["model"],
+            "prop": pr["prop"],
+            "type": "property",
+            "link": "/properties/{}".format(pr["id"]),
+            "_for_nodehandle": pr["node"]["handle"],
+            "_for_nodeid": pr["node"]["nanoid"]
+            }
+        if pr["value_set"]:
+            result["has_valueset"] = {
+                "id": pr["value_set"]["nanoid"],
+                "type": "valueset",
+                "link": url_for("main.entities", entities='valuesets',
+                                id=pr["value_set"]["nanoid"])
+                }
+        if pr["terms"]:
+            result["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
+                                    "type": "term",
+                                    "link": url_for("main.entities",
+                                                    entities='terms',
+                                                    id=t["nanoid"])}
+                                   for t in pr["terms"]]
         return result
 
-    def get_query_to_update_property(self):
-        return '''
-                MATCH (p1:property)
-                WHERE p1.nanoid = $pid AND p1._to IS NULL
-                CALL apoc.refactor.cloneNodesWithRelationships([p1])
-                YIELD input, output
-                MATCH (p2:property)
-                where p2.nanoid = $pid and p2._to IS NULL and id(p1) <> id (p2)
-                SET p1._to = ( p1._from + 1 ), p2._from = (p1._from + 1), p2.handle = $phandle
-                RETURN id(p2)
-                '''
-
-    def update_property_by_id(self, pid, phandle):
-        with self.driver.session() as session:
-            query = self.get_query_to_update_property()
-            property_ = session.write_transaction(self._do_update_property, query, pid, phandle)
-            # TODO update elasticsearch, remove old term and add new term
-        return property_
-
-    # ------------------------------------------------------------------------- #
-
-    @staticmethod
-    def _do_create_property(tx, neo4jquery, phandle):
-        print("working with for {}".format(phandle))
-        result = []
-
-        answers = tx.run(neo4jquery, phandle=phandle)
-
-        for record in answers:
-            result.append(record)
-        return result
-
-    def get_query_to_create_property(self):
-        return '''
-                MATCH (p1:property)
-                WHERE p1.handle = $phandle and p1._to IS NULL
-                SET p1._to = ( p1._from + 1 ), p2._from = (p1._from + 1), p2.handle = $phandle
-                RETURN id(p2);
-                '''
-
-    def create_property(self, phandle):
-        with self.driver.session() as session:
-            query = self.get_query_to_create_property()
-            property_ = session.write_transaction(self._do_create_property, query, phandle)
-            # TODO update elasticsearch add new term
-        return property_
-
-    # ------------------------------------------------------------------------- #
-
-    @staticmethod
-    def _do_deprecate_property(tx, neo4jquery, pid):
-        print("deprecating property {}".format(pid))
-        result = []
-
-        answers = tx.run(neo4jquery, pid=pid)
-
-        for record in answers:
-            result.append(record)
-        return result
-
-    def get_query_to_deprecate_property(self):
-        return '''
-                MATCH (p:property)
-                WHERE p.nanoid = $pid and p._to IS NULL
-                SET p._to = ( p._from + 1 )
-                RETURN id(p);
-                '''
-
-    def deprecate_property(self, pid):
-        with self.driver.session() as session:
-            query = self.get_query_to_deprecate_property()
-            property_ = session.write_transaction(self._do_deprecate_property, query, pid)
-            # TODO update elasticsearch, remove old term
-        return property_
-
-
-
-
-    # ############################################################################################### #
-    # DATA SUBSETS / TAGS
-    # ############################################################################################### #
-
-    @staticmethod
-    def _get_tags_from_db(tx, model=None):
-        result = []
-
-        current_app.logger.warn('yup... using model {}'.format(model))
-
-        query_against_all_models = """
-                MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
-                WHERE n._to IS NULL 
-                AND   p._to IS NULL
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
-                """
-        query_against_specific_model = """
-                MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
-                WHERE n._to IS NULL 
-                AND   p._to IS NULL
-                WHERE toLower(n.model) = toLower($model)
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
-                """
-
-        db_records = None
-        if model is None:
-            db_records = tx.run(query_against_all_models,)
-            current_app.logger.warn(' point 2 ... using model {}'.format(model))
-        else:
-            db_records = tx.run(query_against_specific_model, model=model)
-            current_app.logger.warn(' point 3 ... using model {}'.format(model))
-        for record in db_records:
-            result.append(record)
-
-        return result
-
-    def get_tags(self, model=None):
-        with self.driver.session() as session:
-            current_app.logger.warn('have model {}'.format(model))
-            tag_records = session.read_transaction(self._get_tags_from_db, model)
-            formatted_tags = self.format_tags_records(tag_records)
-        return formatted_tags
-
-    def format_tags_records(self, dataset):
-        """
-        explanation
-        iterate, put keys out front, containing an array (for table)
-        """
-        dict_of_tags = {}
-        tagged_record = namedtuple('datatag', ['node', 'node_nanoid', 'property', 'property_nanoid', 'tag_value'])
-        for row in dataset:
-            tr = tagged_record(row[0], row[1], row[2], row[3], row[5])
-            tag = row[4]
-
-            if tag not in dict_of_tags:
-                dict_of_tags[tag] = []
-            dict_of_tags[tag].append(tr)
-
-        # sort by node
-        for tag in dict_of_tags:
-            stuff = dict_of_tags[tag]
-            sorted_stuff = sorted(stuff, key=lambda x: (x.node, x.property, x.tag_value))
-            dict_of_tags[tag] = sorted_stuff
-        return dict_of_tags
-
-    def get_tag_keys(self, model=None):
-        with self.driver.session() as session:
-            current_app.logger.warn('have model {}'.format(model))
-            tag_records = session.read_transaction(self._get_tags_from_db, model)
-            formatted_tags = self.format_tag_keys(tag_records)
-        return formatted_tags
-
-    def format_tag_keys(self, tag_records):
-        """
-        explanation
-        iterate, put keys out front, containing an array (for table)
-        """
-        tag_keys = []
-        #tagged_record = namedtuple('datatag', ['node', 'node_nanoid', 'property', 'property_nanoid', 'tag_value'])
-        for row in tag_records:
-            tag_key = row[4]
-            tag_value = row[5]
-
-            if tag_key not in tag_keys:
-                tag_keys.append(tag_key)
-
-        # sort by node
-        tag_keys.sort()
-        return tag_keys    
-
-
-    def get_dataset_tags(self, dataset=None, model=None):
-        with self.driver.session() as session:
-            current_app.logger.warn('have model {}'.format(model))
-            tag_records = session.read_transaction(self._get_dataset_tags_from_db, dataset, model)
-            formatted_tags = self.format_tags_records(tag_records)
-        return formatted_tags
-
-
-    @staticmethod
-    def _get_dataset_tags_from_db(tx, dataset=None, model=None):
-        result = []
-
-        current_app.logger.warn('getting for tag {} in model {}'.format(dataset, model))
-
-        dataset_query_ = """
-                MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
-                WHERE toLower(n.model) = toLower($model)
-                AND   t.key = "submitter"
-                AND   t.value = $dataset
-                AND   n._to IS NULL
-                AND   p._to IS NULL
-                MATCH (n)-[z:in_dataset { dataset: $dataset } ]->(p)
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
-                """
-
-        all_query_ = """
-                MATCH (n:node)-[np:has_property]->(p:property)
-                WHERE toLower(n.model) = toLower($model)
-                AND   n._to IS NULL
-                AND   p._to IS NULL
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, n.ONLYthisANDnothingMORE, n.QUOTHtheRAVENnevermore; 
-                """
-
-
-        db_records = None
-
-        if (dataset == 'all') or dataset is None:
-            db_records = tx.run(all_query_, dataset=dataset, model=model)
-            current_app.logger.warn(' getting entire model {}'.format(model))
-            for record in db_records:
-                result.append(record)
-
-        else:
-            db_records = tx.run(dataset_query_, dataset=dataset, model=model)
-            current_app.logger.warn(' getting all tags w/ dataset ... using model {}'.format(model))
-            for record in db_records:
-                result.append(record)
-
-
-
-
-
-        return result
-
-
-
-    def get_dataset(self, dataset=None, model=None):
-        with self.driver.session() as session:
-            current_app.logger.warn('have model {}'.format(model))
-            tag_records = session.read_transaction(self._get_dataset_from_db, dataset, model)
-        return tag_records
-            #formatted_tags = self.format_tags_records(tag_records)
-        #return formatted_tags
-
-
-    @staticmethod
-    def _get_dataset_from_db(tx, dataset=None, model=None):
-        result = []
-
-        current_app.logger.warn('getting for tag {} in model {}'.format(dataset, model))
-
-        dataset_query_ = """
-                MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
-                WHERE toLower(n.model) = toLower($model)
-                AND   t.key = "submitter"
-                AND   t.value = $dataset
-                AND   n._to IS NULL
-                AND   p._to IS NULL
-                MATCH (n)-[z:in_dataset { dataset: $dataset } ]->(p)
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs:value_set)
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value, p.value_domain, vs.nanoid, p.required, p.units, p.description, p.instructions, p.internal_comments, p.example ;
-                """
-
-        all_query_ = """
-                MATCH (n:node)-[np:has_property]->(p:property)
-                WHERE toLower(n.model) = toLower($model)
-                AND   n._to IS NULL
-                AND   p._to IS NULL
-                OPTIONAL MATCH (p)-[:has_value_set]->(vs:value_set)
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, n.ONLYthisANDnothingMORE, n.QUOTHtheRAVENnevermore, p.value_domain, vs.nanoid, p.required, p.units, p.description, p.instructions, p.internal_comments, p.example; 
-                """
-
-
-        db_records = None
-
-        if (dataset == 'all') or dataset is None:
-            db_records = tx.run(all_query_, dataset=dataset, model=model)
-            current_app.logger.warn(' getting entire model {}'.format(model))
-            for record in db_records:
-                _entry = []
-                for part in record:
-                    _entry.append(part)
-                #result.append(record)
-                result.append(_entry)
-
-        else:
-            db_records = tx.run(dataset_query_, dataset=dataset, model=model)
-            current_app.logger.warn(' getting all tags w/ dataset ... using model {}'.format(model))
-            for record in db_records:
-                #result.append(record)
-                _entry = []
-                for part in record:
-                    _entry.append(part)
-                result.append(_entry)
-
-        return result
-
-
-
-    def get_dataset_tag_choices(self):
-        with self.driver.session() as session:
-            tag_records = session.read_transaction(self._get_dataset_tag_choices_from_db)
-            # formatted_tags = self.format_tags_records(tag_records)
-        return tag_records
-
-    @staticmethod
-    def _get_dataset_tag_choices_from_db(tx, dataset=None, model=None):
-        result = ()
-
-        OLD_query_all_models_and_tag_choices = """
-            MATCH (n:node)-[np:has_property]->(p:property)-[:has_tag]->(t:tag)
-            WHERE t.key = "submitter"
-            AND   n._to IS NULL
-            AND   p._to IS NULL
-            AND EXISTS (np.dataset)
-            RETURN distinct n.model, t.value
-            ORDER by n.model ASC, t.value ASC
-            """
-
-        NEW_query_all_models_and_tag_choices = """
-            MATCH (t:tag)
-            WHERE t.key = "submitter"
-            RETURN distinct t.model, t.value
-            ORDER by t.model ASC, t.value ASC
-            """
-
-        query_all_models_and_tag_choices = NEW_query_all_models_and_tag_choices
-
-        db_records = tx.run(query_all_models_and_tag_choices)
-
-        # convert into nested tuple structure for optgroup selectfield
-        # ('ICDC', (                <-  option
-        #    ('NCATS', 'NCATS'),    <-  key, value pairs for selectfield
-        #    ('Glioma', 'Glioma'),
-        #    ('UBC01', 'UBC01')
-        # )),
-
-        # pt 1. organize for optgroup
-        temp_results = {}
-        for record in db_records:
-            mdl = record[0]
-            ky = record[1]
-            #print(' model is {}'.format(mdl))
-            #print(' key is {}'.format(ky))
-            mdlky = mdl + "----" + ky
-            if mdl not in temp_results:
-                temp_results[mdl] = ()
-            arglbargl = temp_results[mdl]
-            funkmeister = (mdlky, ky)
-            temp_results[mdl] = arglbargl + (funkmeister,)
-
-        # pt 2. casting from dict to tuple needed for optgroup
-        for m in temp_results:
-            flashmasterj = (m, temp_results[m])
-            result = result + (flashmasterj,)
-
-        #print('')
-        #print('result is {}'.format(result))
-        return result
-
-    def get_submitter_tag_choices(self, model=None):
-        with self.driver.session() as session:
-            tag_records = session.read_transaction(self._get_submitter_tag_choices_from_db, model)
-            # formatted_tags = self.format_tags_records(tag_records)
-        return tag_records
-
-    # note: there are a couple of approaches for getting tags from the database
-    #       one could get them by starting at node, and then going to property
-    #       but I'm now trying to also label the tag directly with {model:"ICDC"}
-    #       so I can create "empty" datasets
-    @staticmethod
-    def _get_submitter_tag_choices_from_db(tx, model=None):
-        result = ()
-
-        current_app.logger.warn('.yup... using model {}'.format(model))
-
-        query_against_all_models = """
-                MATCH (t:tag)
-                WHERE t.key = 'submitter'
-                RETURN DISTINCT t.model, t.value
-                ORDER by t.model ASC, t.value ASC;
-                """
-        
-        query_against_specific_model = """
-                MATCH (t:tag)
-                WHERE toLower(t.model) = toLower($model)
-                AND   t.key = 'submitter'
-                RETURN DISTINCT t.model, t.value
-                ORDER by t.model ASC, t.value ASC;
-                """
-
-        db_records = None
-        if model is None:
-            db_records = tx.run(query_against_all_models,)
-            current_app.logger.warn('.point 22 ... using model {}'.format(model))
-        else:
-            db_records = tx.run(query_against_specific_model, model=model)
-            current_app.logger.warn('.point 23 ... using model {}'.format(model))
-        
-        # convert into nested tuple structure for optgroup selectfield
-        # ('ICDC', (                <-  option
-        #    ('NCATS', 'NCATS'),    <-  key, value pairs for selectfield
-        #    ('Glioma', 'Glioma'),
-        #    ('UBC01', 'UBC01')
-        # )),
-
-        # pt 1. organize for optgroup
-        temp_results = {}
-        for record in db_records:
-            mdl = record[0]
-            ky = record[1]
-            #print(' model is {}'.format(mdl))
-            #print(' key is {}'.format(ky))
-            mdlky = mdl + "----" + ky
-            if mdl not in temp_results:
-                temp_results[mdl] = ()
-            arglbargl = temp_results[mdl]
-            funkmeister = (mdlky, ky)
-            temp_results[mdl] = arglbargl + (funkmeister,)
-
-        # pt 2. casting from dict to tuple needed for optgroup
-        for m in temp_results:
-            flashmasterj = (m, temp_results[m])
-            result = result + (flashmasterj,)
-
-        #print('')
-        #print(result)
-        return result
-
-    def create_submitter_tag_for_model(self, model=None, tag=None):
-        with self.driver.session() as session:
-            if (model is not None) and (tag is not None):
-                tag_records = session.read_transaction(self._create_submitter_tag_for_model, model, tag)
-                # formatted_tags = self.format_tags_records(tag_records)
-        return tag_records
-
-
-    @staticmethod
-    def _create_submitter_tag_for_model(tx, model=None, tag=None):
-        result = None
-
-        current_app.logger.warn('getting for tag {} in model {}'.format(model, tag))
-
-        create_tag_query_ = """
-                MERGE (t:tag {model:$model, key:"submitter", value:$tag})
-                RETURN id(t);
-                """
-
-        db_records = tx.run(create_tag_query_, model=model, tag=tag)
-        current_app.logger.warn('..point BB ... using model {}'.format(model))
-        result = db_records.single()[0]
-
-        return result
-
-
-
-    def add_submitter_tag_for_model_prop(self, model=None, nodenanoid=None, propnanoid=None, tag=None):
-        with self.driver.session() as session:
-            if (model is not None) and (tag is not None) and (nodenanoid is not None) and (propnanoid is not None):
-                tag_records = session.read_transaction(self._add_submitter_tag_for_model, model, nodenanoid, propnanoid, tag)
-                tag_records = session.read_transaction(self._add_submitter_tag_for_prop, model, nodenanoid, propnanoid, tag)
-                # formatted_tags = self.format_tags_records(tag_records)
-        return tag_records
-
-
-    @staticmethod
-    def _add_submitter_tag_for_model(tx, model=None, nodenanoid=None, propnanoid=None, tag=None):
-        result = None
-
-        current_app.logger.warn('ADD tag {} for node {} prop {} in model {}'.format(model, nodenanoid, propnanoid, tag))
-
-        add_tag_query_ = """
-                MATCH (n:node { model:$model, nanoid:$nodenanoid })-[np:has_property]->(p:property { nanoid:$propnanoid, model:$model })
-                WHERE n._to IS NULL AND p._to IS NULL
-                MATCH (t:tag {key:'submitter', model:$model, value:$tag})
-                MERGE (p)-[r:has_tag]->(t);
-                """
-                #MERGE (p)-[r:has_tag]->(t);
-
-        db_records = tx.run(add_tag_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
-        current_app.logger.warn('..adding tag ... to model {}'.format(model))
-        #result = db_records.single()[0]
-
-        return        
-
-    @staticmethod
-    def _add_submitter_tag_for_prop(tx, model=None, nodenanoid=None, propnanoid=None, tag=None):
-        result = None
-
-        current_app.logger.warn('ADD tag {} for node {} prop {} in model {}'.format(model, nodenanoid, propnanoid, tag))
-
-        add_tag_query_ = """
-                MATCH (n:node { model:$model, nanoid:$nodenanoid })-[np:has_property]->(p:property { nanoid:$propnanoid, model:$model })
-                -[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag})
-                WHERE n._to IS NULL AND p._to IS NULL
-                MERGE (n)-[z:in_dataset { dataset: $tag } ]->(p);
-                """
-                #MERGE (p)-[r:has_tag]->(t);
-
-        db_records = tx.run(add_tag_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
-        current_app.logger.warn('..adding tag ... to prop {}'.format(model))
-        #result = db_records.single()[0]
-
-        return   
-
-
-
-
-
-    def remove_submitter_tag_for_model_prop(self, model=None, nodenanoid=None, propnanoid=None, tag=None):
-        with self.driver.session() as session:
-            if (model is not None) and (tag is not None) and (nodenanoid is not None) and (propnanoid is not None):
-                tag_records = session.read_transaction(self._remove_submitter_tag_for_model_prop, model, nodenanoid, propnanoid, tag)
-                # formatted_tags = self.format_tags_records(tag_records)
-        return tag_records
-
-    @staticmethod
-    def _remove_submitter_tag_for_model_prop(tx, model=None, nodenanoid=None, propnanoid=None, tag=None):
-        result = None
-
-        current_app.logger.warn('REMOVING for tag {} for node {} prop {} in model {}'.format(model, nodenanoid, propnanoid, tag))
-
-        count_nodetag_query_ = """
-                MATCH (t:tag { value: $tag })<-[r:has_tag]-(p:property {nanoid: $propnanoid })<-[np:has_property]-(n:node)
-                WHERE n._to IS NULL AND p._to IS NULL
-                with p,count(n) as rels
-                return rels;
-                """
-
-        db_records = tx.run(count_nodetag_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
-        result = db_records.single()[0]
-        current_app.logger.warn('..found {} counts - for removing tag from model'.format(result))
-
-        ''' only remove p-n tag '''
-        if result == 1:
-            remove_both_query_ = """
-                    MATCH (n:node { model:$model, nanoid:$nodenanoid })-[z:in_dataset { dataset: $tag } ]->(p:property { nanoid:$propnanoid, model:$model })-[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag}) 
-                    WHERE n._to IS NULL AND p._to IS NULL
-                    DELETE r, z
-                    """
-
-            db_records = tx.run(remove_both_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
-            current_app.logger.warn('..removing tag from model {}'.format(model))
-
-        ''' only remove p-n tag '''
-        if result > 1:
-            remove_node_query_ = """
-                    MATCH (n:node { model:$model, nanoid:$nodenanoid })-[z:in_dataset { dataset: $tag } ]->(p:property { nanoid:$propnanoid, model:$model })-[r:has_tag]->(t:tag {key:'submitter', model:$model, value:$tag}) 
-                    WHERE n._to IS NULL AND p._to IS NULL
-                    DELETE z
-                    """
-
-            db_records = tx.run(remove_node_query_, model=model, nodenanoid=nodenanoid, propnanoid=propnanoid, tag=tag)
-            current_app.logger.warn('..removing tag from model {}'.format(model))
-
-        return
+    # TAGS
+    
+    def get_tagged_entities(self, tag_key, tag_value=None, model=None):
+        ents_by_tag = self.mdb.get_entities_by_tag(tag_key, tag_value, model)
+        return ents_by_tag
+
+    def get_tags_and_values(self):
+        tags = self.mdb.get_tags_and_values()
+        return tags
+
+    # SEARCH
+
+    def search_entity_handles(self, qstring):
+        return self.mdb.search_entity_handles(qstring)
+
+    def search_terms(self, qstring, search_values=True,
+                     search_definitions=True):
+        return self.mdb.search_terms(qstring, search_values=search_values,
+                                     search_definitions=search_definitions)

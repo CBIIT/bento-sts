@@ -11,16 +11,14 @@ class Config(object):
         "DATABASE_URL"
     ) or "sqlite:///" + os.path.join(basedir, "app.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = os.environ.get("MAIL_SERVER")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT") or 25)
-    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") is not None
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    ADMINS = ["your-email@example.com"]
+    NEO4J_MDB_URI = os.environ.get("NEO4J_MDB_URI")
+    NEO4J_MDB_USER = os.environ.get("NEO4J_MDB_USER")
+    NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
     LANGUAGES = ["en"]
+    MODEL_LIST = [] # set by MDB query in __init__
     MS_TRANSLATOR_KEY = os.environ.get("MS_TRANSLATOR_KEY")
     ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
-    POSTS_PER_PAGE = 25
+    HITS_PER_PAGE = 25
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024
     UPLOAD_EXTENSIONS = ['.yaml', '.yml']
     UPLOAD_PATH = 'uploads'
@@ -29,3 +27,7 @@ class Config(object):
     DROPZONE_ALLOWED_FILE_CUSTOM = True
     DROPZONE_ALLOWED_FILE_TYPE = 'text/*, .yml, .yaml'
     JSONIFY_PRETTYPRINT_REGULAR = True
+    SHOW_SINGLE_PAGE = True
+    EDITING_FORMS = False
+    
+pass

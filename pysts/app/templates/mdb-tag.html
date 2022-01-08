@@ -1,50 +1,54 @@
+<!-- -*-jinja2-*- -->
 {% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form, render_field %}
-
 {% block app_content %}
-    <br>
-    <h1> {{ title }} </h1>
-    {% if display == 'list' %}
-    <br><br>
-      <table class="table table-striped">
-         <tr>
-             <th> List of all Models </th> <th></th>
-         </tr>
-         {% for item in mdb %}
-         <tr> <td> <a href="{{url_for( subtype, name=item ) }}">{{ item }}</a>  </td> <td> (file: <a href="{{url_for( 'main.models', name=item, format='yaml' ) }}"> {{item}}.yaml</a>)</td> </tr>
-         {% endfor %}
-       </table>
-       <br><br>
-    {% endif %} 
+  <br>
+  <h1> {{title}} </h1>
+  <div class="float-right">
+    <a href="{{url_for( 'main.tags', key=key, value=value,
+	     model=model, format='json' ) }}" class="btn
+	     btn-outline-primary btn-sm">
+	     Export JSON </a>
+  </div>
+  {% if display == 'tags' %}
+    <table class="table-bordered">
+      <tr>
+	<th class="px-2">Key</th>
+	<th class="px-2">Value</th>
+      </tr>
+      {% for item in ents %}
+	<tr>
+	  <th class="px-2" rowspan={{ item['values']|length + 1}}>
+	   <a href={{ url_for('main.tags',key=item.key)}}> {{ item.key }}</a>
+	  </th>
+	  </tr>
+	{% for val in item['values'] %}
+	  <tr>
+	    <td class="px-2">
+	      <a href={{ url_for('main.tags',key=item.key,value=val)}} >{{val}}</a>
+	    <td>
+	  </tr>
+        {% endfor %}
 
-    {% if display == 'detail' %}
-        {% if mdb.handle == 'ICDC' %}
-        <br>
-        ICDC Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
-        <br>
-        View model in <a href="https://cbiit.github.io/icdc-model-tool/">Github</a>
-        <br>
-        <br>
-        <img src="/static/icdc-model.svg" alt="icdc-model" class="img-fluid" width="900">
-        {% endif %}
+      {% endfor %}
+    </table>
+  {% endif %}
 
-        {% if mdb.handle == 'CTDC' %}
-        <br>
-        CTDC Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
-        <br>
-        View model in <a href="https://cbiit.github.io/ctdc-model/">Github</a>
-        <br>
-        <br>
-        <img src="/static/ctdc-model.svg" alt="ctdc-model" class="img-fluid" width="900">
-        {% endif %}
-        
-        {% if mdb.handle == 'Bento' %}
-        <br>
-        Bento Nodes: <a href="{{url_for( 'main.nodes', model=mdb.handle ) }}"> link </a>
-        <br>
-        View model in <a href="https://github.com/CBIIT/BENTO-TAILORx-model">Github</a>
-        {% endif %}
-    {% endif %}
-
-
+  {% if display == 'entities' %}
+    <table class='table-striped table-bordered'>
+      <tr>
+	<th class="px-2">Tag Key</th><th class="px-2">Tag Value</th>
+	<th class="px-2">Entity</th><th class="px-2">Handle</th><th class="px-2">Model</th>
+      </tr>
+      {% for item in ents %}
+	{% for ent in item['entities'] %}
+	<tr>
+	  <td class="px-2">{{item.tag_key}}</td>
+	  <td class="px-2">{{item.tag_value}}</td>
+	  <td class="px-2">{{item.entity}}</td>
+	  <td class="px-2"><a href={{ url_for('main.entities', entities=[item.entity,'s']|join(''), id=ent.nanoid)}}>{{ ent.handle }}</a></td>
+	  <td class="px-2"><a href={{ url_for('main.models', name=ent.model)}}>{{ ent.model }}</a></td>
+	  </tr>
+	{% endfor %}
+      {% endfor %}
+  {% endif %}
 {% endblock %}

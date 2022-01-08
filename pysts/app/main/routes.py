@@ -17,33 +17,27 @@ from flask import (
     abort,
     send_from_directory
 )
-from flask_login import current_user, login_required
-from werkzeug.utils import secure_filename
-from guess_language import guess_language
+from flask_paginate import Pagination, get_page_parameter
 from app import db, logging
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
-from app.main.forms import EditNodeForm, DeprecateNodeForm
-from app.main.forms import EditPropForm, DeprecatePropForm
+from app.main.forms import SearchForm, SelectModelForm
+# from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
+# from app.main.forms import EditNodeForm, DeprecateNodeForm
+# from app.main.forms import EditPropForm, DeprecatePropForm
+from app.main.forms import SelectModelForm
 import app.search
-from app.models import User, Post, Entity
 from app.main import bp
 from app.util import get_yaml_for
-import app.mdb
+from app.mdb import mdb
 from app.arc import diff_mdf
-
 
 @bp.before_app_request
 def before_request():
-    if current_user.is_authenticated:
-        current_user.last_seen = datetime.utcnow()
-        db.session.commit()
-        g.search_form = SearchForm()
+    g.search_form = SearchForm()
     g.locale = 'EN_US'
 
 
 @bp.route('/', methods=['GET', 'POST'])
 @bp.route("/index", methods=["GET", "POST"])
-@login_required
 def index():
     return render_template(
         "index.html",
@@ -56,10 +50,9 @@ def index():
 
 @bp.route("/models/<name>")
 @bp.route("/models")
-@login_required
 def models(name=None):
     format = request.args.get("format")
-    m = app.mdb.mdb()
+    m = mdb()
 
     if name is not None:
         model_ = m.get_model_by_name(name)
@@ -82,491 +75,251 @@ def models(name=None):
         return render_template(
             "mdb-model.html",
             title="Models",
-            mdb=models_,
+            mdb=sorted(models_, key=lambda x:x["name"]),
             subtype="main.models",
             display="list",
         )
 
-@bp.route("/nodes", defaults={'nodeid': None}, methods=['GET', 'POST'])
-@bp.route('/nodes/<nodeid>', methods=['GET', 'POST'])
-@login_required
-def nodes(nodeid):
+@bp.route("/<entities>", defaults={'id': None}, methods=['GET', 'POST'])
+@bp.route('/<entities>/<id>', methods=['GET', 'POST'])
 
-    format = request.args.get("format")
-    model = request.args.get("model")
+def entities(entities, id):
+
+    if request.form.get("format"):
+        format = request.args.get("format")
+    elif request.form.get("export"):
+        format = "json"
+    else:
+        format = ""
+
+    model = request.form.get("model_hdl")
     id_ = request.args.get("id")
-
-    id = nodeid
-    if nodeid is None:
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    select_form = SelectModelForm()
+    select_form.model_hdl.choices = [(x['handle'],x['handle']) for x
+                                     in current_app.config["MODEL_LIST"]]
+    current_app.logger.info("model: {}, format: {}".format(model, format))
+    current_app.logger.info(list(request.args.keys()))
+    id = id
+    if id is None:
         if id_ is not None:
             id = id_
 
-    current_app.logger.warn('> NODES id {} and id_{} and nodeid {}'.format(id, id_, nodeid))
+    m = mdb()
+    dispatch = {
+        "nodes": {
+            "title": "Node",
+            "list_title": "Nodes",
+            "template": "mdb-node.html",
+            "subtype": "nodes",
+            "sort_key": lambda x:x[1],
+            "get_by_id": m.get_node_by_id,
+            "get_list":m.get_list_of_nodes,
+        },
+        "properties": {
+            "title": "Property",
+            "list_title": "Properties",
+            "template": "mdb-property.html",
+            "subtype": "properties",
+            "sort_key": lambda x: (x[1],x[2],x[3]),
+            "display": "prop-tuple",
+            "get_by_id": m.get_property_by_id,
+            "get_list": m.get_list_of_properties,
+        },
+        "valuesets": {
+            "title": "Value Set",
+            "list_title": "Value Sets",
+            "template": "mdb-valueset.html",
+            "subtype": "valuesets",
+            "sort_key": lambda x: x["handle"],
+            "display": "list",
+            "get_by_id": m.get_valueset_by_id,
+            "get_list": m.get_list_of_valuesets,
+        },
+        "terms": {
+            "title": "Term",
+            "list_title": "Terms",
+            "template": "mdb-term.html",
+            "subtype": "terms",
+            "sort_key": lambda x: (x["model"], x["property"], x["value"] if type(x["value"]) == str else ""),
+            "display": "term-tuple",
+            "get_by_id": m.get_term_by_id,
+            "get_list": m.get_list_of_terms,
+        },
+        "origins": {
+            "title": "Origin",
+            "list_title": "Origins",
+            "template": "mdb-origin.html",
+            "subtype": "origins",
+            "sort_key": lambda x:list(x.values())[0],
+            "display": "list",
+            "get_list": m.get_list_of_origins,
+            "get_by_id": m.get_origin_by_id
+        },
+    }
 
-    m = app.mdb.mdb()
-
-    # A: single node
+    # A: single entity
     if id is not None:
-        node_ = m.get_node_by_id(id)
-        # FIXME check that id actually exists - handle error
-
-        form = EditNodeForm()
-        deprecateform = DeprecateNodeForm()
-
-        if form.validate_on_submit():
-            m.update_node_by_id(id, form.nodeHandle.data)
-            flash("Your changes have been saved.")
-            return redirect(url_for("main.nodes", id=id))
-
-        elif deprecateform.validate_on_submit():
-            m.deprecate_node(id)
-            flash("Node has been deprecated.")
-            return redirect(url_for("main.nodes"))
-
-        elif request.method == "GET":
-            form.nodeHandle.data = node_['handle']
-
+        ent_ = dispatch[entities]["get_by_id"](id)
+        if ent_ is None or not bool(ent_):
+            return render_template('/errors/400.html'), 400
+        if type(ent_) == dict and ent_.get("has_properties"): # nodes only kludge
+            ent_['has_properties'].sort(key=lambda x:x['handle'])
+        if request.method == "GET":
             if format == "json":
-                return jsonify(node_)
+                return jsonify(ent_)
             else:
                 return render_template(
-                    "mdb-node.html",
-                    title="Node",
-                    mdb=node_,
-                    subtype="main.nodes",
+                    dispatch[entities]["template"],
+                    title=dispatch[entities]["title"],
+                    mdb=ent_,
+                    subtype=dispatch[entities]["subtype"],
                     display="detail",
-                    form=form,
-                    deprecateform=deprecateform,
                 )
 
     # B: filter by model
-    if model is not None:
+    ents_ = dispatch[entities]["get_list"]( None if model == 'All' else model)
 
-        nodes_ = m.get_list_of_nodes(model)
-
-        if format == "json":
-            return jsonify(nodes_)
-        else:
-            return render_template(
-                "mdb.html",
-                title="Nodes in Model {}".format(model),
-                mdb=nodes_,
-                subtype="main.nodes",
-                display="tuple",
-            )
-
-    # C: plain list
-    nodes_ = m.get_list_of_nodes()
     if format == "json":
-        return jsonify(nodes_)
+        return jsonify(ents_)
     else:
+        pagination = Pagination(page=page,total=len(ents_),record_name=entities)
         return render_template(
             "mdb.html",
-            title="Nodes",
-            mdb=nodes_,
-            subtype="main.nodes",
-            display="tuple",  # from list
+            title=dispatch[entities]["list_title"],
+            mdb=sorted(ents_,
+                       key=dispatch[entities]["sort_key"]),
+            subtype=dispatch[entities]["subtype"],
+            display=dispatch[entities].get("display") or "tuple",
+            first=(pagination.page-1)*pagination.per_page,
+            last=min((pagination.page)*pagination.per_page,len(ents_)),
+            pagination=pagination,
+            form=select_form,
         )
-
-
-@bp.route("/properties", defaults={'propid': None}, methods=['GET', 'POST'])
-@bp.route('/properties/<propid>', methods=['GET', 'POST'])
-@login_required
-def properties(propid):
-
-    format = request.args.get("format")  # for returning in json format
-    model = request.args.get("model")    # to filter by model
-    id_ = request.args.get("id")
-
-    id = propid
-    if propid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> PROP id {} and id_{} and propid {}'.format(id, id_, propid ))
-
-    m = app.mdb.mdb()
-
-    # they specify property by id
-    if id is not None:
-        p_ = m.get_property_by_id(id, model)
-
-        editform = EditPropForm()
-        deprecateform = DeprecatePropForm()
-
-        if editform.validate_on_submit():
-            # go and make actual changes ...
-            m.update_property_by_id(id, editform.prophandle.data)
-            flash("Your changes have been saved.")
-            return redirect(url_for("main.properties", id=id))
-
-        elif deprecateform.validate_on_submit():
-            m.deprecate_property(id)
-            flash("Property has been deprecated.")
-            return redirect(url_for("main.properties"))
-
-        # pre-populate edit form with current handle/value
-        if request.method == "GET":
-            editform.prophandle.data = p_['handle']
-
-        # FIX (not being hit)
-        if p_ is None or not bool(p_):
-            return render_template('/errors/400.html'), 400
-
-        if format == "json":
-            return jsonify(p_)
-        else:
-            return render_template(
-                "mdb-property.html",
-                title="Property: ",
-                mdb=p_,
-                subtype="main.properties",
-                display="detail",
-                editform=editform,
-                deprecateform=deprecateform,
-            )
-
-    # they didn't give an id, so list all properties
-    else:
-        p_ = m.get_list_of_properties(model)
-        if format == "json":
-            return jsonify(p_)
-        else:
-            return render_template(
-                "mdb.html",
-                title="Properties",
-                mdb=p_,
-                subtype="main.properties",
-                display="prop-tuple",  # from list
-            )
-
-
-@bp.route("/valuesets", defaults={'valuesetid': None}, methods=['GET', 'POST'])
-@bp.route('/valuesets/<valuesetid>', methods=['GET', 'POST'])
-@login_required
-def valuesets(valuesetid):
-
-    format = request.args.get("format")
-    model = request.args.get("model")
-
-    id_ = request.args.get("id")
-
-    id = valuesetid
-    if valuesetid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> VS id {} and id_{} and valuesetid {}'.format(id, id_, valuesetid))
-
-    m = app.mdb.mdb()
-
-    if id is not None:
-        vs_ = m.get_valueset_by_id(id, model)
-
-        if vs_ is None or not bool(vs_):
-            return render_template('/errors/400.html'), 400
-
-        # TODO check that id actually exists - handle error
-        if format == "json":
-            return jsonify(vs_)
-        else:
-            return render_template(
-                "mdb-valueset.html",
-                title="Value Set: ",
-                mdb=vs_,
-                subtype="main.valuesets",
-                display="detail",
-            )
-
-    else:
-        vs_ = m.get_list_of_valuesets(model)
-        if format == "json":
-            return jsonify(vs_)
-        else:
-            return render_template(
-                "mdb.html",
-                title="Value Sets",
-                mdb=vs_,
-                subtype="main.valuesets",
-                display="list",
-            )
-
-
-@bp.route("/terms", defaults={'termid': None}, methods=['GET', 'POST'])
-@bp.route('/terms/<termid>', methods=['GET', 'POST'])
-@login_required
-def terms(termid):
-
-    format = request.args.get("format")
-    model = request.args.get("model")    # to filter by model
-    id_ = request.args.get("id")
-
-    id = termid
-    if termid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> TERMS id {} and id_{} and termid {}'.format(id, id_, termid))
-
-    m = app.mdb.mdb()
-
-    if id is not None:
-        term_ = m.get_term_by_id(id)
-
-        editform = EditTermForm()
-        deprecateform = DeprecateTermForm()
-        
-        if editform.validate_on_submit():
-            # go and make actual changes ...
-            m.update_term_by_id(id, editform.termvalue.data)
-            flash("Your changes have been saved.")
-            return redirect(url_for("main.terms", id=id))
-
-        elif deprecateform.validate_on_submit():
-            m.deprecate_term(id)
-            flash("Term has been deprecated.")
-            return redirect(url_for("main.terms"))
-
-        if request.method == "GET":
-            editform.termvalue.data = term_['value']
-
-            if format == "json":
-                return jsonify(term_)
-            else:
-                return render_template(
-                    "mdb-term.html",
-                    title="Term",
-                    mdb=term_,
-                    subtype="main.terms",
-                    display="detail",
-                    form=editform,
-                    deprecateform=deprecateform,
-                )
-    else:
-        terms_ = m.get_list_of_terms(model)
-        if format == "json":
-            return jsonify(terms_)
-        else:
-            return render_template(
-                "mdb.html",
-                title="Terms",
-                mdb=terms_,
-                subtype="main.terms",
-                display="term-tuple",
-            )
-
-
-@bp.route("/origins", defaults={'originid': None}, methods=['GET', 'POST'])
-@bp.route('/origins/<originid>', methods=['GET', 'POST'])
-@login_required
-def origins(originid):
-    format = request.args.get("format")
-    id_ = request.args.get("id")
-
-    id = originid
-    if originid is None:
-        if id_ is not None:
-            id = id_
-
-    current_app.logger.warn('> ORIGIN id {} and id_{} and originid {}'.format(id, id_, originid))
-
-    m = app.mdb.mdb()
-
-    origins_ = m.get_list_of_origins()
-    if format == "json":
-        return jsonify(origins_)
-
-    return render_template(
-        "mdb.html",
-        title="Origins",
-        mdb=origins_,
-        subtype="main.origins",
-        display="list",
-    )
-
-
 # ---------------------------------------------------------------------------
-@bp.route("/user/<username>")
-@login_required
-def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    page = request.args.get("page", 1, type=int)
-    posts = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, current_app.config["POSTS_PER_PAGE"], False
-    )
-    next_url = (
-        url_for("main.user", username=user.username, page=posts.next_num)
-        if posts.has_next
-        else None
-    )
-    prev_url = (
-        url_for("main.user", username=user.username, page=posts.prev_num)
-        if posts.has_prev
-        else None
-    )
-    form = EmptyForm()
-    return render_template(
-        "user.html",
-        user=user,
-        posts=posts.items,
-        next_url=next_url,
-        prev_url=prev_url,
-        form=form,
-    )
 
+@bp.route("/tags", defaults={'key':None,'value':None},methods=['GET','POST'])
+@bp.route("/tags/<key>", methods=['GET','POST'], defaults={'value':None})
+@bp.route("/tags/<key>/<value>", methods=['GET','POST'])
+def tags(key=None,value=None,model=None):
+    key = key or request.args.get("key")
+    val = value or request.args.get("value")
+    model = model or request.args.get("model")
+    ents = []
+    m = mdb()
+    format = request.args.get("format")
+    if request.form.get("format"):
+        format = request.args.get("format")
+    elif request.form.get("export"):
+        format = "json"
+    else:
+        pass
 
-@bp.route("/edit_profile", methods=["GET", "POST"])
-@login_required
-def edit_profile():
-    form = EditProfileForm(current_user.username)
-    if form.validate_on_submit():
-        current_user.username = form.username.data
-        current_user.about_me = form.about_me.data
-        db.session.commit()
-        flash("Your changes have been saved.")
-        return redirect(url_for("main.edit_profile"))
-    elif request.method == "GET":
-        form.username.data = current_user.username
-        form.about_me.data = current_user.about_me
-    return render_template("edit_profile.html", title="Edit Profile", form=form)
+    if key:
+        ents = m.get_tagged_entities(key, val, model)
+    else:
+        ents = m.get_tags_and_values()
 
+    if format == "json":
+        return jsonify(ents)
+    else:
+        if key:
+            return render_template(
+                "mdb-tag.html",
+                title="Tagged Entities",
+                key=key,
+                value=val,
+                model=model,
+                ents=ents,
+                display='entities')
+        else:
+            return render_template(
+                "mdb-tag.html",
+                title="Tags",
+                ents=ents,
+                display='tags')
 
 @bp.route("/search")
-@login_required
 def search():
-
     if not g.search_form.validate():
         return redirect(url_for("main.index"))
-    page = request.args.get("page", 1, type=int)
+    m = mdb()
+    format = request.args.get("format")
+    if request.form.get("format"):
+        format = request.args.get("format")
+    elif request.form.get("export"):
+        format = "json"
+    else:
+        pass
 
-    hits, total = Entity.search(
-        g.search_form.q.data, page, current_app.config["POSTS_PER_PAGE"]
-    )
-    next_url = (
-        url_for("main.search", q=g.search_form.q.data, page=page + 1)
-        if total > page * current_app.config["POSTS_PER_PAGE"]
-        else None
-    )
-    prev_url = (
-        url_for("main.search", q=g.search_form.q.data, page=page - 1)
-        if page > 1
-        else None
-    )
+    qstring = request.args.get("qstring")
+    ents = []
+    thing = ""
+    if request.args.get("terms"):
+        ents = m.search_terms(qstring)
+        thing = "terms"
+    elif request.args.get("models"):
+        ents = m.search_entity_handles(qstring)
+        thing = "models"
+    else:
+        abort(400)
+    if format == 'json':
+        return jsonify(ents)
+
+    pagination = Pagination(
+        page=request.args.get("page", 1, type=int),
+        record_name="Hits",
+        per_page=current_app.config["HITS_PER_PAGE"]
+        )
+    first = {}
+    last = {}
+    if thing == "terms":
+        pagination.total = len(ents)
+        first["terms"] = (pagination.page-1)*pagination.per_page
+        last["terms"] = min(pagination.page*pagination.per_page, len(ents))
+    elif thing == "models":
+        pagination.total = max(len(ents["nodes"]), len(ents["properties"]),
+                               len(ents["relationships"]))
+        pp = round(pagination.per_page/3)
+        first["nodes"] = min(len(ents["nodes"])-pp,
+                             pagination.page-1*pp)
+        last["nodes"] = min(len(ents["nodes"]),
+                            pagination.page*pp)
+        first["properties"] = min(len(ents["properties"])-pp,
+                                  pagination.page-1*pp)
+        last["properties"] = min(len(ents["properties"]),
+                                 pagination.page*pp)
+        first["relationships"] = min(len(ents["relationships"])-pp,
+                                     pagination.page-1*pp)
+        last["relationships"] = min(len(ents["relationships"]),
+                                    pagination.page*pp)
+    else:
+        raise RuntimeError("Huh???")
+    
     return render_template(
         "search.html",
         title="Search",
-        hits=hits,
-        next_url=next_url,
-        prev_url=prev_url,
+        ents=ents,
+        thing=thing,
+        pagination=pagination,
+        first=first,
+        last=last,
     )
 
 @bp.route("/about-mdb")
-@login_required
+
 def about_mdb():
     return render_template("about-mdb.html", title="About MDB")
 
 
 @bp.route("/about-sts")
-@login_required
+
 def about_sts():
     return render_template("about-sts.html", title="About STS")
 
 @bp.errorhandler(413)
 def too_large(e):
     return "File is too large", 413
-
-
-@bp.route("/diff", methods=['GET', 'POST'])
-@login_required
-def diff():
-    '''stub for yaml diff functionality'''
-    current_app.logger.warn('>>>now in diff')
-    # simple check of app.config
-    file_choices = [('', '')]
-    APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
-    APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
-    files = os.listdir(APP_UPLOAD_PATH)
-    current_app.logger.warn('the APP_ROOT is at: {}'.format(APP_ROOT))
-    current_app.logger.warn('the uploads dir is at: {}'.format(APP_UPLOAD_PATH))
-    current_app.logger.warn('the uploads dir has: {}'.format(files))
-    current_app.logger.warn('the uploads dir is {}'.format(current_app.config['UPLOAD_PATH']))
-
-    # create set of files in dir for dropdown, but exclude .gitkeep file, which is needed to keep dir in git
-    for _file in files:
-        current_app.logger.warn('... Adding a new file')
-        if _file == '.gitkeep' or _file == '.gitignore':
-            continue
-        tup = (_file, _file)
-        file_choices.append(tup)
-
-    current_app.logger.warn('the options for file_choices is {}'.format(file_choices))
-
-    dform = DiffForm()
-    dform.mdf_a.choices = file_choices
-    dform.mdf_b.choices = file_choices
-
-    mdf_diff = ''
-    if dform.validate_on_submit():
-        current_app.logger.info('  CLICK !!!! ')
-
-        mdf_a = dform.mdf_a.data
-        mdf_b = dform.mdf_b.data
-
-        if (mdf_a and mdf_b):
-            # simple bento_meta/diff poc using stub/test yaml
-            _diff = app.arc.diff_mdf(mdf_a, mdf_b)
-            mdf_diff = pprint.pformat(_diff)
-            current_app.logger.info('Lastly diff output is {}'.format(mdf_diff))
-
-    elif (request.method == 'POST'):
-        current_app.logger.warn(' >>> now is INTERNAL ')
-
-        uploaded_file = request.files.get('file')
-
-        if (uploaded_file):
-            filename = secure_filename(uploaded_file.filename)
-            current_app.logger.info(' >>> upload_files() has filename {}'.format(filename))
-
-            if filename != '':
-                file_ext = os.path.splitext(filename)[1]
-                if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-                    return "Invalid yaml", 400
-
-                APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   
-                APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
-                uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
-                current_app.logger.info(' >>> upload_files() -- save')
-
-    return render_template('diff.html', form=dform, mdf_diff=mdf_diff)
-
-
-@bp.route("/upload_files", methods=['POST'])
-@login_required
-def upload_files():
-    current_app.logger.warn(' > now is upload_files()')
-
-    uploaded_file = request.files.get('file')
-
-    if (uploaded_file):
-        filename = secure_filename(uploaded_file.filename)
-        current_app.logger.info(' > upload_files() has filename {}'.format(filename))
-
-        if filename != '':
-            file_ext = os.path.splitext(filename)[1]
-            if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-                return "Invalid yaml", 400
-
-            APP_ROOT = os.path.dirname(os.path.abspath(current_app.root_path))   # refers to application_top
-            APP_UPLOAD_PATH = os.path.join(APP_ROOT, current_app.config['UPLOAD_PATH'])
-            uploaded_file.save(os.path.join(APP_UPLOAD_PATH, filename))
-            current_app.logger.info('> upload_files() -- save()')
-    return redirect(url_for('main.diff'))
-
-@bp.route('/uploads/<filename>')
-def upload(filename):
-    current_app.logger.warn('>>>now in upload')
-    return send_from_directory(current_app.config['UPLOAD_PATH'], filename)
-
 
 @bp.route('/reports', methods=['GET', 'POST'])
 def reports():

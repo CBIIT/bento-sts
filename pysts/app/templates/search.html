@@ -1,18 +1,67 @@
+<!-- -*-jinja2-*- -->
 {% extends "base.html" %}
-
 {% block app_content %}
 
-    <h1>{{ 'Search Results' }}</h1>
+    <h2>Search Results</h1>
     <br>
-    <br>
-    {% if hits is defined and hits|length > 0 %}    
-        <ul>
-        {% for hit in hits %}
-            <li> {{ (hit.type).capitalize() }}: <a href="{{hit.link}}"> {{hit.name}} </a> <br> <hr>
-        {% endfor %}
-        </ul>
-    {% else %}
-        How sad! No results!
+
+    {% if pagination %}
+      {{ pagination.info }}
+      {{ pagination.links }}
     {% endif %}
+
+    {% if thing == "terms" %}
+      <table class="table table-striped">
+	<tr>
+	  <th>Value</th><th>Definition</th><th>Origin</th><th>Origin ID</th><th>Score</th>
+	</tr>
+	{% for item in ents[first["terms"]:last["terms"]] %}
+	  <tr>
+	    <td><a href={{ url_for('main.entities', entities="terms", id=item.ent["nanoid"])}}> {{item.ent["value"]}}</a></td>
+	    <td>
+	      {% if item.ent["origin_definition"] %}
+		{{item.ent["origin_definition"]}}
+	      {% else %}
+		<i>none</i>
+	      {% endif %}
+	    </td>
+	    <td>{{item.ent["origin"]}}</td>
+	    <td>
+	      {% if item.ent["origin_id"] %}
+		{{item.ent["origin_id"]}}
+	      {% else %}
+		<i>none</i>
+	      {% endif %}
+	    </td>
+	    <td>{{item.score}}</td>
+	  </tr>
+	{% endfor %}
+	</table>
+    {% endif %}
+    {% if thing == "models" %}
+      {% for type in ["nodes","properties","relationships"] %}
+	<h3>{{type | title }} ({{ents[type] | length }})</h3>
+	<table class="table table-striped">
+	  <tr>
+	    <th>Handle</th><th>Description</th><th>Model</th><th>Score</th>
+	  </tr>
+	  {% for item in ents[type][first[type]:last[type]] %}
+	    <tr>
+	      <td>{{item.ent["handle"]}}</td>
+	      <td>
+		{% if item.ent["desc"] %}
+		  {{item.ent["desc"]}}
+		{% else %}
+		  <i>none</i>
+		{% endif %}
+	      </td>
+	      <td>{{item.ent["model"]}}</td>
+	      <td>{{item.score}}</td>
+	  </tr>
+	{% endfor %}
+	</table>
+      {% endfor %}
+    {% endif %}
+    
 
 {% endblock %}

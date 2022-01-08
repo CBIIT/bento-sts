@@ -1,184 +1,111 @@
+<!-- -*-jinja2-*- -->
 {% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form, render_field, render_hidden_errors %}
 
 {% block app_content %}
     <br>
-    <h1> {{ title }}: {{mdb.handle}} </h1>
+    <h1> {{ title }} <i>{{mdb.handle}}</i> </h1>
     {% if display == 'detail'  %}
-    <div class="float-right">
       <div class="float-right">
-        <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
-      </div>
+	<div class="float-right">
+          <a href="{{url_for('main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+	</div>
   
       </div>
-    <br><br>
-    <div>
-      <h3> Node Details </h3>
-      <div id="detailNode" name="detailNode" style="margin:20px; padding:20x">
-      <table class="table-striped">
-         <tr>
-            <th style="width:300px"> Name </th> 
-            <th style="width:300px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
-       </tr>
-         <tr>
-             <td> Id </td> <td>{{mdb.id}} </td>
-        </tr>
-        <tr>
-            <td> Model </td> <td>{{mdb.model}} </td>
-       </tr>
-      </table>
-      </div>
-    </div>
-            
-         <!-- edit deprecate buttons -->
-         <div class="float-left">
-            <!-- Button trigger modal -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editNodeModal">
-              Edit Node
-            </button>
-            <!-- Button trigger modal -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecateNodeModal">
-                Deprecate Node
-            </button>
-          </div> 
-          <br>
-          <br>
-           
-
-          <!-- Modal -->
-          <div class="modal fade" id="editNodeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <form class="form" method="post" role="form">
-            
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h3 class="modal-title" id="exampleModalLabel">Edit Node</h3>
-                  </div>
-                <!-- <form class="form form-horizontal" method="post" role="form"> -->
-                  <div class="modal-body">
-          
-                              {{ form.hidden_tag() }}
-                              {{ render_hidden_errors(form) }}
-                              {{ render_field(form.nodeHandle) }}
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    {{ render_field(form.submit) }}
-                  </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          <!-- End Modal-->
-
-          <!-- Deprecate Modal -->
-            <div class="modal fade" id="deprecateNodeModal" tabindex="-1" aria-labelledby="deprecateModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-              <div class="modal-content">
-                  <form class="form" method="post" role="deprecateform">
-          
-                  <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                  </button>
-                  <h3 class="modal-title" id="deprecateModalLabel">Deprecate Node</h3>
-                  </div>
-                  <div class="modal-body">
-          
-                              {{ deprecateform.hidden_tag() }}
-                              {{ render_hidden_errors(deprecateform) }}
-                              Do you want to deprecate the node {{ mdb.value }} ?
-                  </div>
-                  <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                  {{ render_field(deprecateform.submit) }}
-                  </div>
-                  </form>
-              </div>
-              </div>
-          </div>
-        <!-- End Deprecate Modal-->
-
-    <br><br>
-
-
-    <div>
-      {% if mdb.has_properties %}
-      <h4> Node Properties</h4>
-      <div id="nodeProperties" name="nodeProperties" style="margin:20px; padding:20x">
-        <table class="table-striped" >
-          <tr> 
-              <th style="width:300px"> Node Name </th>   
-              <th style="width:300px"> Id </th>
-              <th style="width:300px"> Value Domain </th>
-          </tr>
-             
-          {% for property_item in mdb.has_properties %}
+      <br><br>
+      <div>
+	<h3> Node Details </h3>
+	<div id="detailNode" name="detailNode" style="margin:20px; padding:20x">
+	  <table class="table-striped">
             <tr>
-              <td> <a href="{{url_for( 'main.properties', id=property_item.id ) }}"> {{property_item.handle }}</a> </td>
+              <th style="width:300px"> Name </th> 
+              <th style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+	    </tr>
+         <tr>
+           <td> Id </td> <td>{{mdb.id}} </td>
+         </tr>
+            <tr>
+              <td> Model </td> <td>{{mdb.model}} </td>
+	    </tr>
+      </table>
+	</div>
+      </div>
+      {% block edit_functions %}
+      {% endblock edit_functions %}
+      <br><br>
+      <div>
+	{% if mdb.has_properties %}
+	  <h4> Node Properties</h4>
+	  <div id="nodeProperties" name="nodeProperties" style="margin:20px; padding:20x">
+            <table class="table-striped" >
+              <tr> 
+		<th style="width:300px"> Property </th>   
+		<th style="width:300px"> Id </th>
+              <th style="width:300px"> Value Domain </th>
+              </tr>
+              
+              {% for property_item in mdb.has_properties %}
+		<tr>
+              <td> <a href="{{url_for( 'main.entities', entities='properties', id=property_item.id ) }}"> {{property_item.handle }}</a> </td>
               <td> {{ property_item.id }} </td> 
               <td> {{ property_item.value_domain }}</td>
-            </tr>
+		</tr>
           {% endfor %}
-        </table>
-      </div>    
+            </table>
+	  </div>    
       <br>
-      {% endif %}
-  </div>
-<br>
-
-    <div>
-        {% if mdb.has_relationship_from_nodes %}
-        <h3> From Nodes </h3>
-        <div id="fromNodes" name="fromNodes" style="margin:20px; padding:20x">
-          <table class="table-striped" >
-            <tr> 
-              <th style="width:300px"> Node Name </th>  
-              <th style="width:300px"> Id </th>  
-              <th style="width:300px"> With Relationship </th>  
-            </tr>
+    {% endif %}
+      </div>
+      <br>
       
-            {% for node_item in mdb.has_relationship_from_nodes %}
-              <tr>
-                 <td> <a href="{{url_for( subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </td>
+      <div>
+        {% if mdb.has_relationship_from_nodes %}
+          <h3> From Nodes </h3>
+          <div id="fromNodes" name="fromNodes" style="margin:20px; padding:20x">
+            <table class="table-striped" >
+              <tr> 
+		<th style="width:300px"> Node Name </th>  
+		<th style="width:300px"> Id </th>  
+		<th style="width:300px"> With Relationship </th>  
+              </tr>
+	      
+              {% for node_item in mdb.has_relationship_from_nodes %}
+		<tr>
+                 <td> <a href="{{url_for( 'main.entities', entities=subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </td>
                  <td> {{ node_item.id }} </td>
                  <td> {{ node_item.relationship.handle }}</td>
-              </tr>
+		</tr>
             {% endfor %}  
-          </table>
-        </div>    
+            </table>
+          </div>    
         {% endif %}
-    </div>
-
-    <br>
-    <br>
-
-
-    <div>
-        {% if mdb.has_relationship_to_nodes %}
-        <h3> To Nodes </h3>
-        <div id="toNodes" name="toNodes" style="margin:20px; padding:20x">
-          <table class="table-striped" >
-            <tr> 
-              <th style="width:300px"> Node Name </th>  
-              <th style="width:300px"> Id </th>  
-              <th style="width:300px"> With Relationship </th>  
-            </tr>
-            
-            {% for node_item in mdb.has_relationship_to_nodes %}
-              <tr>
-                  <td> <a href="{{url_for( subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </th>
-                  <td> {{ node_item.id }} </td>
-                  <td> {{node_item.relationship.handle }}</td>
-              </tr>
-            {% endfor %}  
-          </table>
-        </div>    
-          {% endif %}
       </div>
+      
+      <br>
+      <br>
+      
+      
+      <div>
+        {% if mdb.has_relationship_to_nodes %}
+          <h3> To Nodes </h3>
+          <div id="toNodes" name="toNodes" style="margin:20px; padding:20x">
+            <table class="table-striped" >
+              <tr> 
+		<th style="width:300px"> Node Name </th>  
+		<th style="width:300px"> Id </th>  
+		<th style="width:300px"> With Relationship </th>  
+              </tr>
+              
+              {% for node_item in mdb.has_relationship_to_nodes %}
+		<tr>
+                  <td> <a href="{{url_for( 'main.entities', entities=subtype, id=node_item.id ) }}"> {{node_item.handle }}</a> </th>
+<td> {{ node_item.id }} </td>
+<td> {{node_item.relationship.handle }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>    
+{% endif %}
+</div>
 
-    {% endif %}
+{% endif %}
 {% endblock %}

@@ -1,205 +1,111 @@
+<!-- -*-jinja2-*- -->
 {% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form, render_field , render_hidden_errors %}
 
 {% block app_content %}
     <br>
-    <h1> {{ title }} {{ mdb.handle}} </h1>
+    <h1> {{ title }} <i>{{ mdb.handle}}</i> </h1>
     {% if display == 'detail'  %}
     <div class="float-right">
-        <a href="{{url_for( subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+        <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
     </div>
     <br><br>
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-6">
-                            
-                            <h3> Property Details </h3>
-                            <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
-                            <table class="table table-striped">
-                                <tr>
-                                    <th scope="row" style="width:100px"> Handle </th> 
-                                    <th scope="row" style="width:250px"> <a href="{{url_for( subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+      <div class="row">
+        <div class="col-lg-6">
+          
+          <h3> Property Details </h3>
+          <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row" style="width:100px"> Handle </th> 
+                <th scope="row" style="width:250px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.prop['nanoid'] ) }}"> {{mdb.prop['handle']}} </a>  </th>
                 
-                            </tr>
-                                <tr>
-                                    <td> Id </td> <td>{{mdb.id}} </td> 
-                            </tr>
-                                <tr>
-                                    <td> Model </td> <td>{{mdb.model}} </td> 
-                            </tr>
-
-                            {% if mdb._for_nodehandle %}
-                            <tr>
-                                <td> For Node </td> <td><a href="{{url_for( 'main.nodes', id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
-                                
-                            </tr>
-                            {% endif %}
-
-                            </table>
-
-                            <!-- edit deprecate buttons -->
-                            <div class="float-left">
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPropModal">
-                                    Edit Property
-                                </button>
-                                <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#deprecatePropModal">
-                                    Deprecate Property
-                                </button>
-                               </div>   
-                            <!-- end buttons -->
-                            
-                                <!-- Edit Modal -->
-                                <div class="modal fade" id="editPropModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <form class="form" method="post" role="editform">
-                                
-                                        <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <h3 class="modal-title" id="exampleModalLabel">Edit Property</h3>
-                                        </div>
-                                        <div class="modal-body">
-
-                                                    {{ editform.hidden_tag() }}
-                                                    {{ render_hidden_errors(editform) }}
-                                                    {{ render_field(editform.prophandle) }}
-                                        </div>
-                                        <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                        {{ render_field(editform.submit) }}
-                                        </div>
-                                        </form>
-                                    </div>
-                                    </div>
-                                </div>
-                                <!-- End Edit Modal-->
-
-                                <!-- Deprecate Modal -->
-                                <div class="modal fade" id="deprecatePropModal" tabindex="-1" aria-labelledby="deprecateModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <form class="form" method="post" role="deprecateform">
-                                
-                                        <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <h3 class="modal-title" id="deprecateModalLabel">Deprecate Property</h3>
-                                        </div>
-                                        <div class="modal-body">
-                                
-                                                    {{ deprecateform.hidden_tag() }}
-                                                    {{ render_hidden_errors(deprecateform) }}
-                                                    Do you want to deprecate the property {{ mdb.value }} ?
-                                        </div>
-                                        <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                        {{ render_field(deprecateform.submit) }}
-                                        </div>
-                                        </form>
-                                    </div>
-                                    </div>
-                                </div>
-                                <!-- End Deprecate Modal-->
-
-                            </div>
-                    </div>     <!-- end col-->
-
-
-                    <div class="col-lg-6">
-
-                        <h3> Property Attributes </h3>
-                        <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
-                        <table class="table table-striped">
-    
-                            <tbody>                               
-                            <tr>
-                                <th scope="row">Value Domain</th>
-                                <td>
-                                    {% if mdb.value_domain %}
-                                       {{ mdb.value_domain }}
-                                    {% endif %}
-                                </td>
-                                
-                          </tr> 
-        
-                              <tr>
-                                <td>Required</td>
-                                <td>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="customSwitch1">
-                                        <label class="custom-control-label" for="customSwitch1"></label>
-                                      </div>
-                                </td>
-                                
-                 
-                                <tr>
-                                    <td>Units</td>
-                                    <td>
-                                        <p class="text-muted"><em>empty</em></p>
-                                    </td>
-                                    
-        
-                                </tr>
-                                <tr>
-                                    <td>Description</td>
-                                    <td>
-                                        <p class="text-muted"><em>empty</em></p>
-                                    </td>
-                                    
-                                  </tr>  
-                                <tr>
-                                    <td>Instructions</td>
-                                    <td>
-                                        <p class="text-muted"><em>empty</em></p>
-                                    </td>
-                                    
-                                  </tr>
-                                
-                                <tr>
-                                    <td>Internal Comments</td>
-                                    <td>
-                                        <p class="text-muted"><em>empty</em></p>
-                                    </td>
-                        
-                                </tr>
-
-                            </tbody>
-                          </table>
-                        </div>
-                    </div>    <!-- end col--> 
-                </div> <!-- end row-->
-            </div> <!-- end container-->
-
-
-    <br>    <br>
-
-    <div>
-        {% if mdb.has_terms %}
-        <h3> Terms in Value Set</h3>
-            
-            <div id="termList" name="termList" style="margin:20px; padding:20x">
-
-            <table class="table-striped" >
-                <tr> 
-                      <th style="width:300px"> Term </th>  
-                      <th style="width:300px"> Id </th>  
-                </tr>    
-                {% for term_item in mdb.has_terms %}
-                    <tr>
-                        <td> <a href="{{url_for( 'main.terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </td>
-                        <td> {{ term_item.id }} </td>
-                    </tr>
-                {% endfor %}
+              </tr>
+              <tr>
+                <td> Id </td> <td>{{mdb.prop['nanoid']}} </td> 
+              </tr>
+              <tr>
+                <td> Model </td> <td>{{mdb.model}} </td> 
+              </tr>
+	      
+              {% if mdb._for_nodehandle %}
+                <tr>
+                  <td> For Node </td> <td><a href="{{url_for( 'main.entities', entities='nodes',id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
+                  
+                </tr>
+              {% endif %}
+	      
             </table>
-            </div>
-
-        {% endif %}
+	    {% block edit_functions %}
+	    {% endblock edit_functions%}
+          </div>
+        </div>     <!-- end col-->
+	
+	
+        <div class="col-lg-6">
+	  
+          <h3> Property Attributes </h3>
+          <div id="propertyDetail" name="propertyDetail" style="margin:20px; padding:20x">
+            <table class="table table-striped">
+	      
+              <tbody>                               
+                <tr>
+                  <th scope="row">Value Domain</th>
+                  <td>
+                      {{ mdb.prop["value_domain"] }}
+                  </td>
+                </tr> 
+		
+                <tr>
+                  <td>Required</td>
+                  <td>
+		    {{ mdb.prop["is_required"] if mdb.prop["is_required"] else 'false' }}
+                  </td>
+                  {% if mdb.prop["units"] %}
+                  <tr>
+                    <td>Units</td>
+                    <td> {{mdb.prop["units"]}} </td>
+                  </tr>
+		  {% endif %}
+                <tr>
+                  <td>Description</td>
+                  <td>
+		    {{ mdb.prop["desc"] }}
+                  </td>
+                </tr>  
+              </tbody>
+            </table>
+          </div>
+        </div>    <!-- end col--> 
+      </div> <!-- end row-->
+    </div> <!-- end container-->
+    
+    
+    <br>    <br>
+    
+    <div>
+      {% if mdb.has_terms %}
+        <h3> Terms in Value Set</h3>
+        
+        <div id="termList" name="termList" style="margin:20px; padding:20x">
+	  
+          <table class="table-striped" >
+            <tr> 
+              <th style="width:300px"> Term </th>  
+              <th style="width:300px"> Id </th>  
+            </tr>    
+            {% for term_item in mdb.has_terms %}
+              <tr>
+                <td> <a href="{{url_for( 'main.entities', entities='terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </td>
+                <td> {{ term_item.id }} </td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+	
+      {% endif %}
     </div>
-
-    {% endif %}
-
+    
+  {% endif %}
+  
 {% endblock %}
