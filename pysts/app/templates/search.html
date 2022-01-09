@@ -5,12 +5,13 @@
     <h2>Search Results</h1>
     <br>
 
-    {% if pagination %}
-      {{ pagination.info }}
-      {{ pagination.links }}
+    {% if thing == "no_hits" %}
+      <h3>No hits for query</h3>
     {% endif %}
-
     {% if thing == "terms" %}
+      {% if pagination %}
+	{{ pagination.info }}
+      {% endif %}
       <table class="table table-striped">
 	<tr>
 	  <th>Value</th><th>Definition</th><th>Origin</th><th>Origin ID</th><th>Score</th>
@@ -37,8 +38,14 @@
 	  </tr>
 	{% endfor %}
 	</table>
+      {% if pagination %}
+	{{pagination.links}}
+      {% endif %}
     {% endif %}
     {% if thing == "models" %}
+      {% if pagination %}
+	{{ pagination.info }}
+      {% endif %}
       {% for type in ["nodes","properties","relationships"] %}
 	<h3>{{type | title }} ({{ents[type] | length }})</h3>
 	<table class="table table-striped">
@@ -61,6 +68,9 @@
 	{% endfor %}
 	</table>
       {% endfor %}
+      {% if pagination %}
+	{{pagination.links}}
+      {% endif %}
     {% endif %}
     
 

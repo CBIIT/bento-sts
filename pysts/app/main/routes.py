@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import json
 import pprint
+import re
 from flask import (
     render_template,
     flash,
@@ -15,15 +16,10 @@ from flask import (
     current_app,
     Response,
     abort,
-    send_from_directory
 )
 from flask_paginate import Pagination, get_page_parameter
 from app import db, logging
 from app.main.forms import SearchForm, SelectModelForm
-# from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTermForm, DeprecateTermForm, DiffForm
-# from app.main.forms import EditNodeForm, DeprecateNodeForm
-# from app.main.forms import EditPropForm, DeprecatePropForm
-from app.main.forms import SelectModelForm
 import app.search
 from app.main import bp
 from app.util import get_yaml_for
@@ -92,19 +88,15 @@ def entities(entities, id):
     else:
         format = ""
 
-    model = request.form.get("model_hdl")
+    model = request.form.get("model")
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
     select_form = SelectModelForm()
-    select_form.model_hdl.choices = [(x['handle'],x['handle']) for x
+    select_form.model.choices = [(x['handle'],x['handle']) for x
                                      in current_app.config["MODEL_LIST"]]
     current_app.logger.info("model: {}, format: {}".format(model, format))
     current_app.logger.info(list(request.args.keys()))
-    id = id
-    if id is None:
-        if id_ is not None:
-            id = id_
-
+    id = id or id_
     m = mdb()
     dispatch = {
         "nodes": {
@@ -165,17 +157,16 @@ def entities(entities, id):
             return render_template('/errors/400.html'), 400
         if type(ent_) == dict and ent_.get("has_properties"): # nodes only kludge
             ent_['has_properties'].sort(key=lambda x:x['handle'])
-        if request.method == "GET":
-            if format == "json":
-                return jsonify(ent_)
-            else:
-                return render_template(
-                    dispatch[entities]["template"],
-                    title=dispatch[entities]["title"],
-                    mdb=ent_,
-                    subtype=dispatch[entities]["subtype"],
-                    display="detail",
-                )
+        if format == "json":
+            return jsonify(ent_)
+        else:
+            return render_template(
+                dispatch[entities]["template"],
+                title=dispatch[entities]["title"],
+                mdb=ent_,
+                subtype=dispatch[entities]["subtype"],
+                display="detail",
+            )
 
     # B: filter by model
     ents_ = dispatch[entities]["get_list"]( None if model == 'All' else model)
@@ -184,7 +175,7 @@ def entities(entities, id):
         return jsonify(ents_)
     else:
         pagination = Pagination(page=page,total=len(ents_),record_name=entities)
-        return render_template(
+        rendered = render_template(
             "mdb.html",
             title=dispatch[entities]["list_title"],
             mdb=sorted(ents_,
@@ -195,7 +186,14 @@ def entities(entities, id):
             last=min((pagination.page)*pagination.per_page,len(ents_)),
             pagination=pagination,
             form=select_form,
+            model=model
         )
+        # get a load of THIS kludge, dude.
+        if model:
+            rendered = re.sub("option value={}".format(model),
+                            'option selected="true" value={}'.format(model),
+                            rendered)
+        return rendered
 # ---------------------------------------------------------------------------
 
 @bp.route("/tags", defaults={'key':None,'value':None},methods=['GET','POST'])
@@ -266,33 +264,46 @@ def search():
     if format == 'json':
         return jsonify(ents)
 
+    pg_tot = 0
+    if thing == "terms":
+        pg_tot = len(ents)
+    elif thing == "models":
+        pg_tot = max(len(ents["nodes"]), len(ents["properties"]),
+                     len(ents["relationships"]))
+    else:
+        pass
     pagination = Pagination(
         page=request.args.get("page", 1, type=int),
         record_name="Hits",
-        per_page=current_app.config["HITS_PER_PAGE"]
+        total=pg_tot,
+        per_page=current_app.config["HITS_PER_PAGE"],
         )
     first = {}
     last = {}
+    nohits = False
     if thing == "terms":
-        pagination.total = len(ents)
-        first["terms"] = (pagination.page-1)*pagination.per_page
-        last["terms"] = min(pagination.page*pagination.per_page, len(ents))
+        if ents:
+            first["terms"] = (pagination.page-1)*pagination.per_page
+            last["terms"] = min(pagination.page*pagination.per_page, len(ents))
+        else:
+            thing = "no_hits"
     elif thing == "models":
-        pagination.total = max(len(ents["nodes"]), len(ents["properties"]),
-                               len(ents["relationships"]))
-        pp = round(pagination.per_page/3)
-        first["nodes"] = min(len(ents["nodes"])-pp,
-                             pagination.page-1*pp)
-        last["nodes"] = min(len(ents["nodes"]),
-                            pagination.page*pp)
-        first["properties"] = min(len(ents["properties"])-pp,
-                                  pagination.page-1*pp)
-        last["properties"] = min(len(ents["properties"]),
-                                 pagination.page*pp)
-        first["relationships"] = min(len(ents["relationships"])-pp,
-                                     pagination.page-1*pp)
-        last["relationships"] = min(len(ents["relationships"]),
-                                    pagination.page*pp)
+        if ents:
+            pp = round(pagination.per_page/3)
+            first["nodes"] = min(len(ents["nodes"])-pp,
+                                 pagination.page-1*pp)
+            last["nodes"] = min(len(ents["nodes"]),
+                                pagination.page*pp)
+            first["properties"] = min(len(ents["properties"])-pp,
+                                      pagination.page-1*pp)
+            last["properties"] = min(len(ents["properties"]),
+                                     pagination.page*pp)
+            first["relationships"] = min(len(ents["relationships"])-pp,
+                                         pagination.page-1*pp)
+            last["relationships"] = min(len(ents["relationships"]),
+                                        pagination.page*pp)
+        else:
+            thing = "no_hits"
     else:
         raise RuntimeError("Huh???")
     

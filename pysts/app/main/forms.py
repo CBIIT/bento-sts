@@ -15,7 +15,7 @@ class SearchForm(FlaskForm):
         super(SearchForm, self).__init__(*args, **kwargs)
 
 class SelectModelForm(FlaskForm):
-    model_hdl = SelectField('Model')
+    model = SelectField('Model')
     filter = SubmitField('Filter')
     export = SubmitField('Export JSON')
 
