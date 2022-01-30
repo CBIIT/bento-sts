@@ -1,9 +1,13 @@
 import os
 from dotenv import load_dotenv
+import yaml
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, ".env"))
-
+qp = yaml.load(
+    open('/'.join([basedir,"query_paths.yml"]),"r"),
+    Loader=yaml.CLoader
+    )
 
 class Config(object):
     SECRET_KEY = os.environ.get("SECRET_KEY") or "supposedly-random-passphrase"
@@ -20,14 +24,8 @@ class Config(object):
     ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
     HITS_PER_PAGE = 25
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024
-    UPLOAD_EXTENSIONS = ['.yaml', '.yml']
-    UPLOAD_PATH = 'uploads'
-    DROPZONE_MAX_FILE_SIZE = 3
-    DROPZONE_MAX_FILES = 30
-    DROPZONE_ALLOWED_FILE_CUSTOM = True
-    DROPZONE_ALLOWED_FILE_TYPE = 'text/*, .yml, .yaml'
     JSONIFY_PRETTYPRINT_REGULAR = True
     SHOW_SINGLE_PAGE = True
     EDITING_FORMS = False
-    
+    QUERY_PATHS = qp
 pass

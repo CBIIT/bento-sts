@@ -1,9 +1,5 @@
 # route.py
 
-from datetime import datetime
-import os
-import json
-import pprint
 import re
 from flask import (
     render_template,
@@ -20,11 +16,11 @@ from flask import (
 from flask_paginate import Pagination, get_page_parameter
 from app import db, logging
 from app.main.forms import SearchForm, SelectModelForm
-import app.search
+# import app.search
 from app.main import bp
 from app.util import get_yaml_for
 from app.mdb import mdb
-from app.arc import diff_mdf
+# from app.arc import diff_mdf
 
 @bp.before_app_request
 def before_request():

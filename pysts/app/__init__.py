@@ -45,25 +45,16 @@ def create_app(config_class=Config):
         if app.config["ELASTICSEARCH_URL"]
         else None
     )
+
+    # from app.errors import bp as errors_bp
+    # app.register_blueprint(errors_bp)
+
+    # from app.main import bp as main_bp
+    # app.register_blueprint(main_bp)
+
+    from app.api import bp as api_bp
+    app.register_blueprint(api_bp)
     
-
-    dropzone = Dropzone(app)
-
-    from app.errors import bp as errors_bp
-    app.register_blueprint(errors_bp)
-
-    # from app.auth import bp as auth_bp
-    # app.register_blueprint(auth_bp, url_prefix="/auth")
-
-    from app.main import bp as main_bp
-    app.register_blueprint(main_bp)
-
-    # from app.datasubsets import bp as datasubsets_bp
-    # app.register_blueprint(datasubsets_bp)
-
-    # from app.ver import bp as ver_bp
-    # app.register_blueprint(ver_bp)
-
     if not app.debug and not app.testing:
         if not os.path.exists("logs"):
             os.mkdir("logs")
@@ -72,7 +63,8 @@ def create_app(config_class=Config):
         )
         file_handler.setFormatter(
             logging.Formatter(
-                "%(asctime)s %(levelname)s: %(message)s " "[in %(pathname)s:%(lineno)d]"
+                "%(asctime)s %(levelname)s: %(message)s"
+                " [in %(pathname)s:%(lineno)d]"
             )
         )
         file_handler.setLevel(logging.INFO)
@@ -83,5 +75,3 @@ def create_app(config_class=Config):
 
     return app
 
-
-#from app import models
