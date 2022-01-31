@@ -65,15 +65,34 @@ def query_db(path):
     m = mdb()
     skip = request.args.get("skip")
     limit = request.args.get("limit")
+    if not limit or limit > current_app.config['MAX_ENTS_PER_REQ']:
+        limit = current_app.config['MAX_ENTS_PER_REQ'] 
     q = None
+    total_rows = None
     try:
-        q = Query(path, use_params=True)
+        q = Query(path)
     except Exception as e:
         abort(404, e)
+    # look for a paired 'count'
+    if not path.endswith('count'):
+        try:
+            qct = Query(path+"/count")
+            ret = m.mdb.get_with_statement(str(qct), qct.params)
+            total_rows = list(ret[0].values())[0]
+        except Exception as e:
+            current_app.logger.warn(e)
+            pass
+    
     stmt = str(q)
     if skip:
         stmt = stmt + " SKIP {}".format(int(skip))
     if limit:
         stmt = stmt + " LIMIT {}".format(int(limit))
     current_app.logger.info(stmt)
-    return jsonify(m.mdb.get_with_statement(stmt, q.params))
+    ret = m.mdb.get_with_statement(stmt, q.params)
+    if total_rows is not None:
+        if total_rows > 0:
+            ret.insert(0, {"total": total_rows})
+        else:
+            ret = {"total":0}
+    return jsonify(ret)
