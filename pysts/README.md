@@ -13,13 +13,7 @@ This is a flask-based implementation of the Simple Terminology Service (STS) for
 
 ## Dependencies
 
-`bento-sts` requires an Elastic store and a Neo4j-based
-[MDB](https://github.com/CBIIT/bento-meta).
-
-For authentication, a user database must be set up.
-
-For email-based password reset, the server must have email
-capabilities.
+`bento-sts` requires a Neo4j-based [MDB](https://github.com/CBIIT/bento-meta).
 
 
 

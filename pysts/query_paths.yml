@@ -85,7 +85,11 @@ paths:
             $handle: 
               _node: property  # -> n._add_props(P(handle="handle", value=$handle))
               terms: # incoming entity is t
-                _edge: has_valueset  # G(t, w) - path of 2 triples
+                _edge:
+                  _type: has_valueset  # G(t, w) - path of 2 triples
+                  _join:
+                    - property
+                    - value_set
                 _node:  # -> a Triple: w
                   _label: term  # z = N(label="term") is the "incoming" ent
                   _node: value_set  # v = N(label="value_set")

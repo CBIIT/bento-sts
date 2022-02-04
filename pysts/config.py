@@ -29,4 +29,5 @@ class Config(object):
     SHOW_SINGLE_PAGE = True
     EDITING_FORMS = False
     QUERY_PATHS = qp
+    WTF_CSRF_CHECK_DEFAULT = False
 pass

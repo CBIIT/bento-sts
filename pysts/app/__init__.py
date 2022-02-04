@@ -1,5 +1,5 @@
 import logging
-from logging.handlers import SMTPHandler, RotatingFileHandler
+from logging.handlers import RotatingFileHandler
 import os
 from bento_meta.mdb import MDB
 from flask import Flask, request, current_app
@@ -7,10 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from flask_dropzone import Dropzone
 from flask_wtf.csrf import CSRFProtect
-import flask_excel
-from elasticsearch import Elasticsearch
 from config import Config
 
 db = SQLAlchemy()
@@ -27,7 +24,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     """ or set to None for default theme """
-    app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = 'spacelab' 
+    app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = 'spacelab'
 
     mdb = MDB(app.config["NEO4J_MDB_URI"],
               user=app.config["NEO4J_MDB_USER"],
@@ -39,22 +36,16 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     moment.init_app(app)
     csrf.init_app(app)
-    flask_excel.init_excel(app)
-    app.elasticsearch = (
-        Elasticsearch([app.config["ELASTICSEARCH_URL"]])
-        if app.config["ELASTICSEARCH_URL"]
-        else None
-    )
 
     # from app.errors import bp as errors_bp
     # app.register_blueprint(errors_bp)
 
-    # from app.main import bp as main_bp
-    # app.register_blueprint(main_bp)
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
 
     from app.api import bp as api_bp
     app.register_blueprint(api_bp)
-    
+
     if not app.debug and not app.testing:
         if not os.path.exists("logs"):
             os.mkdir("logs")
@@ -74,4 +65,3 @@ def create_app(config_class=Config):
         app.logger.info("pySTS startup")
 
     return app
-
