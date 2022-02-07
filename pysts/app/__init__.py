@@ -30,6 +30,7 @@ def create_app(config_class=Config):
               user=app.config["NEO4J_MDB_USER"],
               password=app.config["NEO4J_MDB_PASS"])
     app.config['MODEL_LIST'] = [x["m"] for x in mdb.get_model_nodes()]
+    app.config['MODEL_LIST'].insert(0,{"handle":"All"})
 
     db.init_app(app)
     migrate.init_app(app, db)

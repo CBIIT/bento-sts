@@ -72,8 +72,8 @@ def models(name=None):
             display="list",
         )
 
-@bp.route("/<entities>", defaults={'id': None}, methods=['GET', 'POST'])
-@bp.route('/<entities>/<id>', methods=['GET', 'POST'])
+@bp.route("/<entities>", defaults={'id': None}, methods=['GET','POST'])
+@bp.route('/<entities>/<id>', methods=['GET','POST'])
 
 def entities(entities, id):
 
@@ -84,14 +84,13 @@ def entities(entities, id):
     else:
         format = ""
 
-    model = request.form.get("model")
+    model = request.args.get("model") or request.form.get("model") or "All"
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
     select_form = SelectModelForm()
     select_form.model.choices = [(x['handle'],x['handle']) for x
                                      in current_app.config["MODEL_LIST"]]
-    current_app.logger.info("model: {}, format: {}".format(model, format))
-    current_app.logger.info(list(request.args.keys()))
+    current_app.logger.info("model: {}, page: {}, format: {}".format(model, page, format))
     id = id or id_
     m = mdb()
     dispatch = {
@@ -170,7 +169,16 @@ def entities(entities, id):
     if format == "json":
         return jsonify(ents_)
     else:
-        pagination = Pagination(page=page,total=len(ents_),record_name=entities)
+        pgurl = url_for('main.entities',entities=entities)
+        pgurl += "?page={0}"
+        if model:
+            pgurl += "&model={}".format(model)
+        pagination = Pagination(
+            page=page,
+            total=len(ents_),
+            record_name=entities,
+            href=pgurl
+            )
         rendered = render_template(
             "mdb.html",
             title=dispatch[entities]["list_title"],
@@ -186,9 +194,10 @@ def entities(entities, id):
         )
         # get a load of THIS kludge, dude.
         if model:
-            rendered = re.sub("option value={}".format(model),
+            rendered = re.sub('option value="{}"'.format(model),
                             'option selected="true" value={}'.format(model),
                             rendered)
+
         return rendered
 # ---------------------------------------------------------------------------
 
