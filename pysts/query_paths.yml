@@ -86,7 +86,7 @@ paths:
               _node: property  # -> n._add_props(P(handle="handle", value=$handle))
               terms: # incoming entity is t
                 _edge:
-                  _type: has_valueset  # G(t, w) - path of 2 triples
+                  _type: has_value_set  # G(t, w) - path of 2 triples
                   _join:
                     - property
                     - value_set
@@ -96,7 +96,8 @@ paths:
                   _edge:
                     _type: has_term 
                     _dir: _left  # w = R(type="has_term").relate(z,v)
-                _return: _items 
+                _return:
+                  _nodes: term
                 count:
                   _return:
                     _nodes: "*"
@@ -105,7 +106,8 @@ paths:
                 _node: term
                 $value:
                   #_prop: value
-                  _return: _items
+                  _return:
+                    _nodes: term
               _return: _items # y
           _return: _items # x
         _return: _items # m
