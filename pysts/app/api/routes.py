@@ -57,7 +57,7 @@ def index():
     })
 
 
-@bp.route("/v1/<path:path>", methods=allowed_meths)
+@bp.route("/v1/<path:path>", methods=['GET'])
 def query_db(path):
     if not Query.paths:
         Query.set_paths(current_app.config["QUERY_PATHS"])
@@ -88,11 +88,39 @@ def query_db(path):
         stmt = stmt + " SKIP {}".format(int(skip))
     if limit:
         stmt = stmt + " LIMIT {}".format(int(limit))
+    # kludge for tagged entities - get the entity label = the node type
+    if (q.toks[-1] == 'entities'):
+        stmt = re.sub("(n([0-9]+) as entity)", "\\1, head(labels(n\\2)) as label",
+                      stmt)
     current_app.logger.info(stmt)
-    ret = m.mdb.get_with_statement(stmt, q.params)
+    current_app.logger.info(q.params)
+    ret = None
+    try:
+        ret = m.mdb.get_with_statement(stmt, q.params)
+    except Exception as e:
+        abort(500, "MDB issue: {}".format(str(e)))
+    if not ret:
+        abort(404, "No results")
+    if len(ret) == 1:
+        ret = ret[0]
+    else:
+        # array of dicts to dict of arrays
+        xfm = {}
+        if q.toks[-1] == "entities":
+            for i in range(0,len(ret)):
+                ret[i]['entity']['label'] = ret[i]['label']
+                del ret[i]['label']
+        keys = ret[0].keys()
+        for k in keys:
+            xfm[k] = [x[k] for x in ret]
+        ret = xfm
+        # kludge for tagged entities
+
     if total_rows is not None:
         if total_rows > 0:
-            ret.insert(0, {"total": total_rows})
+            ret['count'] = total_rows
         else:
-            ret = {"total":0}
+            # ../count was 0
+            abort(404,"No items found")
+            # ret = {"total":0}
     return jsonify(ret)

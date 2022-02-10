@@ -56,29 +56,35 @@ paths:
     _return: _items # _return(m)
     count:
       _return:
-        _nodes: "*"
-        _func: count
+        _nodes:
+          - "*"
+        _func: count@count
   model:
     _node: node # m = N(label="node")
     $model: # ->m._add_props(P(handle="model",value=$model))
       nodes: 
-        _return: _items # _return(m)
+        _return:
+          _nodes:
+            - node@nodes
         count:
           _return:
-            _nodes: node
-            _func: count
+            _nodes:
+              - node
+            _func: count@count
       node:
         $handle: # -> m._add_props(P(handle="handle", value=$handle)
           properties: 
             _node: property # n = N(label="property") - return this
             _edge: has_property # t = R(type="has_property",m,n) - is a condition
             _return:
-                _nodes: property # _return(n)
+                _nodes:
+                  - property@properties # _return(n)
 
             count:
               _return:
-                _nodes: property # _return( count(n) )
-                _func: count
+                _nodes:
+                  - property # _return( count(n) )
+                _func: count@count
           property:
             _edge: has_property # t = R(type="has_property",m,n)
             _node: property # n = N(label="property")
@@ -97,57 +103,78 @@ paths:
                     _type: has_term 
                     _dir: _left  # w = R(type="has_term").relate(z,v)
                 _return:
-                  _nodes: term
+                  _nodes:
+                    - term@terms
                 count:
                   _return:
-                    _nodes: "*"
-                    _func: count
+                    _nodes:
+                      - "*"
+                    _func: count@count
               term:
                 _node: term
                 $value:
                   #_prop: value
                   _return:
-                    _nodes: term
-              _return: _items # y
-          _return: _items # x
-        _return: _items # m
+                    _nodes:
+                      - term@term
+              _return:
+                _nodes:
+                  - property@property
+          _return:
+            _nodes:
+              - node@node
   tags: 
     _node: tag # g = N(label="tag")
-    _return: _items # _return(g)
+    _return:
+      _nodes:
+        - tag@tags
     count:
       _return:
-        _nodes: "*"
-        _func: count
+        _nodes:
+          - "*"
+        _func: count@count
   tag:
     _node: tag # g = N(label="tag")
     $key: # -> g._add_props(P(handle="key", value=$key))
       values:
-        _prop: value
-        _return: _items # P(entity=g,handle="value")
+        _return:
+          _nodes:
+            - tag@tags
         count:
           _return:
-            _nodes: "*"
-            _func: count
+            _nodes:
+              - "*"
+            _func: count@count
       $value: # g._add_props(P(handle="value",value=<_value>)); i = N(); R0(i, g)
-        _return: _items # i
-        count:
+        entities:
+          _node: _var
+          _edge:
+            _type: has_tag
+            _dir: _left
           _return:
-            _nodes: "*"
-            _func: count
+            _nodes:
+              - _var@entities
+          count:
+            _return:
+              _nodes:
+                - "*"
+              _func: count@count
   term:
     _node: term # x = N(label="term")
     $value:
       _prop: value # x._add_prop(P(handle="value", value=$value))
-      _return: _items
+      _return:
+        _nodes:
+          - term@terms
       count:
         _return:
-          _nodes: "*"
-          _func: count
+          _nodes:
+            - "*"
+          _func: count@count
   id:
     _node: _var
     $nanoid:
       _return: _items
-      
 
 
     
