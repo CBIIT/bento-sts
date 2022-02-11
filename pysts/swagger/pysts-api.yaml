@@ -14,7 +14,8 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: sts.ctos-data-team.org
+#host: sts.ctos-data-team.org
+host: localhost:5000
 basePath: "/v1"
 tags:
   - name: "models"
@@ -54,7 +55,8 @@ tags:
       description: Explore on UI
       url: "https://sts.ctos-data-team.org"
 schemes:
-  - "https"
+  - "http"
+#  - "https"
 paths:
   /models:
     get:
@@ -81,7 +83,10 @@ paths:
         "200":
           description: Count of models
           schema:
-            type: integer
+            type: object
+            properties:
+              count:
+                type: integer
   /model/{modelHandle}/nodes:
     get:
       tags:
@@ -138,7 +143,10 @@ paths:
         "200":
           description: Count of nodes
           schema:
-            type: integer
+            type: object
+            properties:
+              count:
+                type: integer
         "404":
           description: Model not found
   /model/{modelHandle}/node/{nodeHandle}:
@@ -239,7 +247,10 @@ paths:
         "200":
           description: Count of properties for node
           schema:
-            type: integer
+            type: object
+            properties:
+              count:
+                type: integer
         "404":
           description: Item not found
   /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}:
@@ -337,7 +348,7 @@ paths:
             (No Content)
         "404":
           description: Item not found
-  /model/{modelHandle}/node/{nodeHandle}/properties/{propHandle}/terms/count:
+  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms/count:
     get:
       tags:
         - model
@@ -369,9 +380,12 @@ paths:
       responses:
         "200":
           description: |
-            Count of terms in property\'s acceptible value set
+            Count of terms in property\'s acceptable value set
           schema:
-            type: integer
+            type: object
+            properties:
+              count:
+                type: integer
         "204":
           description: |
             Property exists, but does not use an acceptable value set.
@@ -418,9 +432,14 @@ paths:
         - application/json
       responses:
         "200":
-          description: Requested term
+          description: Requested term(s)
           schema:
-            $ref: "#/definitions/Term"
+            type: object
+            properties:
+              term:
+                type: array
+                items:
+                  $ref: "#/definitions/Term"
         "204":
           description: |
             Property exists, but does not use an acceptable value set.
@@ -460,7 +479,10 @@ paths:
         "200":
           description: success
           schema:
-            type: integer
+            type: object
+            properties:
+              count:
+                type: integer
         "404":
           description: No tags found
   /tag/{key}/values:
@@ -478,14 +500,23 @@ paths:
           type: string
       responses:
         "200":
-          description: Tags with specified key
+          description: >-
+            \<value\>\:\<count of tagged entities\> for each value under specified key
+
           schema:
-            type: array
-            items:
-              type: "#/definitions/Tag"
+            type: object
+            properties:
+              count:
+                type: integer
+              key:
+                type: string
+              values:
+                type: array
+                items:
+                  type: object
         "404":
           description: No tag with specified key found
-  /tag/{key}/value/{value}/entities:
+  /tag/{key}/{value}/entities:
     get:
       tags:
         - tag
@@ -517,7 +548,7 @@ paths:
                   $ref: "#/definitions/Entity"
         "404":
           description: No tag with specified key:value found
-  /tag/{key}/value/{value}/entities/count:
+  /tag/{key}/{value}/entities/count:
     get:
       tags:
         - tag
@@ -549,7 +580,10 @@ paths:
         "200":
           description: Count of entities tagged by key:value
           schema:
-            type: integer
+            type: object
+            properties:
+              count:
+                type: integer
         "404":
           description: No tag with specified key:value found
   /id/{id}:
@@ -576,9 +610,12 @@ definitions:
   Entity:
     type: object
     properties:
+      label:
+        type: string
       nanoid:
         type: string
     required:
+      - label
       - nanoid
   Model:
     type: object
@@ -589,8 +626,11 @@ definitions:
         type: string
       repository:
         type: string
+      nanoid:
+        type: string
     required:
       - handle
+      - nanoid
   Node:
     type: object
     properties:
@@ -598,15 +638,20 @@ definitions:
         type: string
       model:
         type: string
+      nanoid:
+        type: string
     required:
       - handle
       - model
+      - nanoid
   Property:
     type: object
     properties:
       handle:
         type: string
       model:
+        type: string
+      nanoid:
         type: string
       is_required:
         type: string
@@ -619,6 +664,7 @@ definitions:
     required:
       - handle
       - model
+      - nanoid
       - value_domain
   Term:
     type: object
@@ -627,6 +673,8 @@ definitions:
         type: string
       origin_name:
         type: string
+      nanoid:
+        type: string
       origin_id:
         type: string
       origin_definition:
@@ -634,6 +682,7 @@ definitions:
     required:
       - value
       - origin_name
+      - nanoid
   Tag:
     type: object
     properties:
@@ -641,6 +690,12 @@ definitions:
         type: string
       value:
         type: string
+      nanoid:
+        type: string
+    required:
+      - key
+      - value
+      - nanoid
         
     
         

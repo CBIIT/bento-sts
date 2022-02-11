@@ -140,6 +140,7 @@ paths:
         _return:
           _nodes:
             - tag@tags
+          _path_id: tag_values
         count:
           _return:
             _nodes:
@@ -154,6 +155,7 @@ paths:
           _return:
             _nodes:
               - _var@entities
+            _path_id: tag_entities
           count:
             _return:
               _nodes:
