@@ -53,7 +53,9 @@
 paths:
   models:  
     _node: model # m = N(label="model")
-    _return: _items # _return(m)
+    _return:
+      _nodes:
+        - model@model
     count:
       _return:
         _nodes:
