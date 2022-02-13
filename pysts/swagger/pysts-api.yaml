@@ -69,9 +69,14 @@ paths:
         "200":
           description: "success"
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/Model"
+            type: object
+            properties:
+              count:
+                type: integer
+              models:
+                type: array
+                items:
+                  $ref: "#/definitions/Model"
   /models/count:
     get:
       tags:
