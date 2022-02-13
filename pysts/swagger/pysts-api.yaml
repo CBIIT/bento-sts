@@ -14,8 +14,11 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-#host: sts.ctos-data-team.org
-host: localhost:5000
+host: sts.ctos-data-team.org
+#host: localhost:5000
+schemes:
+#  - "http"
+  - "https"
 basePath: "/v1"
 tags:
   - name: "models"
@@ -54,9 +57,6 @@ tags:
     externalDocs:
       description: Explore on UI
       url: "https://sts.ctos-data-team.org"
-schemes:
-  - "http"
-#  - "https"
 paths:
   /models:
     get:
