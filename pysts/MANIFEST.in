@@ -1,4 +1,9 @@
-include query_paths.yml
+include *.py
+include tests/*
+include pytest.ini
+include .flaskenv
 include swagger/*.yaml
+include app/*.py
+include app/api/query_paths.yml
 include app/static/*
 include app/templates/*

@@ -3,15 +3,11 @@ from logging.handlers import RotatingFileHandler
 import os
 from bento_meta.mdb import MDB
 from flask import Flask, request, current_app
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf.csrf import CSRFProtect
 from config import Config
 
-db = SQLAlchemy()
-migrate = Migrate()
 bootstrap = Bootstrap()
 moment = Moment()
 csrf = CSRFProtect()
@@ -32,8 +28,6 @@ def create_app(config_class=Config):
     app.config['MODEL_LIST'] = [x["m"] for x in mdb.get_model_nodes()]
     app.config['MODEL_LIST'].insert(0,{"handle":"All"})
 
-    db.init_app(app)
-    migrate.init_app(app, db)
     bootstrap.init_app(app)
     moment.init_app(app)
     csrf.init_app(app)

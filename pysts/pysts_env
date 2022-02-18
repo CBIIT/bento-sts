@@ -1,0 +1,5 @@
+export PYTHONPATH=~/Code/bento-meta/python
+export NEO4J_MDB_URI=bolt://localhost:7687
+export NEO4J_MDB_USER=neo4j
+export NEO4J_MDB_PASS=Seeto5!nk
+
