@@ -1,0 +1,4 @@
+include query_paths.yml
+include swagger/*.yaml
+include app/static/*
+include app/templates/*
