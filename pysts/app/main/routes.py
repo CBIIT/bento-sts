@@ -14,7 +14,7 @@ from flask import (
     abort,
 )
 from flask_paginate import Pagination, get_page_parameter
-from app import db, logging
+from app import logging
 from app.main.forms import SearchForm, SelectModelForm
 # import app.search
 from app.main import bp

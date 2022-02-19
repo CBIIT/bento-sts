@@ -1,13 +1,15 @@
 import os
+import config_pysts
 from dotenv import load_dotenv
 import yaml
+from importlib_resources import files, as_file
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, ".env"))
-qp = yaml.load(
-    open('/'.join([basedir,"query_paths.yml"]),"r"),
-    Loader=yaml.CLoader
-    )
+src = files(config_pysts).joinpath(".env")
+with as_file(src) as envf:
+    load_dotenv(envf)
+src = files(config_pysts).joinpath("query_paths.yml")
+with src.open('r') as fh:
+    qp = yaml.load(fh, Loader=yaml.CLoader)
 
 class Config(object):
     SECRET_KEY = os.environ.get("SECRET_KEY") or "supposedly-random-passphrase"
@@ -16,8 +18,6 @@ class Config(object):
     NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
     LANGUAGES = ["en"]
     MODEL_LIST = [] # set by MDB query in __init__
-    MS_TRANSLATOR_KEY = os.environ.get("MS_TRANSLATOR_KEY")
-    ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
     HITS_PER_PAGE = 25
     MAX_ENTS_PER_REQ = 500
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024
@@ -26,4 +26,4 @@ class Config(object):
     EDITING_FORMS = False
     QUERY_PATHS = qp
     WTF_CSRF_CHECK_DEFAULT = False
-pass
+

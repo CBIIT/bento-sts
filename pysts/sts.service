@@ -1,0 +1,24 @@
+[Unit]
+Description=Simple Terminology Server
+After=nginx.service
+
+
+[Service]
+Type=forking
+User=www-data
+WorkingDirectory=/app/bento-sts/pysts
+EnvironmentFile=/app/bento-sts/pysts/pysts.env
+PassEnvironment=PYTHONPATH
+PassEnvironment=NEO4J_MDB_URI
+PassEnvironment=NEO4J_MDB_USER
+PassEnvironment=NEO4J_MDB_PASS
+RemainAfterExit=True
+ExecStartPre= 
+ExecStart=/usr/local/bin/gunicorn --config=/app/bento-sts/pysts/guniconf.py --daemon app:app
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+PIDFile=/var/www/run/sts.pid
+
+
+[Install]
+WantedBy=multi-user.target
