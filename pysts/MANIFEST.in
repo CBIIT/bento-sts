@@ -1,5 +1,8 @@
 include *.py
+include pysts.env.eg
+include sts.service
 include tests/*
+include nginx/*
 include pytest.ini
 include swagger/*.yaml
 include app/*.py
