@@ -1,9 +1,9 @@
 bind = "127.0.0.1:8000"
 pidfile = "/var/www/run/sts.pid"
-#certfile = "/var/www/prv/fullchain.pem"
-#keyfile = "/var/www/prv/privkey.pem"
 errorlog = "/var/www/log/sts.log"
 accesslog = "/var/www/log/access-sts.log"
 loglevel = "info"
-#ca_certs = "/etc/ssl/certs/ca-certificates.crt"
 workers = 2
+#certfile = "/var/www/prv/fullchain.pem"
+#keyfile = "/var/www/prv/privkey.pem"
+#ca_certs = "/etc/ssl/certs/ca-certificates.crt"

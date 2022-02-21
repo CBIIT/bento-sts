@@ -14,7 +14,7 @@ PassEnvironment=NEO4J_MDB_USER
 PassEnvironment=NEO4J_MDB_PASS
 RemainAfterExit=True
 ExecStartPre= 
-ExecStart=/usr/local/bin/gunicorn --config=/app/bento-sts/pysts/guniconf.py --daemon app:app
+ExecStart=/usr/local/bin/gunicorn --config=guniconf.py --daemon app:app
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 PIDFile=/var/www/run/sts.pid
