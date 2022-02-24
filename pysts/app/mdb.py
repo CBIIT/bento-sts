@@ -271,7 +271,7 @@ could be used here for write and tag functionality."""
     def get_tagged_entities(self, tag_key, tag_value=None, model=None):
         ents_by_tag = self.mdb.get_entities_by_tag(tag_key, tag_value, model)
         for i in range(0, len(ents_by_tag)):
-            ents_by_tag[i]['plural'] = plural[ents_by_tag[ents_by_tag[i]['entity']]]
+            ents_by_tag[i]['plural'] = plural[ents_by_tag[i]['entity']]
         return ents_by_tag
 
     def get_tags_and_values(self):
