@@ -45,7 +45,7 @@
 	  <td class="px-2">{{item.tag_key}}</td>
 	  <td class="px-2">{{item.tag_value}}</td>
 	  <td class="px-2">{{item.entity}}</td>
-	  <td class="px-2"><a href={{ url_for('main.entities', entities=[item.entity,'s']|join(''), id=ent.nanoid)}}>{{ ent.handle }}</a></td>
+	  <td class="px-2"><a href={{ url_for('main.entities', entities=[item.plural]|join(''), id=ent.nanoid)}}>{{ ent.handle }}</a></td>
 	  <td class="px-2"><a href={{ url_for('main.models', name=ent.model)}}>{{ ent.model }}</a></td>
 	  </tr>
 	{% endfor %}

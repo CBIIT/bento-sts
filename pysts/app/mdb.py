@@ -5,6 +5,18 @@ from bento_meta.model import Model
 from bento_meta.object_map import ObjectMap
 
 
+plural = {
+    "node": "nodes",
+    "edge": "edges",
+    "relationship": "relationships",
+    "property": "properties",
+    "tag": "tags",
+    "origin": "origins",
+    "predicate": "predicates",
+    "value_set": "value_sets",
+    "term": "terms",
+    }
+
 class mdb():
     """Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
 could be used here for write and tag functionality."""
@@ -258,6 +270,8 @@ could be used here for write and tag functionality."""
     
     def get_tagged_entities(self, tag_key, tag_value=None, model=None):
         ents_by_tag = self.mdb.get_entities_by_tag(tag_key, tag_value, model)
+        for i in range(0, len(ents_by_tag)):
+            ents_by_tag[i]['plural'] = plural[ents_by_tag[ents_by_tag[i]['entity']]]
         return ents_by_tag
 
     def get_tags_and_values(self):
