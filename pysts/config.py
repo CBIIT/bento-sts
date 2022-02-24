@@ -16,6 +16,7 @@ class Config(object):
     NEO4J_MDB_URI = os.environ.get("NEO4J_MDB_URI")
     NEO4J_MDB_USER = os.environ.get("NEO4J_MDB_USER")
     NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
+    FLASK_LOGFILE = os.environ.get("PYSTS_LOGFILE") or "logs/pysts.log"
     LANGUAGES = ["en"]
     MODEL_LIST = [] # set by MDB query in __init__
     HITS_PER_PAGE = 25

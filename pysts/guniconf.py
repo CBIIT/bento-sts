@@ -1,6 +1,6 @@
 bind = "127.0.0.1:8000"
 pidfile = "/var/www/run/sts.pid"
-errorlog = "/var/www/log/sts.log"
+errorlog = "/var/www/log/error-sts.log"
 accesslog = "/var/www/log/access-sts.log"
 loglevel = "info"
 workers = 2

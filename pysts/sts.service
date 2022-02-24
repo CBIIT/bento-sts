@@ -12,9 +12,10 @@ PassEnvironment=PYTHONPATH
 PassEnvironment=NEO4J_MDB_URI
 PassEnvironment=NEO4J_MDB_USER
 PassEnvironment=NEO4J_MDB_PASS
+PassEnvironment=PYSTS_LOGFILE
 RemainAfterExit=True
 ExecStartPre= 
-ExecStart=/usr/local/bin/gunicorn --config=guniconf.py --daemon app:app
+ExecStart=/usr/local/bin/gunicorn --config=guniconf.py --daemon pysts:app
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 PIDFile=/var/www/run/sts.pid
