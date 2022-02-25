@@ -1,6 +1,0 @@
-# gitignore
-local
-vendor
-aws.ini
-RUN-README.md
-script/hypnotoad.pid

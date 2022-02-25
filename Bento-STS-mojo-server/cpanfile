@@ -1,4 +1,0 @@
-requires 'Mojolicious';
-requires 'Neo4j::Bolt';
-requires 'IPC::Run';
-requires 'Neo4j::Client';
