@@ -1,5 +1,5 @@
 alembic==0.9.6
-Babel==2.5.1
+Babel==2.9.1
 blinker==1.4
 bento_meta>=0.0.32
 Bootstrap-Flask==1.5.2
