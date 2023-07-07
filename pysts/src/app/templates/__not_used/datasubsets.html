@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h1> Data Subsets</h1>
+    <br>
+   
+    <div class="container">
+        <form action="{{ url_for('datasubsets.datasubsets') }}" method="POST">
+            {{ form.hidden_tag() }}  
+            {{ form.csrf_token() }} 
+        
+            <div class="row style="margin:20px; padding:20x">
+                <div class="col-lg-6">
+                    <div class="row">
+                        {{ render_field(form.datasubsets) }}
+                    </div>
+                    <div class="row">
+                        {{ render_field( form.submit) }}
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                            {{ render_field( form.exportcsv , button_style="btn btn-outline-primary",  button_size="sm" ) }}
+                </div>
+
+            </div> <!-- endrow-->
+        </form>
+    </div>       
+    
+    <br>
+    <br>
+
+    <div class="container-fluid">
+    {% if formatted_dataset %}
+            <table class="table table-striped">
+                <tr>
+                    <th>Node</th>
+                    <th>Node Id</th>
+                    <th>Property</th>
+                    <th>Property Id</th>
+                    <th>Value Domain</th>
+                    <th>Required</th>
+                    <th>Units</th>
+                    <th>Description</th>
+                    <th>Instructions</th>
+                    <th>Internal Comments</th>
+                    <th>Example</th>
+                </tr>
+                {% for row in formatted_dataset %}
+                    <tr>
+                        <td> <a href="{{url_for('main.nodes', id=row[1] ) }}">{{ row[0] }}</a> </td>
+                        <td> {{ row[1] }}</td>
+                        <td> <a href="{{url_for('main.properties', id=row[3] ) }}">{{ row[2] }}</a> </td>
+                        <td> {{row[3]}} </td>
+                        
+                        <td> 
+                            {% if row[6] %}
+                                {% if row[6] == 'value_set' %}
+                                    <a href="{{url_for('main.valuesets', id=row[7] ) }}">{{ row[6] }} ({{ row[7] }})</a>
+                                {% else %}
+                                    {{ row[6] }}
+                                {% endif %}
+                            {% else %}    
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+
+                        <td> <!-- required -->
+                            {% if row[8] %}
+                                {{ row[8] }}
+                            {% else %}
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+
+                        <td> <!-- units -->
+                            {% if row[9] %}
+                                {{ row[9] }}
+                            {% else %}
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+
+                        <td> <!-- description -->
+                            {% if row[10] %}
+                                {{ row[10] }}
+                            {% else %}
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+
+                        <td> <!-- instructions -->
+                            {% if row[11] %}
+                                {{ row[11] }}
+                            {% else %}
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+                        <td> <!-- internal comments -->
+                            {% if row[12] %}
+                                {{ row[12] }}
+                            {% else %}
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+
+                        <td> <!-- example -->
+                            {% if row[13] %}
+                                {{ row[13] }}
+                            {% else %}
+                                <p class="text-muted"><em>...</em></p>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </table>
+
+            <br><br>
+
+
+    {% else %}
+        No tags were found
+    {% endif %}
+    </div>
+{% endblock %}

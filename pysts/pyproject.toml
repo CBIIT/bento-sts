@@ -1,3 +1,82 @@
+[project]
+name = "pysts"
+version = "0.0.1"
+author = "Mark Benson"
+author_email = "mark.benson@nih.gov"
+maintainer = "Mark A. Jensen"
+maintainer_email = "mark.jensen@nih.gov"
+description = "Bento Simple Terminology Server"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache License"
+]
+[project.urls]
+"Homepage" = "https://github.com/CBIIT/bento-sts"
+"Bug Tracker" = "https:/github.com/CBIIT/bento-sts/issues"
+
+
+#[options]
+#    package_dir =
+#        = app
+#    packages = find:
+
+[tool.poetry]
+name = "bento-sts"
+version = "0.0.1"
+description = "Bento Simple Terminology Server"
+authors = [
+	"Mark Benson <mark.benson@nih.gov>",
+	"Mark A. Jensen <mark.jensen@nih.gov>"
+]
+license = "Apache 2.0"
+readme = "README.md"
+include = ["swagger", "nginx","config_pysts"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+bento-meta = ">=0.0.32"
+importlib_resources = ">=5.4.0"
+Flask-WTF =  ">=0.14.3"
+Bootstrap-Flask =  ">=1.5.2"
+Flask-Moment =  ">=0.5.2"
+Flask-Paginate = ">=2021.10.29"
+guess-language-spirit =  ">=0.5.3"
+gunicorn = ">=20.1.0"
+idna = ">=2.6"
+itsdangerous = ">=0.24"
+Jinja2 = ">=2.11.3"
+MarkupSafe = ">=1.1.1"
+neo4j = ">=4.1"
+python-dateutil =  ">=2.6.1"
+python-dotenv = ">=0.15.0"
+python-editor = ">=1.0.3"
+pytz = ">=2017.2"
+PyYAML = ">=5.4.1"
+requests = ">=2.20.0"
+six = ">=1.15.0"
+urllib3 = ">=1.26.5"
+visitor = ">=0.1.3"
+Werkzeug = ">=1.0.1"
+WTForms = ">=2.1"
+WTForms-Components = ">=0.10.5"
+
+#[options.packages.find]
+#where = app
+
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.semantic_release]
+version_variable = "pyproject.toml:version"
+branch = "master"
+changelog_file = "CHANGELOG.md"
+build_command = "poetry build"
+dist_path = "dist/"
+upload_to_release = true
+upload_to_pypi = false
+remove_dist = false
+patch_without_tag = true
+major_on_zero = false # while major version on 0.y.z, won't bump to 1.0.0
+version_source = "tag" # temp?
