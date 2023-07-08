@@ -1,6 +1,6 @@
 [project]
-name = "pysts"
-version = "0.0.1"
+name = "bento-sts"
+version = "0.1.0"
 author = "Mark Benson"
 author_email = "mark.benson@nih.gov"
 maintainer = "Mark A. Jensen"
@@ -31,7 +31,7 @@ authors = [
 ]
 license = "Apache 2.0"
 readme = "README.md"
-include = ["swagger", "nginx","config_pysts","sysd"]
+include = ["swagger", "nginx","config_sts","sysd"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"

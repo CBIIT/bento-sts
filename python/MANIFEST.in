@@ -1,5 +1,5 @@
 include *.py
-include pysts.env.eg
+include sts.env.eg
 include sts.service
 include tests/*
 include nginx/*

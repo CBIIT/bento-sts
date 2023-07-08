@@ -1,4 +1,4 @@
-# Welcome to pysts
+# Welcome to bento-sts
 
 This is a flask-based implementation of the Simple Terminology Service (STS) for the Bento Metadatabase (MDB).
 

@@ -1,14 +1,14 @@
 import os
-import config_pysts
+import config_sts
 from dotenv import load_dotenv
 import yaml
 from importlib_resources import files, as_file
 
 # set up - create .env with secrets NEO4J_MDB_... in config_pysts folder
-src = files(config_pysts).joinpath(".env")
+src = files(config_sts).joinpath(".env")
 with as_file(src) as envf:
     load_dotenv(envf)
-src = files(config_pysts).joinpath("query_paths.yml")
+src = files(config_sts).joinpath("query_paths.yml")
 with src.open('r') as fh:
     qp = yaml.load(fh, Loader=yaml.CLoader)
 

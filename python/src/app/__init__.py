@@ -55,6 +55,6 @@ def create_app(config_class=Config):
         app.logger.addHandler(file_handler)
 
         app.logger.setLevel(logging.DEBUG)
-        app.logger.info("pySTS startup")
+        app.logger.info("STS startup")
 
     return app
