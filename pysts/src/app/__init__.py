@@ -3,12 +3,12 @@ from logging.handlers import RotatingFileHandler
 import os
 from bento_meta.mdb import MDB
 from flask import Flask, request, current_app
-from flask_bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap4
 from flask_moment import Moment
 from flask_wtf.csrf import CSRFProtect
 from config import Config
 
-bootstrap = Bootstrap()
+bootstrap = Bootstrap4()
 moment = Moment()
 csrf = CSRFProtect()
 

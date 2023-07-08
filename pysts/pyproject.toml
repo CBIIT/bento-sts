@@ -31,7 +31,7 @@ authors = [
 ]
 license = "Apache 2.0"
 readme = "README.md"
-include = ["swagger", "nginx","config_pysts"]
+include = ["swagger", "nginx","config_pysts","sysd"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
