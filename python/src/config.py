@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import yaml
 from importlib_resources import files, as_file
 
+# set up - create .env with secrets NEO4J_MDB_... in config_pysts folder
 src = files(config_pysts).joinpath(".env")
 with as_file(src) as envf:
     load_dotenv(envf)
