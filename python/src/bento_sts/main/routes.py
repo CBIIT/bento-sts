@@ -1,5 +1,5 @@
-# route.py
-
+import sys
+print("main routes", file=sys.stderr)
 import re
 from flask import (
     render_template,
@@ -14,13 +14,14 @@ from flask import (
     abort,
 )
 from flask_paginate import Pagination, get_page_parameter
-from app import logging
-from app.main.forms import SearchForm, SelectModelForm
+from .forms import SearchForm, SelectModelForm
 # import app.search
-from app.main import bp
-from app.util import get_yaml_for
-from app.mdb import mdb
+from . import bp
+from ..util import get_yaml_for
+from ..mdb import mdb
 # from app.arc import diff_mdf
+
+
 
 @bp.before_app_request
 def before_request():

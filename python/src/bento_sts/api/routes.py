@@ -13,10 +13,9 @@ from flask import (
     abort,
 )
 from werkzeug.exceptions import HTTPException
-from app import logging
-from app.mdb import mdb
-from app.api import bp
-sys.path.insert(0,"/Users/jensenma/Code/bento-meta/python")  # noqa E231
+from . import bp
+from ..mdb import mdb
+# sys.path.insert(0,"/Users/jensenma/Code/bento-meta/python")  # noqa E231
 
 from bento_meta.util.makeq import Query
 
