@@ -8,7 +8,7 @@ from flask_moment import Moment
 from flask_wtf.csrf import CSRFProtect
 from bento_sts.config import Config
 
-bootstrap = Bootstrap4()
+bootstrap4 = Bootstrap4()
 moment = Moment()
 csrf = CSRFProtect()
 load_dotenv(".env")
@@ -29,7 +29,7 @@ def create_app(config_class=Config):
     app.config['MODEL_LIST'] = [x["m"] for x in mdb.get_model_nodes()]
     app.config['MODEL_LIST'].insert(0,{"handle":"All"})
 
-    bootstrap.init_app(app)
+    bootstrap4.init_app(app)
     moment.init_app(app)
     csrf.init_app(app)
 

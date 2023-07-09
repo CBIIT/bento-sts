@@ -1,4 +1,5 @@
 bind = "127.0.0.1:8000"
+wsgi_app = "bento_sts.sts:create_app()"
 pidfile = "sts.pid"
 errorlog = "error-sts.log"
 accesslog = "access-sts.log"

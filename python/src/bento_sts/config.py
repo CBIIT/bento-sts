@@ -1,22 +1,18 @@
 import os
 from bento_sts import config_sts
 import yaml
-from importlib_resources import files, as_file
-
-# set up - create .env with secrets NEO4J_MDB_... in config_pysts folder
-# src = files(config_sts).joinpath(".env")
-# with as_file(src) as envf:
-#     load_dotenv(envf)
+from importlib_resources import files
 
 src = files(config_sts).joinpath("query_paths.yml")
 with src.open('r') as fh:
     qp = yaml.load(fh, Loader=yaml.CLoader)
+
 class Config(object):
     SECRET_KEY = os.environ.get("SECRET_KEY") or "supposedly-random-passphrase"
     NEO4J_MDB_URI = os.environ.get("NEO4J_MDB_URI")
     NEO4J_MDB_USER = os.environ.get("NEO4J_MDB_USER")
     NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
-    FLASK_LOGFILE = os.environ.get("PYSTS_LOGFILE") or "sts.log"
+    FLASK_LOGFILE = os.environ.get("STS_LOGFILE") or "sts.log"
     LANGUAGES = ["en"]
     MODEL_LIST = [] # set by MDB query in sts.py
     HITS_PER_PAGE = 25

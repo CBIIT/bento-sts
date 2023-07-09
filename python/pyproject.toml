@@ -31,11 +31,7 @@ authors = [
 ]
 license = "Apache 2.0"
 readme = "README.md"
-exclude = ["src/app/__not_used/*","src/app/*/__not_used/*"]
 include = ["swagger", "nginx","sysd"]
-
-[tool.poetry.scripts]
-sts = "bento_sts.sts:create_app"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
