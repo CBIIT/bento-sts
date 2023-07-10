@@ -198,7 +198,7 @@ could be used here for write and tag functionality."""
         t_result = self.mdb.get_props_and_terms_by_model(model)
         result = []
         for p in t_result:
-            result.extend([{"id": x["nanoid"], "value": x["value"],
+            result.extend([{"id": x["nanoid"], "value": x["value"] if "value" in x else None,
                             "property": p["prop"]["handle"],
                             "model": p["prop"]["model"],
                             "propid": p["prop"]["nanoid"]}
