@@ -27,7 +27,7 @@ version = "0.1.0"
 description = "Bento Simple Terminology Server"
 authors = [
 	"Mark Benson <mark.benson@nih.gov>",
-	"Mark A. Jensen <mark.jensen@nih.gov>"
+	"Mark A. Jensen <mark.jensen@nih.gov>",
 ]
 license = "Apache 2.0"
 readme = "README.md"
