@@ -274,8 +274,9 @@ def search():
     if thing == "terms":
         pg_tot = len(ents)
     elif thing == "models":
-        pg_tot = max(len(ents["nodes"]), len(ents["properties"]),
-                     len(ents["relationships"]))
+        if ents:
+            pg_tot = max(len(ents["nodes"]), len(ents["properties"]),
+                         len(ents["relationships"]))
     else:
         pass
     pagination = Pagination(

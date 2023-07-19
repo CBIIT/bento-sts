@@ -77,25 +77,26 @@ could be used here for write and tag functionality."""
         if (edges_result):
             for e in edges_result:
                 node = e["far_node"]
-                rln = e["rln"]
-                add_to = None
-                if e["far_type"] == "has_src":
-                    add_to = from_nodes
-                elif e["far_type"] == "has_dst":
-                    add_to = to_nodes
-                else:
-                    RuntimeError("What?")
-                add_to[node["nanoid"]] = {
-                    "id": node["nanoid"],
-                    "handle": node["handle"],
-                    "link": url_for("main.entities", entities='nodes',
-                                    id=node["nanoid"]),
-                    "type": "node",
-                    "relationship": {
-                        "id": rln["nanoid"],
-                        "handle": rln["handle"],
-                        "link": "/relationships/{}".format(rln["nanoid"]),
-                        "type": "relationship"
+                if (node):
+                    rln = e["rln"]
+                    add_to = None
+                    if e["far_type"] == "has_src":
+                        add_to = from_nodes
+                    elif e["far_type"] == "has_dst":
+                        add_to = to_nodes
+                    else:
+                        RuntimeError("What?")
+                    add_to[node["nanoid"]] = {
+                        "id": node["nanoid"],
+                        "handle": node["handle"],
+                        "link": url_for("main.entities", entities='nodes',
+                                        id=node["nanoid"]),
+                        "type": "node",
+                        "relationship": {
+                            "id": rln["nanoid"],
+                            "handle": rln["handle"],
+                            "link": "/relationships/{}".format(rln["nanoid"]),
+                            "type": "relationship"
                         }
                     }
             result["has_relationship_to_nodes"].extend(to_nodes.values())

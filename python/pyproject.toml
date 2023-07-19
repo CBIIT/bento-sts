@@ -1,6 +1,6 @@
 [project]
 name = "bento-sts"
-version = "0.1.0"
+version = "0.1.1"
 author = "Mark Benson"
 author_email = "mark.benson@nih.gov"
 maintainer = "Mark A. Jensen"
@@ -23,7 +23,7 @@ classifiers = [
 
 [tool.poetry]
 name = "bento-sts"
-version = "0.1.0"
+version = "0.1.1"
 description = "Bento Simple Terminology Server"
 authors = [
 	"Mark Benson <mark.benson@nih.gov>",
@@ -31,7 +31,7 @@ authors = [
 ]
 license = "Apache 2.0"
 readme = "README.md"
-include = ["swagger", "nginx","sysd"]
+include = ["swagger"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"

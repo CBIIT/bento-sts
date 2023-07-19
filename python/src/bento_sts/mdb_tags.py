@@ -20,14 +20,14 @@ based on them."""
                 MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
                 WHERE n._to IS NULL 
                 AND   p._to IS NULL
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
+                RETURN distinct n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
         query_against_specific_model = """
                 MATCH (n:node) -[:has_property]->(p:property)-[:has_tag]->(t:tag)
                 WHERE n._to IS NULL 
                 AND   p._to IS NULL
                 WHERE toLower(n.model) = toLower($model)
-                RETURN n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
+                RETURN distinct n.handle, n.nanoid, p.handle, p.nanoid, t.key, t.value;
                 """
 
         db_records = None
