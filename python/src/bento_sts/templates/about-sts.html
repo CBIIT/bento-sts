@@ -1,43 +1,29 @@
-{% extends "base.html" %}
-{% from 'bootstrap4/form.html' import render_form, render_field %}
+<h4>Simple Terminology Service (STS)</h4>
 
-
-{% block app_content %}
-    <br>
-
-    <h2> Filtering </h2>
-    Use url parameter <code> ?model= </code> to filter on model.
-
-    <p>
-    For example: <code> https://metabento.com/nodes?model=ICDC </code>
-
-    <br>
-    <br>
-
-    <h2> JSON </h2>
-    Use url parameter <code> ?format=json </code> to get JSON-formatted output.
-
-    <p>
-    For example: <code> https://metabento.com/valuesets/EapU3g?format=json </code>
-
-    <br>
-    <br>
-    
-    <h2> ID </h2>
-    Individual entities (nodes, properties, and terms) are identified by their Id either in the URL path or as parameter (as a query string)
-    <br>
-    <ul>
-        <li> In the URL path: <code> /terms/&lt;termid&gt; </code> </li>
-        <li>As a query parameter: <code> /terms?id=termid </code></li>
-    </ul>
-
-    <p>
-    For example: 
-    <ul>
-        <li> <code> https://metabento.com/valuesets/EapU3g </code> </li>
-        <li> <code> https://metabento.com/valuesets?id=EapU3g </code> </li>
-    </ul>    
-
-
-
-{% endblock %}
+The STS is a front-end for browsing and using data model information stored in a Metamodel Database (MDB). Models are represented as <a href="https://en.wikipedia.org/wiki/Graph_database#Labeled-property_graph">labeled property graphs</a>, having:
+<ul>
+  <li>Nodes (logical data groupings, similar to table rows),</li>
+  <li>Relationships (logical associations between Nodes, similar to foreign key relationships between tables),</li>
+  <li>Properties (data "slots" or "variables", similar to cells in a table column), along with</li>
+  <li>Terms, which represent acceptable values and can be used across any Model.</li>
+</ul>
+Every entity in the database is accessible by an immutable ID, which is given in most detail views. An entity's metadata can be retrieved in JSON format via the API using this ID:
+<pre>
+  https://sts.ctos-data-team.org/v1/id/&lt;entity id&gt;
+</pre>
+A complete REST API is available and documented <a href="">in Swagger</a>.
+<br>
+<em>Features</em>:
+<ul>
+  <li>Fulltext searching of Model entities or Terms is available using the search box at the top right.</li>
+<li><em>Models</em> present in the database are listed under the "Models" tab.</li>
+<li><em>Nodes</em> in Models are listed under the "Nodes" tab. Filter Node lists to specific Models with the righthand dropdown.
+<br>	   
+Individual Node information is found by clicking the Node name. Relationships in which a Node participates are listed in this detail view.</li>
+<li><em>Properties</em> or data slots can are listed under the "Properties" tab, and may be filtered according to individual Models.
+<br>
+Individual Property information is found by clicking the Property name. The Property detail view will present either the data type or the valid value set of Terms for the Property.</li>
+<li><em>Terms</em> are listed under the "Terms" tab, along with the Properties for which each Term is a valid value.
+<br>
+Individual Term information is found by clicking the Term name. The Term detail view will present the term authority or Origin information (including definition and Origin ID) if present in the database.</li>
+</ul>

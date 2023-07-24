@@ -32,22 +32,6 @@
       </div>
 
 <div class="col-6">
-      <br>
-      <h4> About </h4>
-      <ul class="pager">
-        <li class="aboutmdb">
-         <a href="{{ url_for( 'main.about_mdb') }}">About MDB</a>
-        </li>
-        <li>
-         <a href="{{ url_for( 'main.about_sts') }}">About STS</a> and how to filter
-        </li>
-       </ul> 
-
-   <br>
-   <h4> Reports and Version History</h4>
-   <ul class="pager">
-      </ul>     
-
    <br>
    <h4> External Resources</h4>
    <ul class="pager">
@@ -68,5 +52,22 @@
    </div>
 
 </div>
+</div>
+
+<ul class="nav nav-tabs" id="aboutTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="about-sts-tab" data-toggle="tab" href="#about_sts" role="tab" aria-controls="home" aria-selected="true">About STS</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="about-mdb-tab" data-toggle="tab" href="#about_mdb" role="tab" aria-controls="profile" aria-selected="false">About MDB</a>
+  </li>
+</ul>
+<div class="tab-content" id="aboutTabContent" style="overflow: scroll; height: 250px">
+  <div class="tab-pane fade show active" id="about_sts" role="tabpanel" aria-labelledby="about-sts-tab">
+    {% include 'about-sts.html' %}
+  </div>
+  <div class="tab-pane fade" id="about_mdb" role="tabpanel" aria-labelledby="about-mdb-tab">
+    {% include 'about-mdb.html' %}
+  </div>
 </div>
 {% endblock %}

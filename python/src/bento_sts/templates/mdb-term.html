@@ -18,10 +18,15 @@
        </tr>
          <tr>
              <th> Id </th> <td>{{mdb.id}} </td>
-        </tr>
+         </tr>
+     {% if mdb.has_origin  %}	 
+	 <tr>
+	   <th> Origin </th> <td><a href="{{mdb.has_origin.link}}">{{mdb.origin_name}}</a></td>
+	 </tr>
        <tr>
         <th> Origin Id </th> <td>{{mdb.origin_id}} </td>
-   </tr>
+       </tr>
+     {% endif %}
    <tr>
        <th> Origin Definition </th> <td>{{mdb.origin_definition}} </td>
   </tr>
@@ -31,25 +36,5 @@
 {% block edit_functions %}
 {% endblock edit_functions %}
     <br><br>
-    <div>
-        {% if mdb.has_origin %}
-        <h3> Origin  </h3>
-        <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
-
-            <table  class="table-striped">
-                <tr> <th style="width:300px"> Origin Name  </th>  
-		<td style="width:300px">
-		  <a href="{{url_for( 'main.entities', entities='origins',id=mdb.has_origin.id ) }}"> {{ mdb.has_origin.name }}</a> </td>
-                </tr>
-                <tr> 
-                    <th>  Id </th>  
-                    <td> {{ mdb.has_origin.id }} </td>
-                </tr>
-            </table>
-            <br>
-            </div>
-        {% endif %}
-    </div>
-
     {% endif %}
 {% endblock %}
