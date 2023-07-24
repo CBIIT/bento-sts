@@ -1,6 +1,6 @@
 [project]
 name = "bento-sts"
-version = "0.1.2"
+version = "0.1.3"
 authors = [
 { name="Mark Benson", email="mark.benson@nih.gov"},
 { name="Mark A. Jensen", email="mark.jensen@nih.gov"},
@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry]
 name = "bento-sts"
-version = "0.1.2"
+version = "0.1.3"
 description = "Bento Simple Terminology Server"
 authors = [
 	"Mark Benson <mark.benson@nih.gov>",
@@ -27,7 +27,11 @@ authors = [
 ]
 license = "Apache 2.0"
 readme = "README.md"
-include = ["swagger"]
+packages = [
+	 { include = "bento_sts", from = "src" },
+	 { include = "swagger_server", from = "src" },
+	 ]
+include = ["swagger_server"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
@@ -56,6 +60,12 @@ visitor = ">=0.1.3"
 Werkzeug = ">=1.0.1"
 WTForms = ">=2.1"
 WTForms-Components = ">=0.10.5"
+connexion = {version = ">= 2.6.0", optional = false}
+swagger-ui-bundle = {version = ">=0.0.9", optional = false}
+
+
+#[tool.poetry.extras]
+#swagger = ["connexion", "swagger-ui-bundle"]
 
 [build-system]
 requires = ["poetry-core"]
