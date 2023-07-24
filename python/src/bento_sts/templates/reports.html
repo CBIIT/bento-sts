@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h4> Model Data by Browser</h4>
+    <nav aria-label="...">
+        <ul class="pager">
+      <li class="model">
+         <a href="{{ url_for('main.models') }}"> List Models </a>
+      </li>
+      <li class="nodes">
+         <a href="{{ url_for('main.nodes') }}"> List Nodes </a>
+      </li>
+      <li class="properties">
+         <a href="{{ url_for('main.properties') }}"> List Properties </a>
+      </li>
+      <li class="terms">
+         <a href="{{ url_for('main.terms') }}"> List Terms </a>
+      </li>
+      <li class="origins">
+         <a href="{{ url_for('main.origins') }}"> List Origins </a>
+      </li>
+    </ul>
+    </nav>
+
+
+
+    <br>
+    <div>
+    <h4><a href="{{ url_for( 'main.about_mdb') }}">About MDB</a></h4>
+    <br>
+    <br>
+    <h4><a href="{{ url_for( 'main.about_sts') }}">About STS</a> and how to filter</h4>
+    <br>
+    <br>
+    <h4><a href="{{ url_for( 'main.diff') }}">MDF Diff</a> -- Find the diff between 2 MDF files</h4>
+
+    <br>
+    <br>
+    <h4> Data Subsets</h4>
+    <ul class="pager">
+         <li class="tags">
+               <a href="{{ url_for('datasubsets.tags') }}"> List All Tagged Data</a>
+         </li>
+         <li class="tag-select">
+               <a href="{{ url_for('datasubsets.tagselect') }}"> Select Data Subsets</a>
+         </li>
+         <li class="tag-delta">
+               <a href="{{ url_for('datasubsets.tagdelta') }}"> Edit Data Subsets</a>
+         </li>
+         <li class="tag-export">
+               <a href="{{ url_for('datasubsets.tagexport') }}"> Export Data Plan</a>
+         </li>
+   </ul>
+
+   <br>
+   <br>
+   <h4> Reports and Version History</h4>
+   <ul class="pager">
+      <li class="reports">
+         <a href="{{ url_for('main.reports') }}"> Releases and Data Reports</a>
+      </li>
+        <li class="version-history">
+              <a href="{{ url_for('main.versionhistory') }}"> Version History</a>
+        </li>
+      </ul>     
+
+      <br>
+   <br>
+   <h4> External Resources</h4>
+   <ul class="pager">
+
+      <li class="ncit">
+         <a href="https://ncithesaurus.nci.nih.gov/ncitbrowser/"> NCI Thesaurus</a>
+      </li>
+        <li class="evs">
+              <a href="https://evs.nci.nih.gov/"> NCI EVS</a>
+        </li>
+        <li class="icdc">
+         <a href="https://caninecommons.cancer.gov/#/"> ICDC </a>
+      </li>
+      <li class="umls">
+         <a href="https://www.nlm.nih.gov/research/umls/index.htm"> UMLS</a>
+      </li>
+      </ul>
+
+</div>
+{% endblock %}

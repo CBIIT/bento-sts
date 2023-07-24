@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <nav aria-label="...">
+        <ul class="pager">
+      <li class="model">
+         <a href="{{ url_for('main.models') }}"> List Models </a>
+      </li>
+      <li class="nodes">
+         <a href="{{ url_for('main.nodes') }}"> List Nodes </a>
+      </li>
+      <li class="valuesets">
+         <a href="{{ url_for('main.valuesets') }}"> List Value Sets </a>
+      </li>
+      <li class="terms">
+         <a href="{{ url_for('main.terms') }}"> List Terms </a>
+      </li>
+      <li class="origins">
+         <a href="{{ url_for('main.origins') }}"> List Origins </a>
+      </li>
+    </ul>
+    </nav>
+    <br><br>
+{% endblock %}

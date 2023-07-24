@@ -1,0 +1,12 @@
+include *.py
+include sts.env.eg
+include sts.service
+include tests/*
+include nginx/*
+include pytest.ini
+include swagger/*.yaml
+include app/*.py
+include config_pysts/*
+include app/static/*
+include app/templates/*
+include logs/.gitkeep

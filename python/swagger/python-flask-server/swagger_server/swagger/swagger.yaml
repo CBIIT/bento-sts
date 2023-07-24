@@ -1,0 +1,725 @@
+---
+swagger: "2.0"
+info:
+  description: "The Simple Terminology Server (STS) exposes elements of data models\
+    \ in an intuitive, consistent way. Data models expressed in the form of a [property\
+    \ graph](https://en.wikipedia.org/wiki/Graph_database#Labeled-property_graph)\
+    \ -- i.e., as nodes, relationships, properties, and terms -- can be explored and\
+    \ queried via this interface. Data models are stored in an instance of a [Metamodel\
+    \ Database (MDB)](https://github.com/CBIIT/bento-meta) backed by a [Neo4j](https://neo4j.com)\
+    \ server."
+  version: "1.0.0"
+  title: "Simple Terminology Server API"
+  contact:
+    email: "mark.jensen@nih.gov"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "sts.ctos-data-team.org"
+basePath: "/v1"
+tags:
+- name: "models"
+  description: "Available models\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
+- name: "model"
+  description: "Nodes, properties, and value sets of terms for a specific model\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
+- name: "tags"
+  description: "Metainformation in MDB tags\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
+- name: "tag"
+  description: "Tag values and tagged entity retrieval\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
+- name: "term"
+  description: "Term entities by their string representation (a.k.a. 'value')\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
+- name: "id"
+  description: "Retrieve a single entity by its nanoid\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
+schemes:
+- "https"
+paths:
+  /models:
+    get:
+      tags:
+      - "models"
+      summary: "Get info on available models"
+      operationId: "models_get"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "success"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Model"
+      x-swagger-router-controller: "swagger_server.controllers.models_controller"
+  /models/count:
+    get:
+      tags:
+      - "models"
+      summary: "Get number of available models"
+      operationId: "models_count_get"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "Count of models"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+      x-swagger-router-controller: "swagger_server.controllers.models_controller"
+  /model/{modelHandle}/nodes:
+    get:
+      tags:
+      - "model"
+      summary: "Get all nodes for specified model"
+      operationId: "model_model_handle_nodes_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "skip"
+        in: "query"
+        description: "Pagination - number of items to skip\n"
+        required: false
+        type: "integer"
+      - name: "limit"
+        in: "query"
+        description: "Pagination - number of items to return\n"
+        required: false
+        type: "integer"
+      responses:
+        "200":
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+              nodes:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Node"
+        "404":
+          description: "Model not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/nodes/count:
+    get:
+      tags:
+      - "model"
+      summary: "Get number of nodes for specified model"
+      operationId: "model_model_handle_nodes_count_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Count of nodes"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+        "404":
+          description: "Model not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}:
+    get:
+      tags:
+      - "model"
+      summary: "Retrieve a specified node from a model"
+      operationId: "model_model_handle_node_node_handle_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Requested node"
+          schema:
+            $ref: "#/definitions/Node"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}/properties:
+    get:
+      tags:
+      - "model"
+      summary: "Get all properties for specified node"
+      operationId: "model_model_handle_node_node_handle_properties_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      - name: "skip"
+        in: "query"
+        description: "Pagination - number of items to skip\n"
+        required: false
+        type: "integer"
+      - name: "limit"
+        in: "query"
+        description: "Pagination - number of items to return\n"
+        required: false
+        type: "integer"
+      responses:
+        "200":
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+              properties:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Property"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}/properties/count:
+    get:
+      tags:
+      - "model"
+      summary: "Get number of  properties for specified node"
+      operationId: "model_model_handle_node_node_handle_properties_count_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Count of properties for node"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}:
+    get:
+      tags:
+      - "model"
+      summary: "Retrieve a specified property from a model"
+      operationId: "model_model_handle_node_node_handle_property_prop_handle_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      - name: "propHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+          to find available properties\n"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Requested property"
+          schema:
+            $ref: "#/definitions/Property"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms:
+    get:
+      tags:
+      - "model"
+      summary: "Get the terms (acceptable values) for specified property,\nif applicable\
+        \ to property\n"
+      operationId: "model_model_handle_node_node_handle_property_prop_handle_terms_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      - name: "propHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+          to find available properties\n"
+        required: true
+        type: "string"
+      - name: "skip"
+        in: "query"
+        description: "Pagination - number of items to skip\n"
+        required: false
+        type: "integer"
+      - name: "limit"
+        in: "query"
+        description: "Pagination - number of items to return\n"
+        required: false
+        type: "integer"
+      responses:
+        "200":
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+              terms:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Term"
+        "204":
+          description: "Property exists, but does not use an acceptable value set.\n\
+            (No Content)\n"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms/count:
+    get:
+      tags:
+      - "model"
+      summary: "Get number of  properties for specified node"
+      operationId: "model_model_handle_node_node_handle_property_prop_handle_terms_count_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      - name: "propHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+          to find available properties\n"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Count of terms in property\\'s acceptable value set\n"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+        "204":
+          description: "Property exists, but does not use an acceptable value set.\n\
+            (No Content)\n"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/term/{termValue}:
+    get:
+      tags:
+      - "model"
+      summary: "Retrieve a specified term from a property\\'s acceptable value set\n"
+      operationId: "model_model_handle_node_node_handle_property_prop_handle_term_term_value_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "modelHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of model (use /models to find available\
+          \ handles)\n"
+        required: true
+        type: "string"
+      - name: "nodeHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+          \ to find\navailable nodes\n"
+        required: true
+        type: "string"
+      - name: "propHandle"
+        in: "path"
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+          to find available properties\n"
+        required: true
+        type: "string"
+      - name: "termValue"
+        in: "path"
+        description: "String representation (\\'value\\') of the term (use\n/model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms\n\
+          to find available terms\n"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Requested term(s)"
+          schema:
+            type: "object"
+            properties:
+              term:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Term"
+        "204":
+          description: "Property exists, but does not use an acceptable value set.\n\
+            (No Content)\n"
+        "404":
+          description: "Item not found"
+      x-swagger-router-controller: "swagger_server.controllers.model_controller"
+  /tags:
+    get:
+      tags:
+      - "tags"
+      summary: "Get all tag nodes in MDB"
+      operationId: "tags_get"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+              tags:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Tag"
+        "404":
+          description: "No tags found"
+      x-swagger-router-controller: "swagger_server.controllers.tags_controller"
+  /tags/count:
+    get:
+      tags:
+      - "tags"
+      summary: "Get number of tags present in MDB"
+      operationId: "tags_count_get"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+        "404":
+          description: "No tags found"
+      x-swagger-router-controller: "swagger_server.controllers.tags_controller"
+  /tag/{key}/values:
+    get:
+      tags:
+      - "tag"
+      summary: "Get list of tags having specified tag key"
+      operationId: "tag_key_values_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "key"
+        in: "path"
+        description: "Tag node key (string)"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "\\<value\\>\\:\\<count of tagged entities\\> for each value\
+            \ under specified key"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+              key:
+                type: "string"
+              values:
+                type: "array"
+                items:
+                  type: "object"
+                  properties: {}
+        "404":
+          description: "No tag with specified key found"
+      x-swagger-router-controller: "swagger_server.controllers.tag_controller"
+  /tag/{key}/{value}/entities:
+    get:
+      tags:
+      - "tag"
+      summary: "Get list of entities tagged by key:value"
+      operationId: "tag_key_value_entities_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "key"
+        in: "path"
+        description: "Tag node key (string)"
+        required: true
+        type: "string"
+      - name: "value"
+        in: "path"
+        description: "Tag node value (string)"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "List of model entities tagged by specified tag"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+              entities:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Entity"
+        "404":
+          description: "No tag with specified key:value found"
+      x-swagger-router-controller: "swagger_server.controllers.tag_controller"
+  /tag/{key}/{value}/entities/count:
+    get:
+      tags:
+      - "tag"
+      summary: "Get number of entities tagged by key:value"
+      operationId: "tag_key_value_entities_count_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "key"
+        in: "path"
+        description: "Tag node key (string)"
+        required: true
+        type: "string"
+      - name: "value"
+        in: "path"
+        description: "Tag node value (string)"
+        required: true
+        type: "string"
+      - name: "skip"
+        in: "query"
+        description: "Pagination - number of items to skip\n"
+        required: false
+        type: "integer"
+      - name: "limit"
+        in: "query"
+        description: "Pagination - number of items to return\n"
+        required: false
+        type: "integer"
+      responses:
+        "200":
+          description: "Count of entities tagged by key:value"
+          schema:
+            type: "object"
+            properties:
+              count:
+                type: "integer"
+        "404":
+          description: "No tag with specified key:value found"
+      x-swagger-router-controller: "swagger_server.controllers.tag_controller"
+  /id/{id}:
+    get:
+      tags:
+      - "id"
+      summary: "Get MDB entity with specified nanoid"
+      operationId: "id_id_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Nanoid (6 character unique string)"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "MDB entity"
+          schema:
+            $ref: "#/definitions/Entity"
+        "404":
+          description: "No entity with specified nanoid"
+      x-swagger-router-controller: "swagger_server.controllers.id_controller"
+definitions:
+  Entity:
+    type: "object"
+    required:
+    - "label"
+    - "nanoid"
+    properties:
+      label:
+        type: "string"
+      nanoid:
+        type: "string"
+    example:
+      nanoid: "nanoid"
+      label: "label"
+  Model:
+    type: "object"
+    required:
+    - "handle"
+    - "nanoid"
+    properties:
+      handle:
+        type: "string"
+      name:
+        type: "string"
+      repository:
+        type: "string"
+      nanoid:
+        type: "string"
+    example:
+      nanoid: "nanoid"
+      name: "name"
+      handle: "handle"
+      repository: "repository"
+  Node:
+    type: "object"
+    required:
+    - "handle"
+    - "model"
+    - "nanoid"
+    properties:
+      handle:
+        type: "string"
+      model:
+        type: "string"
+      nanoid:
+        type: "string"
+    example:
+      nanoid: "nanoid"
+      handle: "handle"
+      model: "model"
+  Property:
+    type: "object"
+    required:
+    - "handle"
+    - "model"
+    - "nanoid"
+    - "value_domain"
+    properties:
+      handle:
+        type: "string"
+      model:
+        type: "string"
+      nanoid:
+        type: "string"
+      is_required:
+        type: "string"
+      value_domain:
+        type: "string"
+      units:
+        type: "string"
+      pattern:
+        type: "string"
+    example:
+      nanoid: "nanoid"
+      value_domain: "value_domain"
+      is_required: "is_required"
+      pattern: "pattern"
+      handle: "handle"
+      model: "model"
+      units: "units"
+  Term:
+    type: "object"
+    required:
+    - "nanoid"
+    - "origin_name"
+    - "value"
+    properties:
+      value:
+        type: "string"
+      origin_name:
+        type: "string"
+      nanoid:
+        type: "string"
+      origin_id:
+        type: "string"
+      origin_definition:
+        type: "string"
+  Tag:
+    type: "object"
+    required:
+    - "key"
+    - "nanoid"
+    - "value"
+    properties:
+      key:
+        type: "string"
+      value:
+        type: "string"
+      nanoid:
+        type: "string"

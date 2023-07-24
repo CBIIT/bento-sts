@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    {% if display == 'list' %}
+
+    <br><br>
+      <table class="table table-striped">
+         <tr>
+	   <th>Handle</th><th>Name</th><th>Repository</th>
+         </tr>
+         {% for item in mdb %}
+	 <tr>
+	   <td>
+	     <a href="{{url_for( subtype, name=item.handle ) }}">{{
+	     item.handle }}</a>
+	   </td>
+	   <td>
+	     {{item.name}}
+	     </a>
+	   </td>
+	   <td>
+	     <a href="{{item.repository}}">repo</a>
+	   </td>
+	   </tr>
+         {% endfor %}
+       </table>
+       <br><br>
+    {% endif %} 
+
+    {% if display == 'detail' %}
+     <div class="float-right">
+       <a href="{{url_for( 'main.entities', entities=subtype, name=mdb.handle, format='yaml' ) }}" class="btn btn-outline-primary btn-sm"> Export Yaml</a>
+     </div>
+     <br>
+     <ul>
+    <li><a href="{{url_for( 'main.entities', entities='nodes', model=mdb.handle ) }}"> Nodes </a></li>
+     <br>
+    <li><a href="{{mdb.repository}}">Model repository</a></li>
+    <ul>
+     <br>
+    <i> Some image or other? </i>
+   {% endif %}
+
+{% endblock %}

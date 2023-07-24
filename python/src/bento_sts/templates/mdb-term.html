@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }}</h1>
+    {% if display == 'detail'  %}
+    <div class="float-right">
+      <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
+    </div>
+    <br><br>
+    <div>
+      <h3> Details </h3>
+      <div id="termDetail" name="termDetail" style="margin:20px; padding:20x">
+      <table class="table-striped">
+         <tr>
+            <th style="width:300px"> Term Value </th> 
+            <td style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.value}} </a>        </td>
+       </tr>
+         <tr>
+             <th> Id </th> <td>{{mdb.id}} </td>
+         </tr>
+     {% if mdb.has_origin  %}	 
+	 <tr>
+	   <th> Origin </th> <td><a href="{{mdb.has_origin.link}}">{{mdb.origin_name}}</a></td>
+	 </tr>
+       <tr>
+        <th> Origin Id </th> <td>{{mdb.origin_id}} </td>
+       </tr>
+     {% endif %}
+   <tr>
+       <th> Origin Definition </th> <td>{{mdb.origin_definition}} </td>
+  </tr>
+      </table>
+      </div>
+    </div>
+{% block edit_functions %}
+{% endblock edit_functions %}
+    <br><br>
+    {% endif %}
+{% endblock %}

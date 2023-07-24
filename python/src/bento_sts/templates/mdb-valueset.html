@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} {{ mdb.handle}} </h1>
+    {% if display == 'detail'  %}
+    <br><br>
+    <div>
+      <h3> Details </h3>
+      <div id="valuesetDetail" name="valuesetDetail" style="margin:20px; padding:20x">
+      <table class="table-striped">
+         <tr>
+            <th style="width:300px"> Handle </th> 
+            <th style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
+       </tr>
+         <tr>
+             <td> Id </td> <td>{{mdb.id}} </td>
+        </tr>
+        <tr>
+            <td> Model </td> <td>{{mdb.model}} </td>
+       </tr>
+       <tr>
+         <td> For Property </td> <td><a href="{{url_for(
+         'main.entities', entities='properties', id=mdb._for_propertyid ) }}"> {{mdb._for_propertyhandle}} </a> </td>
+       </tr>
+      </table>
+      </div>
+    </div>
+
+    <br>    <br>
+
+    <div>
+        {% if mdb.has_terms %}
+        <h3> Terms in Value Set</h3>
+            
+            {% for term_item in mdb.has_terms %}
+            <div id="termList" name="termList" style="margin:20px; padding:20x">
+            <table class="table-striped">
+                <tr> <th style="width:300px"> Term Value  </th>  
+                     <th style="width:300px"> <a href="{{url_for(
+                     'main.entities', entities='terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </th>
+                </tr>
+                <tr> 
+                    <td> Id </td>  
+                    <td> {{ term_item.id }} </td>
+                </tr>
+            </table>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+{% endblock %}

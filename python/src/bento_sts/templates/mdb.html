@@ -1,0 +1,122 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h1> {{ title }} </h1>
+    <div class="float-right">
+      {{ render_form(form, form_type='inline', action=url_for('main.entities', entities=subtype)) }}
+      <!--
+      <button type="submit" class="btn btn-outline-primary btn-sm">Filter</button>
+      <button type="submit" class="btn btn-outline-primary btn-sm">Export JSON</button> -->
+    </div> 
+    {% if display == 'list'  %}
+    <br><br>
+    <div id="listall" name="listall" style="margin:20px; padding:20x">
+      {% if pagination %}
+	{{ pagination.info }}
+	{{ pagination.links }}
+      {% endif %}
+      <table class="table table-striped">
+         <tr>
+             <th> {{ "Value" if subtype == "terms" else "Handle" }}</th>
+         </tr>
+	 {% for dict_item in mdb[first:last] %}
+	 {% for key, value in dict_item.items() %}
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, id=key) }}">{{ value }}</a> </td> </tr>
+         {% endfor %}
+         {% endfor %}
+       </table>
+       {% if pagination %}
+       {{ pagination.links }}
+       {% endif %}
+      </div> 
+       <br><br>
+    {% endif %}
+
+    {% if display == 'model'  %}
+    <br><br>
+    <div id="allModel" name="allModel" style="margin:20px;padding:20x">
+      <table class="table table-striped">
+         <tr>
+             <th> {{ "Value" if subtype == "terms" else "Handle" }} </th>
+         </tr>
+         {% for item in mdb[first:last] %}
+         <tr> <td> <a href="{{url_for( 'main.entities', entities=subtype, name=item ) }}">{{ item }}</a> </td> </tr>
+         {% endfor %}
+       </table>
+       </div>
+       <br><br>
+    {% endif %}
+
+    {% if display == 'tuple'  %}
+    <br><br>
+       <div id="listall" name="listall" style="margin:20px; padding:20x">
+	 {{ pagination.info }}
+	 {{ pagination.links }}
+	 <table class="table-striped">
+         <tr>
+             <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> <th style="width:300px"> Model</th>
+	   </tr>
+         {% for entry in mdb[first:last] %}
+	 <tr>
+	   <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	   <td> {{ entry[2] }} </td>
+	 </tr>
+	 {% endfor %}
+       </table>
+	 {{ pagination.links }}
+      </div> 
+       <br><br>
+    {% endif %}
+
+    {% if display == 'prop-tuple'  %}
+    <br><br>
+      <div id="listall" name="listall" style="margin:20px; padding:20x">
+	{{pagination.info}}
+	{{pagination.links}}
+	<table class="table-striped">
+	  <tr>
+	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }} </th> 
+	    <th style="width:300px"> Node</th> 
+	    <th style="width:300px"> Model</th>
+	  </tr>
+         {% for entry in mdb[first:last] %}
+	  <tr> 
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
+	    <td> {{ entry[2] }} </td>
+	  </tr>
+	  {% endfor %}
+	</table>
+	{{pagination.links}}
+      </div> 
+       <br><br>
+    {% endif %}
+
+    {% if display == 'term-tuple'  %}
+    <br><br>
+      <div id="listall" name="listall" style="margin:20px; padding:20x">
+	{{pagination.info}}
+	{{pagination.links}}
+	<table class="table-striped">
+	  <tr>
+	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> 
+	    <th style="width:300px"> Property</th> 
+	    <th style="width:300px"> Model</th>
+	  </tr>
+	  {% for entry in mdb[first:last] %}
+	  <tr> 
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.id ) }}">{{ entry.value }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='properties', id=entry.propid ) }}">{{ entry.property }} </td>
+	    <td> {{ entry.model }} </td>
+	  </tr>
+	  {% endfor %}
+	</table>
+	{{pagination.links}}
+      </div> 
+      <br><br>
+    {% endif %}
+
+{% endblock %}

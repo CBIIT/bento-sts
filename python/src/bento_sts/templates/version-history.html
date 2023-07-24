@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+    <br>
+    <h4> ICDC </h4>
+
+    <form action="{{ url_for('ver.versioningicdc') }}" method="POST">
+      {{ form.hidden_tag() }}  
+      {{ form.csrf_token() }}   
+
+      <div class="container">
+         <div class="row"> 
+             <div class="col-lg">
+               {{ render_form(form) }}
+             </div>
+         </div>
+      </div>   
+   </form>
+     
+{% endblock %}
+
