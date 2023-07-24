@@ -1,8 +1,10 @@
 [project]
 name = "bento-sts"
-version = "0.1.1"
-author = "Mark Benson"
-author_email = "mark.benson@nih.gov"
+version = "0.1.2"
+authors = [
+{ name="Mark Benson", email="mark.benson@nih.gov"},
+{ name="Mark A. Jensen", email="mark.jensen@nih.gov"},
+]
 maintainer = "Mark A. Jensen"
 maintainer_email = "mark.jensen@nih.gov"
 description = "Bento Simple Terminology Server"
@@ -15,15 +17,9 @@ classifiers = [
 "Homepage" = "https://github.com/CBIIT/bento-sts"
 "Bug Tracker" = "https:/github.com/CBIIT/bento-sts/issues"
 
-
-#[options]
-#    package_dir =
-#        = app
-#    packages = find:
-
 [tool.poetry]
 name = "bento-sts"
-version = "0.1.1"
+version = "0.1.2"
 description = "Bento Simple Terminology Server"
 authors = [
 	"Mark Benson <mark.benson@nih.gov>",
