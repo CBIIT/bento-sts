@@ -12,6 +12,7 @@ plural = {
     "property": "properties",
     "tag": "tags",
     "origin": "origins",
+    "concept": "concepts",
     "predicate": "predicates",
     "value_set": "value_sets",
     "term": "terms",
