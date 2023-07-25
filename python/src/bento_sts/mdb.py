@@ -145,6 +145,7 @@ could be used here for write and tag functionality."""
                                    "link": "/properties/{}".format(x["nanoid"])}
                                   for x in vs_result[0].props]
         result["has_terms"] = [{"id": x["nanoid"], "value": x["value"],
+                                "origin": x["origin_name"] if "origin_name" in x else None,
                                 "type": "term",
                                 "link":url_for('main.entities', entities='terms',
                                                id=x["nanoid"])}
@@ -200,7 +201,9 @@ could be used here for write and tag functionality."""
         t_result = self.mdb.get_props_and_terms_by_model(model)
         result = []
         for p in t_result:
-            result.extend([{"id": x["nanoid"], "value": x["value"] if "value" in x else None,
+            result.extend([{"id": x["nanoid"],
+                            "value": x["value"] if "value" in x else None,
+                            "origin": x["origin_name"] if "origin_name" in x else None,
                             "property": p["prop"]["handle"],
                             "model": p["prop"]["model"],
                             "propid": p["prop"]["nanoid"]}
@@ -261,6 +264,7 @@ could be used here for write and tag functionality."""
                 }
         if pr["terms"]:
             result["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
+                                    "origin": t["origin_name"] if "origin_name" in t else None,
                                     "type": "term",
                                     "link": url_for("main.entities",
                                                     entities='terms',

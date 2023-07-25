@@ -272,7 +272,8 @@ def search():
 
     pg_tot = 0
     if thing == "terms":
-        pg_tot = len(ents)
+        if ents:
+            pg_tot = len(ents)
     elif thing == "models":
         if ents:
             pg_tot = max(len(ents["nodes"]), len(ents["properties"]),

@@ -91,12 +91,14 @@
 	  
           <table class="table-striped" >
             <tr> 
-              <th style="width:300px"> Term </th>  
+              <th style="width:300px"> Term </th>
+	      <th style="width:250px"> Origin </th>
               <th style="width:300px"> Id </th>  
             </tr>    
             {% for term_item in mdb.has_terms %}
               <tr>
                 <td> <a href="{{url_for( 'main.entities', entities='terms', id=term_item.id ) }}"> {{ term_item.value }}</a> </td>
+		<td> {{ term_item.origin }} </td>
                 <td> {{ term_item.id }} </td>
               </tr>
             {% endfor %}

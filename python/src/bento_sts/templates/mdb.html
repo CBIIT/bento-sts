@@ -104,13 +104,19 @@
 	  <tr>
 	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> 
 	    <th style="width:300px"> Property</th> 
-	    <th style="width:300px"> Model</th>
+	    <th style="width:250px"> Model</th>
+	    {% if subtype == "terms"%}
+	    <th style="width:250px"> Origin</th>
+	    {% endif %}
 	  </tr>
 	  {% for entry in mdb[first:last] %}
 	  <tr> 
 	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.id ) }}">{{ entry.value }}</a> </td> 
 	    <td> <a href="{{url_for('main.entities', entities='properties', id=entry.propid ) }}">{{ entry.property }} </td>
 	    <td> {{ entry.model }} </td>
+	    {% if subtype == "terms" %}
+	    <td> {{ entry.origin }} </td>
+	    {% endif %}
 	  </tr>
 	  {% endfor %}
 	</table>
