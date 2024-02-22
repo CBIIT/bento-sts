@@ -66,6 +66,7 @@ swagger-ui-bundle = {version = ">=0.0.9", optional = false}
 
 #[tool.poetry.extras]
 #swagger = ["connexion", "swagger-ui-bundle"]
+flask-testing = "^0.8.1"
 
 [build-system]
 requires = ["poetry-core"]

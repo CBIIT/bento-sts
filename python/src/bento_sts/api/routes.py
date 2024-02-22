@@ -73,7 +73,7 @@ def query_db(path):
     q = None
     total_rows = None
     try:
-        q = Query(path)
+        q = Query(path, use_cache=False)
     except Exception as e:
         abort(404, e)
     # look for a paired 'count'

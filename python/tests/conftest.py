@@ -1,6 +1,6 @@
 import pytest
-from config import Config
-from app import create_app
+from bento_sts.config import Config
+from bento_sts.sts import create_app
 
 
 @pytest.fixture
