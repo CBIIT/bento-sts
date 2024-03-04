@@ -1,6 +1,6 @@
 [project]
 name = "bento-sts"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
 { name="Mark Benson", email="mark.benson@nih.gov"},
 { name="Mark A. Jensen", email="mark.jensen@nih.gov"},
@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry]
 name = "bento-sts"
-version = "0.1.6"
+version = "0.1.7"
 description = "Bento Simple Terminology Server"
 authors = [
 	"Mark Benson <mark.benson@nih.gov>",
