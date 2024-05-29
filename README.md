@@ -2,10 +2,10 @@
 
 Simple Terminology Service for [Bento MDB](https://github.com/CBIIT/bento-mdb).
 
-See [bento-meta documentation] for an overview of the Metamodel
-Database. The STS provides a web-based UI and a RESTful API for
+The STS provides a web-based UI and a RESTful API for
 browsing and accessing graph data models and associated controlled
-vocabulary.
+vocabulary. See [https://cbiit.github.io/bento-meta/](https://cbiit.github.io/bento-meta/)
+for an overview of the backend Metamodel Database (MDB). 
 
 ## Install
 
