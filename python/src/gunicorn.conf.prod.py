@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 bind = "127.0.0.1:8000"
 wsgi_app = "bento_sts.sts:create_app()"
 pidfile = "/var/www/run/sts.pid"
