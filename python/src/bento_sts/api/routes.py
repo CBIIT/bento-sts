@@ -58,7 +58,8 @@ def index():
     response.access_control_allow_origin = "*"
     return response
 
-
+# incorporate model version by allowing model parameter to take the
+# form "<model>@<version>"
 
 @bp.route("/v1/<path:path>", methods=['GET'])
 def query_db(path):
@@ -73,7 +74,7 @@ def query_db(path):
     q = None
     total_rows = None
     try:
-        q = Query(path, use_cache=False)
+        q = Query(path)
     except Exception as e:
         abort(404, e)
     # look for a paired 'count'
