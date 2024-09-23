@@ -1,35 +1,30 @@
 """
-makeq - make a Neo4j query from an endpoint path.
+makeq - make a Neo4j query from an endpoint path or JSON payload.
 """
 import yaml
-import re
+
 from pdb import set_trace
 from ._engine import _engine
-from bento_meta.util.cypher.entities import (  # noqa E402
-    N, R, P, N0, R0, G,
-    _as, _var, _plain, _anon,
-    )
-from bento_meta.util.cypher.functions import (
-    count, exists, labels, group, And, Or, Not,
-    )
-from bento_meta.util.cypher.clauses import (
-    Match, Where, With, Return,
-    Statement,
-    )
 
 class Query(object):
     paths = {}
     cache = {}
 
-    def __init__(self, path):
-        if path.startswith("/"):
-            path = path[1:]
-        self.toks = path.split("/")
-        self._engine = None
-        if not self._engine:
-            self._engine = _engine()
-            if not self._engine.parse(self.toks):
-                raise RuntimeError(self._engine.error)
+    def __init__(self, qspec):
+        if isinstance(qspec, str):
+            path = qspec
+            if path.startswith("/"):
+                path = path[1:]
+            self.toks = path.split("/")
+            self._engine = None
+            if not self._engine:
+                self._engine = _engine()
+                if not self._engine.parse(self.toks):
+                    raise RuntimeError(self._engine.error)
+        elif isinstance(qspec, dict):
+            pass
+        else:
+            raise RuntimeError("Query arg1 must be path string or dict")
 
     @classmethod
     def set_paths(cls, paths):
