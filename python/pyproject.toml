@@ -48,6 +48,7 @@ itsdangerous = ">=0.24"
 Jinja2 = ">=2.11.3"
 MarkupSafe = ">=1.1.1"
 neo4j = ">=4.1"
+pytest = ">=8.0.0"
 python-dateutil =  ">=2.6.1"
 python-dotenv = ">=0.15.0"
 python-editor = ">=1.0.3"
@@ -62,8 +63,6 @@ WTForms = ">=2.1"
 WTForms-Components = ">=0.10.5"
 connexion = {version = ">= 2.6.0", optional = false}
 swagger-ui-bundle = {version = ">=0.0.9", optional = false}
-
-
 #[tool.poetry.extras]
 #swagger = ["connexion", "swagger-ui-bundle"]
 flask-testing = "^0.8.1"
