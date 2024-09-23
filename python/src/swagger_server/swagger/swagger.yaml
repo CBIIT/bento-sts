@@ -86,7 +86,7 @@ paths:
               count:
                 type: "integer"
       x-swagger-router-controller: "swagger_server.controllers.models_controller"
-  /model/{modelHandle}/nodes:
+  /model/{modelHandle}/version/{versionString}/nodes:
     get:
       tags:
       - "model"
@@ -99,6 +99,11 @@ paths:
         in: "path"
         description: "Handle (\\'name\\') of model (use /models to find available\
           \ handles)\n"
+        required: true
+        type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
         required: true
         type: "string"
       - name: "skip"
@@ -126,7 +131,7 @@ paths:
         "404":
           description: "Model not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/nodes/count:
+  /model/{modelHandle}/version/{versionString}/nodes/count:
     get:
       tags:
       - "model"
@@ -141,6 +146,11 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       responses:
         "200":
           description: "Count of nodes"
@@ -152,7 +162,7 @@ paths:
         "404":
           description: "Model not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}:
     get:
       tags:
       - "model"
@@ -167,9 +177,14 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
@@ -181,7 +196,7 @@ paths:
         "404":
           description: "Item not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}/properties:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}/properties:
     get:
       tags:
       - "model"
@@ -196,9 +211,14 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
@@ -227,7 +247,7 @@ paths:
         "404":
           description: "Item not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}/properties/count:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}/properties/count:
     get:
       tags:
       - "model"
@@ -242,9 +262,14 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
@@ -259,7 +284,7 @@ paths:
         "404":
           description: "Item not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}/property/{propHandle}:
     get:
       tags:
       - "model"
@@ -274,15 +299,20 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
       - name: "propHandle"
         in: "path"
-        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/version/{versionString}/node/{nodeHandle}/properties\n\
           to find available properties\n"
         required: true
         type: "string"
@@ -294,7 +324,7 @@ paths:
         "404":
           description: "Item not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}/property/{propHandle}/terms:
     get:
       tags:
       - "model"
@@ -310,15 +340,20 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
       - name: "propHandle"
         in: "path"
-        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/version/{versionString}/node/{nodeHandle}/properties\n\
           to find available properties\n"
         required: true
         type: "string"
@@ -350,7 +385,7 @@ paths:
         "404":
           description: "Item not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms/count:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}/property/{propHandle}/terms/count:
     get:
       tags:
       - "model"
@@ -365,15 +400,20 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
       - name: "propHandle"
         in: "path"
-        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/version/{versionString}/node/{nodeHandle}/properties\n\
           to find available properties\n"
         required: true
         type: "string"
@@ -391,7 +431,7 @@ paths:
         "404":
           description: "Item not found"
       x-swagger-router-controller: "swagger_server.controllers.model_controller"
-  /model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/term/{termValue}:
+  /model/{modelHandle}/version/{versionString}/node/{nodeHandle}/property/{propHandle}/term/{termValue}:
     get:
       tags:
       - "model"
@@ -406,21 +446,26 @@ paths:
           \ handles)\n"
         required: true
         type: "string"
+      - name: "versionString"
+        in: "path"
+        description: "Version of model (use empty string to query unversioned models)"
+        required: true
+        type: "string"
       - name: "nodeHandle"
         in: "path"
-        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/nodes\
+        description: "Handle (\\'name\\') of node (use /model/{modelHandle}/version/{versionString}/nodes\
           \ to find\navailable nodes\n"
         required: true
         type: "string"
       - name: "propHandle"
         in: "path"
-        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/node/{nodeHandle}/properties\n\
+        description: "Handle (\\'name\\') of property (use\n/model/{modelHandle}/version/{versionString}/node/{nodeHandle}/properties\n\
           to find available properties\n"
         required: true
         type: "string"
       - name: "termValue"
         in: "path"
-        description: "String representation (\\'value\\') of the term (use\n/model/{modelHandle}/node/{nodeHandle}/property/{propHandle}/terms\n\
+        description: "String representation (\\'value\\') of the term (use\n/model/{modelHandle}/version/{versionString}/node/{nodeHandle}/property/{propHandle}/terms\n\
           to find available terms\n"
         required: true
         type: "string"
@@ -631,9 +676,12 @@ definitions:
     type: "object"
     required:
     - "handle"
+    - "version"
     - "nanoid"
     properties:
       handle:
+        type: "string"
+      version:
         type: "string"
       name:
         type: "string"
@@ -645,17 +693,21 @@ definitions:
       nanoid: "nanoid"
       name: "name"
       handle: "handle"
+      version: "v1.0"
       repository: "repository"
   Node:
     type: "object"
     required:
     - "handle"
     - "model"
+    - "version"
     - "nanoid"
     properties:
       handle:
         type: "string"
       model:
+        type: "string"
+      version:
         type: "string"
       nanoid:
         type: "string"
@@ -663,17 +715,21 @@ definitions:
       nanoid: "nanoid"
       handle: "handle"
       model: "model"
+      version: "v1.0"
   Property:
     type: "object"
     required:
     - "handle"
     - "model"
+    - "version"
     - "nanoid"
     - "value_domain"
     properties:
       handle:
         type: "string"
       model:
+        type: "string"
+      version:
         type: "string"
       nanoid:
         type: "string"
@@ -689,10 +745,11 @@ definitions:
       nanoid: "nanoid"
       value_domain: "value_domain"
       is_required: "is_required"
-      pattern: "pattern"
+      pattern: "pattern_regex"
       handle: "handle"
       model: "model"
-      units: "units"
+      version: "v1.0"
+      units: "units_abbreviation"
   Term:
     type: "object"
     required:
