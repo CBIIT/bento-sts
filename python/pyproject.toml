@@ -35,7 +35,7 @@ include = ["swagger_server"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-bento-meta = ">=0.0.32"
+bento-meta = ">=0.2.7"
 importlib_resources = ">=5.4.0"
 Flask-WTF =  ">=0.14.3"
 Bootstrap-Flask =  ">=1.5.2"

@@ -17,7 +17,7 @@ from . import bp
 from ..mdb import mdb
 # sys.path.insert(0,"/Users/jensenma/Code/bento-meta/python")  # noqa E231
 
-from bento_meta.util.makeq import Query
+from ..query import Query
 
 allowed_meths = ['GET', 'POST']
 
