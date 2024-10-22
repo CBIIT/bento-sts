@@ -8,12 +8,15 @@ from flask_moment import Moment
 from flask_wtf.csrf import CSRFProtect
 from bento_sts.config import Config
 
+from pdb import set_trace
+
 bootstrap4 = Bootstrap4()
 moment = Moment()
 csrf = CSRFProtect()
 load_dotenv(".env")
-
 logger = logging.getLogger()
+
+
 def create_app(config_class=Config):
     # see: "Application Object -> About the First Parameter"
     # at https://flask.palletsprojects.com/en/1.1.x/api/#flask.g

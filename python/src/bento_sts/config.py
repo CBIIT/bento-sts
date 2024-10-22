@@ -7,6 +7,7 @@ src = files(config_sts).joinpath("query_paths.yml")
 with src.open('r') as fh:
     qp = yaml.load(fh, Loader=yaml.CLoader)
 
+
 class Config(object):
     SECRET_KEY = os.environ.get("SECRET_KEY") or "supposedly-random-passphrase"
     NEO4J_MDB_URI = os.environ.get("NEO4J_MDB_URI")

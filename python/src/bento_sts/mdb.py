@@ -18,36 +18,42 @@ plural = {
     "term": "terms",
     }
 
+
 class mdb():
     """Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
 could be used here for write and tag functionality."""
     def __init__(self):
         self.mdb = SearchableMDB(current_app.config["NEO4J_MDB_URI"],
-                       user=current_app.config["NEO4J_MDB_USER"],
-                       password=current_app.config["NEO4J_MDB_PASS"])
+                                 user=current_app.config["NEO4J_MDB_USER"],
+                                 password=current_app.config["NEO4J_MDB_PASS"])
 
     def close(self):
         self.mdb.close()
 
     def get_list_of_models(self):
         models = self.mdb.get_model_nodes()
+        ret = {}
         if models:
-            return [x["m"] for x in models]
-        else:
-            return []
-
-    """
-    In [4]: m.get_model_by_name('ICDC')
-    Out[4]: <bento_meta.model.Model at 0x110378450>
-    """
+            for mdl in models:
+                h = mdl["m"]["handle"]
+                if ret.get(h):
+                    ret[h]["version"].append(mdl["m"]["version"])
+                else:
+                    ret[h] = mdl["m"]
+                    if not ret[h].get("name"):
+                        ret[h]["name"] = ret[h]["handle"]
+                    ret[h]["version"] = [mdl["m"]["version"]]
+        return [x for x in ret.values()]
     def get_model_by_name(self, name):
-        ObjectMap.clear_cache()
-        model = Model(name, self.mdb)
-        model_node = self.mdb.get_model_nodes(model=name)
-        # if you dont call dget, it wont be populated...
-        model.dget()
-        model.repository = model_node[0]["m"]["repository"]
-        return model
+        model_nodes = self.mdb.get_model_nodes(model=name)
+        models = []
+        for node in model_nodes:
+            model = Model(handle=name)
+            model.version = node["m"].get("version")
+            model.repository = node["m"].get("repository")
+            models.append(model)
+        return models
+
 
     # ####################################################################### #
     # NODES
@@ -62,6 +68,7 @@ could be used here for write and tag functionality."""
         result = {"id": nid,
                   "handle": props_result[0]["handle"],
                   "model": props_result[0]["model"],
+                  "version": props_result[0].get("version"),
                   "has_properties": [],
                   "has_relationship_to_nodes": [],
                   "has_relationship_from_nodes": []}
@@ -70,6 +77,8 @@ could be used here for write and tag functionality."""
                 result["has_properties"].append({
                     "id": p["nanoid"],
                     "handle": p["handle"],
+                    "model": p["model"],
+                    "version": p.get("version"),
                     "type": "property",
                     "link": url_for("main.entities", entities='properties',
                                     id=p["nanoid"]),
@@ -90,12 +99,16 @@ could be used here for write and tag functionality."""
                     add_to[node["nanoid"]] = {
                         "id": node["nanoid"],
                         "handle": node["handle"],
+                        "model": node["model"],
+                        "version": node.get("version"),
                         "link": url_for("main.entities", entities='nodes',
                                         id=node["nanoid"]),
                         "type": "node",
                         "relationship": {
                             "id": rln["nanoid"],
                             "handle": rln["handle"],
+                            "model": rln["model"],
+                            "version": rln.get("version"),
                             "link": "/relationships/{}".format(rln["nanoid"]),
                             "type": "relationship"
                         }
@@ -119,6 +132,53 @@ could be used here for write and tag functionality."""
             return [(x["nanoid"], x["handle"], x["model"]) for x in result]
         else:
             return []
+
+    # ####################################################################### #
+    # PROPERTIES
+    # ####################################################################### #
+
+    def get_list_of_properties(self, model=None):
+        np_result = self.mdb.get_nodes_and_props_by_model(model)
+        if not np_result:
+            return []
+        result = []
+        for np in np_result:
+            result.extend([{"prop_id": p["nanoid"], "prop_handle": p["handle"],
+                            "node_model": np["model"], "node_handle": np["handle"],
+                            "node_id": np["id"], "node_version": np.get("version")}
+                           for p in np["props"]])
+        return result
+
+    def get_property_by_id(self, pid, model=None):
+        p_result = self.mdb.get_prop_node_and_domain_by_prop_id(pid)
+        if not p_result:
+            return {}
+        pr = p_result[0]
+        result = {
+            "prop": pr["prop"],
+            "model": pr["model"],
+            "version": pr.get("version"),
+            "type": "property",
+            "link": "/properties/{}".format(pr["id"]),
+            "_for_nodehandle": pr["node"]["handle"],
+            "_for_nodeid": pr["node"]["nanoid"]
+            }
+        if pr["value_set"]:
+            result["has_valueset"] = {
+                "id": pr["value_set"]["nanoid"],
+                "type": "valueset",
+                "link": url_for("main.entities", entities='valuesets',
+                                id=pr["value_set"]["nanoid"])
+                }
+        if pr["terms"]:
+            result["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
+                                    "origin": t["origin_name"] if "origin_name" in t else None,
+                                    "type": "term",
+                                    "link": url_for("main.entities",
+                                                    entities='terms',
+                                                    id=t["nanoid"])}
+                                   for t in pr["terms"]]
+        return result
 
     # ####################################################################### #
     # VALUESETS
@@ -225,51 +285,6 @@ could be used here for write and tag functionality."""
 
     def get_origin_by_id(self, oid):
         result = self.mdb.get_origin_by_id(oid)
-        return result
-
-    # ####################################################################### #
-    # PROPERTIES
-    # ####################################################################### #
-
-    def get_list_of_properties(self, model=None):
-        np_result = self.mdb.get_nodes_and_props_by_model(model)
-        if not np_result:
-            return []
-        result = []
-        for np in np_result:
-            result.extend([(p["nanoid"], p["handle"],
-                            np["model"], np["handle"], np["id"])
-                           for p in np["props"]])
-        return result
-
-    def get_property_by_id(self, pid, model=None):
-        p_result = self.mdb.get_prop_node_and_domain_by_prop_id(pid)
-        if not p_result:
-            return {}
-        pr = p_result[0]
-        result = {
-            "model": pr["model"],
-            "prop": pr["prop"],
-            "type": "property",
-            "link": "/properties/{}".format(pr["id"]),
-            "_for_nodehandle": pr["node"]["handle"],
-            "_for_nodeid": pr["node"]["nanoid"]
-            }
-        if pr["value_set"]:
-            result["has_valueset"] = {
-                "id": pr["value_set"]["nanoid"],
-                "type": "valueset",
-                "link": url_for("main.entities", entities='valuesets',
-                                id=pr["value_set"]["nanoid"])
-                }
-        if pr["terms"]:
-            result["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
-                                    "origin": t["origin_name"] if "origin_name" in t else None,
-                                    "type": "term",
-                                    "link": url_for("main.entities",
-                                                    entities='terms',
-                                                    id=t["nanoid"])}
-                                   for t in pr["terms"]]
         return result
 
     # TAGS

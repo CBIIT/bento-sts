@@ -20,12 +20,15 @@
               <th style="width:300px"> Name </th> 
               <th style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.id ) }}"> {{mdb.handle}} </a>  </th>
 	    </tr>
-         <tr>
-           <td> Id </td> <td>{{mdb.id}} </td>
-         </tr>
+            <tr>
+              <td> Id </td> <td>{{mdb.id}} </td>
+            </tr>
             <tr>
               <td> Model </td> <td>{{mdb.model}} </td>
 	    </tr>
+            <tr>
+              <td> Version </td> <td>{{mdb.version}} </td>
+            </tr>
       </table>
 	</div>
       </div>

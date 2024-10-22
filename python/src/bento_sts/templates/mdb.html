@@ -79,14 +79,16 @@
 	<table class="table-striped">
 	  <tr>
 	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }} </th> 
-	    <th style="width:300px"> Node</th> 
-	    <th style="width:300px"> Model</th>
+	    <th style="width:250px"> Node</th> 
+	    <th style="width:250px"> Model</th>
+	    <th style="width:250px"> Version</th>            
 	  </tr>
          {% for entry in mdb[first:last] %}
 	  <tr> 
-	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
-	    <td> {{ entry[2] }} </td>
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.prop_id ) }}">{{ entry.prop_handle }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry.node_id ) }}">{{ entry.node_handle }} </td>
+	    <td> {{ entry.node_model }} </td>
+            <td> {{ entry.node_version }} </td>
 	  </tr>
 	  {% endfor %}
 	</table>

@@ -64,6 +64,67 @@ paths:
   model:
     _node: node # m = N(label="node")
     $model: # ->m._add_props(P(handle="model",value=$model))
+      nodes: 
+        _return:
+          _nodes:
+            - node@nodes
+        count:
+          _return:
+            _nodes:
+              - node
+            _func: count@count
+      node:
+        $handle: # -> m._add_props(P(handle="handle", value=$handle)
+          properties: 
+            _node: property # n = N(label="property") - return this
+            _edge: has_property # t = R(type="has_property",m,n) - is a condition
+            _return:
+                _nodes:
+                  - property@properties # _return(n)
+
+            count:
+              _return:
+                _nodes:
+                  - property # _return( count(n) )
+                _func: count@count
+          property:
+            _edge: has_property # t = R(type="has_property",m,n)
+            _node: property # n = N(label="property")
+            $handle: 
+              _node: property  # -> n._add_props(P(handle="handle", value=$handle))
+              terms: # incoming entity is t
+                _edge:
+                  _type: has_value_set  # G(t, w) - path of 2 triples
+                  _join:
+                    - property
+                    - value_set
+                _node:  # -> a Triple: w
+                  _label: term  # z = N(label="term") is the "incoming" ent
+                  _node: value_set  # v = N(label="value_set")
+                  _edge:
+                    _type: has_term 
+                    _dir: _left  # w = R(type="has_term").relate(z,v)
+                _return:
+                  _nodes:
+                    - term@terms
+                count:
+                  _return:
+                    _nodes:
+                      - "*"
+                    _func: count@count
+              term:
+                _node: term
+                $value:
+                  #_prop: value
+                  _return:
+                    _nodes:
+                      - term@term
+              _return:
+                _nodes:
+                  - property@property
+          _return:
+            _nodes:
+              - node@node
       version:
         $version:
           nodes: 

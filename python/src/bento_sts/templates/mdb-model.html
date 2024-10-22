@@ -9,7 +9,7 @@
     <br><br>
       <table class="table table-striped">
          <tr>
-	   <th>Handle</th><th>Name</th><th>Repository</th>
+	   <th>Handle</th><th>Name</th><th>Versions</th><th>Repository</th>
          </tr>
          {% for item in mdb %}
 	 <tr>
@@ -19,8 +19,10 @@
 	   </td>
 	   <td>
 	     {{item.name}}
-	     </a>
-	   </td>
+           </td>
+           <td>
+             {{", ".join(item.version)}}
+           </td>
 	   <td>
 	     <a href="{{item.repository}}">repo</a>
 	   </td>
@@ -31,10 +33,11 @@
     {% endif %} 
 
     {% if display == 'detail' %}
+     <!--
      <div class="float-right">
        <a href="{{url_for( 'main.entities', entities=subtype, name=mdb.handle, format='yaml' ) }}" class="btn btn-outline-primary btn-sm"> Export Yaml</a>
      </div>
-     <br>
+     <br> -->
      <ul>
     <li><a href="{{url_for( 'main.entities', entities='nodes', model=mdb.handle ) }}"> Nodes </a></li>
      <br>

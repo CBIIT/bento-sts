@@ -48,20 +48,14 @@ def models(name=None):
     m = mdb()
 
     if name is not None:
-        model_ = m.get_model_by_name(name)
-
-        if format == 'yaml':
-            yaml = get_yaml_for(model_.handle)
-            return Response(yaml, mimetype='text/plain')
-
-        else:
-            return render_template(
-                "mdb-model.html",
-                title="Model: {}".format(model_.handle),
-                mdb=model_,
-                subtype="main.models",
-                display="detail",
-            )
+        models_ = m.get_model_by_name(name)  # list of versions of model <name>
+        return render_template(
+            "mdb-model.html",
+            title="Model: {}".format(models_[0].handle),
+            mdb=models_,
+            subtype="main.models",
+            display="detail",
+        )
 
     else:
         models_ = m.get_list_of_models()
@@ -109,7 +103,7 @@ def entities(entities, id):
             "list_title": "Properties",
             "template": "mdb-property.html",
             "subtype": "properties",
-            "sort_key": lambda x: (x[1], x[2], x[3]),
+            "sort_key": lambda x: (x["prop_handle"], x["node_model"], x["node_handle"]),
             "display": "prop-tuple",
             "get_by_id": m.get_property_by_id,
             "get_list": m.get_list_of_properties,
@@ -165,7 +159,7 @@ def entities(entities, id):
             )
 
     # B: filter by model
-    ents_ = dispatch[entities]["get_list"]( None if model == 'All' else model)
+    ents_ = dispatch[entities]["get_list"](None if model == 'All' else model)
 
     if format == "json":
         return jsonify(ents_)
@@ -196,8 +190,8 @@ def entities(entities, id):
         # get a load of THIS kludge, dude.
         if model:
             rendered = re.sub('option value="{}"'.format(model),
-                            'option selected="true" value={}'.format(model),
-                            rendered)
+                              'option selected="true" value={}'.format(model),
+                              rendered)
 
         return rendered
 # ---------------------------------------------------------------------------
