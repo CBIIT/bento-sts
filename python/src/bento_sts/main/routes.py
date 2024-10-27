@@ -94,7 +94,7 @@ def entities(entities, id):
             "list_title": "Nodes",
             "template": "mdb-node.html",
             "subtype": "nodes",
-            "sort_key": lambda x: x[1],
+            "sort_key": lambda x:(x[1], x[2], x[3]),
             "get_by_id": m.get_node_by_id,
             "get_list":m.get_list_of_nodes,
         },
@@ -123,7 +123,7 @@ def entities(entities, id):
             "list_title": "Terms",
             "template": "mdb-term.html",
             "subtype": "terms",
-            "sort_key": lambda x: (x["model"], x["property"], x["value"] if type(x["value"]) == str else ""),
+            "sort_key": lambda x: (x["value"].lower()  if type(x["value"]) == str else ""),
             "display": "term-tuple",
             "get_by_id": m.get_term_by_id,
             "get_list": m.get_list_of_terms,
@@ -158,8 +158,8 @@ def entities(entities, id):
                 display="detail",
             )
 
-    # B: filter by model
-    ents_ = dispatch[entities]["get_list"](None if model == 'All' else model)
+    # B: list, filter by model
+    ents_ = dispatch[entities]["get_list"]()
 
     if format == "json":
         return jsonify(ents_)

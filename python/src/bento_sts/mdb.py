@@ -129,7 +129,8 @@ could be used here for write and tag functionality."""
         """
         result = self.mdb.get_nodes_by_model(model)
         if result:
-            return [(x["nanoid"], x["handle"], x["model"]) for x in result]
+            return [(x["nanoid"], x["handle"],
+                     x["model"], x["version"]) for x in result]
         else:
             return []
 
@@ -236,40 +237,26 @@ could be used here for write and tag functionality."""
     # TERMS
     # ####################################################################### #
     def get_term_by_id(self, tid):
-        t_result = self.mdb.get_term_by_id(tid)
+        t_result = self.mdb.get_with_statement(
+            "match (t:term {nanoid:$id})<-[:has_term]-(v:value_set)"
+            "<-[:has_value_set]-(p:property) "
+            "with t as term, t.origin_name as oname,  collect(p) as props "
+            "optional match (o:origin) where o.name = oname "
+            "return term, o as origin, props ", {"id": tid})
         if not t_result:
             return {}
-        result = t_result[0]["term"]
-        result["id"] = result["nanoid"]
-        del result["nanoid"]
-        result["type"] = "term"
-        result["link"] = url_for("main.entities", entities='terms',
-                                 id=result["id"],
-                                 _external=False)
-        result["has_origin"] = {}
-        origin = t_result[0]["origin"]
-        if origin:
-            origin["id"] = origin["nanoid"]
-            origin["type"] = "origin"
-            origin["link"] = "/origins/{}".format(origin["nanoid"])
-            result["has_origin"] = origin
+        result = t_result[0]
+        result["props"] = sorted(result["props"],
+                                 key=lambda x:(x['handle'],x['model'],x.get('version')))
         return result
+        
+    def get_list_of_terms(self):
+        t_result = self.mdb.get_with_statement(
+            "match (t:term)<-[:has_term]-(:value_set) "
+            "return t.value as value, t as term", {})
+        return t_result
 
-    # ======================================================================= #
-
-    def get_list_of_terms(self, model=None):
-        t_result = self.mdb.get_props_and_terms_by_model(model)
-        result = []
-        for p in t_result:
-            result.extend([{"id": x["nanoid"],
-                            "value": x["value"] if "value" in x else None,
-                            "origin": x["origin_name"] if "origin_name" in x else None,
-                            "property": p["prop"]["handle"],
-                            "model": p["prop"]["model"],
-                            "propid": p["prop"]["nanoid"]}
-                           for x in p["terms"]])
-        return result
-
+        
     # ####################################################################### #
     # ORIGINS
     # ####################################################################### #
