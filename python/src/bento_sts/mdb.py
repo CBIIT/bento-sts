@@ -119,7 +119,7 @@ could be used here for write and tag functionality."""
 
     # ----------------------------------------------------------------------- #
 
-    def get_list_of_nodes(self, model=None):
+    def get_list_of_nodes(self, model=None, version=None):
         """
         In [3]: m.get_list_of_nodes()
         Out[3]:
@@ -127,7 +127,7 @@ could be used here for write and tag functionality."""
          {'N0Qx7Z': 'off_study'},
          {'nUoHJH': 'diagnosis
         """
-        result = self.mdb.get_nodes_by_model(model)
+        result = self.mdb.get_nodes_by_model(model, version)
         if result:
             return [(x["nanoid"], x["handle"],
                      x["model"], x["version"]) for x in result]
@@ -138,8 +138,8 @@ could be used here for write and tag functionality."""
     # PROPERTIES
     # ####################################################################### #
 
-    def get_list_of_properties(self, model=None):
-        np_result = self.mdb.get_nodes_and_props_by_model(model)
+    def get_list_of_properties(self, model=None, version=None):
+        np_result = self.mdb.get_nodes_and_props_by_model(model, version)
         if not np_result:
             return []
         result = []
@@ -223,8 +223,8 @@ could be used here for write and tag functionality."""
 
     # ----------------------------------------------------------------------- #
 
-    def get_list_of_valuesets(self, model=None):
-        vs_result = self.mdb.get_valuesets_by_model(model)
+    def get_list_of_valuesets(self, model=None, version=None):
+        vs_result = self.mdb.get_valuesets_by_model(model, version)
         if not vs_result:
             return []
         # kludge assuming that there is only one property assoc with each

@@ -38,6 +38,9 @@
        <a href="{{url_for( 'main.entities', entities=subtype, name=mdb.handle, format='yaml' ) }}" class="btn btn-outline-primary btn-sm"> Export Yaml</a>
      </div>
      <br> -->
+     <div>
+       {{ render_form(form, form_type='inline', action=url_for('main.models', name=mdb[0].handle)) }}
+     </div>
      <ul>
     <li><a href="{{url_for( 'main.entities', entities='nodes', model=mdb.handle ) }}"> Nodes </a></li>
      <br>

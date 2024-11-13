@@ -29,8 +29,13 @@ def create_app(config_class=Config):
     mdb = MDB(app.config["NEO4J_MDB_URI"],
               user=app.config["NEO4J_MDB_USER"],
               password=app.config["NEO4J_MDB_PASS"])
-    app.config['MODEL_LIST'] = [x["m"] for x in mdb.get_model_nodes()]
-    app.config['MODEL_LIST'].insert(0,{"handle":"All"})
+    minfo = mdb.get_model_info()
+
+    app.config['MODEL_LIST'] = sorted(set([x['handle'] for x in minfo]))
+    app.config['VERSIONS_BY_MODEL'] = {m: sorted(
+        [v['version'] for v in minfo if v['handle'] == m])
+        for m in app.config['MODEL_LIST'] }
+    app.config['MODEL_LIST'].insert(0,"ALL")
 
     bootstrap4.init_app(app)
     moment.init_app(app)

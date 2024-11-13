@@ -14,7 +14,7 @@ from flask import (
     abort,
 )
 from flask_paginate import Pagination, get_page_parameter
-from .forms import SearchForm, SelectModelForm
+from .forms import SearchForm, SelectModelForm, SelectVersionForm
 # import app.search
 from . import bp
 from ..util import get_yaml_for
@@ -44,17 +44,20 @@ def index():
 @bp.route("/models/<name>")
 @bp.route("/models")
 def models(name=None):
-    format = request.args.get("format")
+    # format = request.args.get("format")
     m = mdb()
 
     if name is not None:
         models_ = m.get_model_by_name(name)  # list of versions of model <name>
+        select_form = SelectVersionForm()
+        select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
         return render_template(
             "mdb-model.html",
             title="Model: {}".format(models_[0].handle),
             mdb=models_,
             subtype="main.models",
             display="detail",
+            form=select_form,
         )
 
     else:
@@ -80,12 +83,19 @@ def entities(entities, id):
         format = ""
 
     model = request.args.get("model") or request.form.get("model") or "All"
+    version = request.args.get("version") or request.form.get("version") or None
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
     select_form = SelectModelForm()
-    select_form.model.choices = [(x['handle'],x['handle']) for x
-                                     in current_app.config["MODEL_LIST"]]
-    current_app.logger.info("model: {}, page: {}, format: {}".format(model, page, format))
+    select_form.model.choices = [(x, x) for x
+                                 in current_app.config["MODEL_LIST"]]
+    if model != "ALL":
+        select_form.version.choices = [(x, x) for x
+                                       in current_app.config["VERSIONS_BY_MODEL"][model]]
+    else:
+        select_form.version.choices = []
+        
+    current_app.logger.info(f"model: {model}, version: {version}, page: {page}, format: {format}")
     id = id or id_
     m = mdb()
     dispatch = {
@@ -159,7 +169,7 @@ def entities(entities, id):
             )
 
     # B: list, filter by model
-    ents_ = dispatch[entities]["get_list"]()
+    ents_ = dispatch[entities]["get_list"](model, version)
 
     if format == "json":
         return jsonify(ents_)
@@ -185,7 +195,7 @@ def entities(entities, id):
             last=min((pagination.page)*pagination.per_page,len(ents_)),
             pagination=pagination,
             form=select_form,
-            model=model
+            model=model,
         )
         # get a load of THIS kludge, dude.
         if model:

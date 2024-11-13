@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, SelectField
 from wtforms.validators import ValidationError, DataRequired, Length, InputRequired
 
+
 class SearchForm(FlaskForm):
     qstring = StringField("Query", validators=[DataRequired()])
     terms = SubmitField('Search Terms')
@@ -14,11 +15,18 @@ class SearchForm(FlaskForm):
             kwargs["csrf_enabled"] = False
         super(SearchForm, self).__init__(*args, **kwargs)
 
+
 class SelectModelForm(FlaskForm):
     model = SelectField('Model')
+    version = SelectField('Version') 
     filter = SubmitField('Filter')
     export = SubmitField('Export JSON')
 
+
+class SelectVersionForm(FlaskForm):
+    version = SelectField('Version')
+    submit_version = SubmitField('Filter')
+    
 
 
 
