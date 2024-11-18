@@ -35,6 +35,21 @@ def create_app(config_class=Config):
     app.config['VERSIONS_BY_MODEL'] = {m: sorted(
         [v['version'] for v in minfo if v['handle'] == m])
         for m in app.config['MODEL_LIST'] }
+    app.config['VERSIONS_BY_MODEL'] = {}
+    app.config['LATEST_VERSION_BY_MODEL'] = {}
+    # below assumes that minfo is sorted lexically by (model, version)
+    for m in app.config['MODEL_LIST']:
+        for info in [x for x in minfo if x['handle'] == m]:
+            if app.config['VERSIONS_BY_MODEL'].get(m):
+                app.config['VERSIONS_BY_MODEL'][m].append(info['version'])
+            else:
+                app.config['VERSIONS_BY_MODEL'][m] = [info['version']]
+            if info.get('latest_version') == True or info.get('is_latest_version') == True:
+                app.config['LATEST_VERSION_BY_MODEL'][m] = info['version']
+    for m in app.config['MODEL_LIST']:
+        if not app.config['LATEST_VERSION_BY_MODEL'].get(m):
+            app.config['LATEST_VERSION_BY_MODEL'][m] = app.config['VERSIONS_BY_MODEL'][m][-1]
+            
     app.config['MODEL_LIST'].insert(0,"ALL")
 
     bootstrap4.init_app(app)

@@ -127,6 +127,11 @@ could be used here for write and tag functionality."""
          {'N0Qx7Z': 'off_study'},
          {'nUoHJH': 'diagnosis
         """
+        if model == 'ALL':
+            model = None
+            version = None
+        elif version == 'ALL':
+            version = '*'
         result = self.mdb.get_nodes_by_model(model, version)
         if result:
             return [(x["nanoid"], x["handle"],
@@ -139,6 +144,11 @@ could be used here for write and tag functionality."""
     # ####################################################################### #
 
     def get_list_of_properties(self, model=None, version=None):
+        if model == 'ALL':
+            model = None
+            version = None
+        elif version == 'ALL':
+            version = '*'
         np_result = self.mdb.get_nodes_and_props_by_model(model, version)
         if not np_result:
             return []
@@ -253,6 +263,7 @@ could be used here for write and tag functionality."""
     def get_list_of_terms(self):
         t_result = self.mdb.get_with_statement(
             "match (t:term)<-[:has_term]-(:value_set) "
+            "with distinct t as t "
             "return t.value as value, t as term", {})
         return t_result
 

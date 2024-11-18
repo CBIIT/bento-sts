@@ -82,7 +82,7 @@ def entities(entities, id):
     else:
         format = ""
 
-    model = request.args.get("model") or request.form.get("model") or "All"
+    model = request.args.get("model") or request.form.get("model") or "ALL"
     version = request.args.get("version") or request.form.get("version") or None
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
@@ -92,8 +92,10 @@ def entities(entities, id):
     if model != "ALL":
         select_form.version.choices = [(x, x) for x
                                        in current_app.config["VERSIONS_BY_MODEL"][model]]
+        select_form.version.choices.insert(0, ("ALL", "ALL"))
     else:
-        select_form.version.choices = []
+        select_form.version.choices = [("ALL", "ALL")]
+        version = "*"
         
     current_app.logger.info(f"model: {model}, version: {version}, page: {page}, format: {format}")
     id = id or id_
@@ -169,7 +171,10 @@ def entities(entities, id):
             )
 
     # B: list, filter by model
-    ents_ = dispatch[entities]["get_list"](model, version)
+    get_list_args = (model, version)
+    if (entities in ['origins', 'terms']):
+        get_list_args = ()
+    ents_ = dispatch[entities]["get_list"](*get_list_args)
 
     if format == "json":
         return jsonify(ents_)
