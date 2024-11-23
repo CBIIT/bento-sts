@@ -24,61 +24,16 @@ class mdb():
 could be used here for write and tag functionality."""
     mdb_ = None
 
-    @functools.lru_cache
-    def get_term_batch_info(nbatches, start=0, ct=None):
-        batches = []
-        tabnames = []
-        if ct is None:
-            ct_result = mdb.mdb_.get_with_statement(
-                "match (t:term) return count(t) as ct", {})
-            ct = ct_result[0]['ct']
-        bsize = ct // nbatches
-        for n in range(start, start+ct, bsize):
-            try:
-                res = mdb.mdb_.get_with_statement(
-                    "match (t:term) with t order by t.value "
-                    "with apoc.agg.nth(t, $n) as term "
-                    "return term", {"n": n})
-                batches.append({'first': n, 'term': res[0]['term']})
-            except Exception as e:
-                raise e
-        if n != ct:
-            try:
-                res = mdb.mdb_.get_with_statement(
-                    "match (t:term) with t order by t.value "
-                    "with apoc.agg.nth(t, $n) as term "
-                    "return term", {"n": ct-1})
-                batches.append({'first': ct-1, 'term': res[0]['term']})
-            except Exception as e:
-                raise e
-        for n in range(0, len(batches)-1):
-            v1 = batches[n]['term'].get('value') or "__"
-            v2 = batches[n+1]['term'].get('value') or "__"
-            tabnames.append("{}-{}".format(v1[0:3],v2[0:3]))
-
-        return (batches, tabnames)
-
-    @functools.lru_cache
-    def get_term_batch(start, bsize):
-        try:
-            res = mdb.mdb_.get_with_statement(
-                "match (t:term) with t order by t.value "
-                "return t as term skip $start limit $bsize",
-                {"start": start, "bsize": bsize}
-            )
-        except Exception as e:
-            raise e
-        return res
-
     def __init__(self):
         if mdb.mdb_ is None:
             mdb.mdb_ = SearchableMDB(current_app.config["NEO4J_MDB_URI"],
-                                user=current_app.config["NEO4J_MDB_USER"],
-                                password=current_app.config["NEO4J_MDB_PASS"])
+                                     user=current_app.config["NEO4J_MDB_USER"],
+                                     password=current_app.config["NEO4J_MDB_PASS"])
         self.mdb = mdb.mdb_
 
     def close(self):
         self.mdb.close()
+
 
     def get_list_of_models(self):
         models = self.mdb.get_model_nodes()
@@ -296,10 +251,61 @@ could be used here for write and tag functionality."""
     # ####################################################################### #
     # TERMS
     # ####################################################################### #
+
+    @functools.lru_cache
+    def get_term_batch_info(nbatches, start=0, ct=None):
+        batches = []
+        tabnames = []
+        if ct is None:
+            ct_result = mdb.mdb_.get_with_statement(
+                "match (t:term) return count(t) as ct", {})
+            ct = ct_result[0]['ct']
+        bsize = ct // nbatches or ct
+        for n in range(start, start+ct, bsize):
+            try:
+                res = mdb.mdb_.get_with_statement(
+                    "match (t:term) with t order by t.value "
+                    "with apoc.agg.nth(t, $n) as first_term, "
+                    " apoc.agg.nth(t, $l) as last_term "
+                    "return first_term, last_term", {"n": n, "l": n+bsize-1})
+                batches.append({'first': n, 'first_term': res[0]['first_term'],
+                                'last': n+bsize-1, 'last_term': res[0]['last_term']})
+            except Exception as e:
+                raise e
+        if n+bsize != start+ct:
+            try:
+                res = mdb.mdb_.get_with_statement(
+                    "match (t:term) with t order by t.value "
+                    "with apoc.agg.nth(t, $n) as term "
+                    "return term", {"n": start+ct-1})
+                batches[-1]['last']= start+ct-1
+                batches[-1]['last_term'] = res[0]['term']
+            except Exception as e:
+                raise e
+        for n in range(0, len(batches)):
+            v1 = batches[n]['first_term'].get('value') or "__"
+            v2 = batches[n]['last_term'].get('value') or "__"
+            tabnames.append("{}-{}".format(v1[0:3],v2[0:3]))
+
+        return (batches, tabnames)
+
+    @functools.lru_cache
+    def get_term_batch(start, bsize):
+        try:
+            res = mdb.mdb_.get_with_statement(
+                "match (t:term) with t order by t.value "
+                "return t as term skip $start limit $bsize",
+                {"start": start, "bsize": bsize}
+            )
+        except Exception as e:
+            raise e
+        return res
+
+
     def get_term_by_id(self, tid):
         t_result = self.mdb.get_with_statement(
-            "match (t:term {nanoid:$id})<-[:has_term]-(v:value_set)"
-            "optional match (v)<-[:has_value_set]-(p:property) "
+            "match (t:term {nanoid:$id}) "
+            "optional match (t)<-[:has_term]-(v:value_set)<-[:has_value_set]-(p:property) "
             "with t as term, t.origin_name as oname,  collect(p) as props "
             "optional match (o:origin) where o.name = oname "
             "return term, o as origin, props ", {"id": tid})

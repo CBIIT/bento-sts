@@ -211,10 +211,10 @@ def entities(entities, id):
         return rendered
 # ---------------------------------------------------------------------------
 
-@bp.route("/terms", defaults={'start':None}, methods=['GET', 'POST'])
+
+@bp.route("/terms", defaults={'start': 0}, methods=['GET', 'POST'])
 @bp.route("/terms/batch/<start>", methods=['GET', 'POST'])
-def terms(start=None, num=15):
-    start = start or request.args.get('start')
+def terms(start, num=15):
     page = request.args.get(get_page_parameter(), type=int, default=1)
     m = mdb() # kludge - to instantiate singleton class mdb object
     (batches, tabnames) = mdb.get_term_batch_info(num)
@@ -224,20 +224,21 @@ def terms(start=None, num=15):
     subtabnames = None
     batch = None
     paging = {}
-
     if start is not None:
         start = int(start)
-        bsize = batches[1]['first'] - batches[0]['first'] + 1
+        bsize = batches[0]['last'] - batches[0]['first'] + 1
         for i in range(0, len(batches)):
-            if batches[i]['first'] <= start and start < batches[i+1]['first']:
+            if batches[i]['first'] <= start and start <= batches[i]['last']:
                 activetab = i
                 break
-        (subbatches, subtabnames) = mdb.get_term_batch_info(num, batches[i]['first'], bsize)
-        for j in range(0, len(subbatches)-1):
-            if subbatches[j]['first'] <= start and start < subbatches[j+1]['first']:
+        (subbatches, subtabnames) = mdb.get_term_batch_info(
+            num, batches[i]['first'], bsize
+        )
+        for j in range(0, len(subbatches)):
+            if subbatches[j]['first'] <= start and start < subbatches[j]['last']:
                 activesubtab = j
                 break
-        sbsize = subbatches[1]['first'] - subbatches[0]['first'] + 1 
+        sbsize = subbatches[j]['last'] - subbatches[j]['first'] + 1 
         batch =  mdb.get_term_batch(start, sbsize)
         pgurl = url_for('main.terms',start=start)
         pgurl += "?page={0}"
