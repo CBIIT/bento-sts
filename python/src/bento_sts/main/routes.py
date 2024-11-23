@@ -1,6 +1,6 @@
 import sys
-print("main routes", file=sys.stderr)
 import re
+from .. import mdb
 from flask import (
     render_template,
     flash,
@@ -210,6 +210,60 @@ def entities(entities, id):
 
         return rendered
 # ---------------------------------------------------------------------------
+
+@bp.route("/terms", defaults={'start':None}, methods=['GET', 'POST'])
+@bp.route("/terms/batch/<start>", methods=['GET', 'POST'])
+def terms(start=None, num=15):
+    start = start or request.args.get('start')
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    m = mdb() # kludge - to instantiate singleton class mdb object
+    (batches, tabnames) = mdb.get_term_batch_info(num)
+    activetab = -1
+    activesubtab = -1
+    subbatches = None
+    subtabnames = None
+    batch = None
+    paging = {}
+
+    if start is not None:
+        start = int(start)
+        bsize = batches[1]['first'] - batches[0]['first'] + 1
+        for i in range(0, len(batches)):
+            if batches[i]['first'] <= start and start < batches[i+1]['first']:
+                activetab = i
+                break
+        (subbatches, subtabnames) = mdb.get_term_batch_info(num, batches[i]['first'], bsize)
+        for j in range(0, len(subbatches)-1):
+            if subbatches[j]['first'] <= start and start < subbatches[j+1]['first']:
+                activesubtab = j
+                break
+        sbsize = subbatches[1]['first'] - subbatches[0]['first'] + 1 
+        batch =  mdb.get_term_batch(start, sbsize)
+        pgurl = url_for('main.terms',start=start)
+        pgurl += "?page={0}"
+        pagination = Pagination(
+            page=page,
+            total=len(batch),
+            record_name=entities,
+            href=pgurl
+        )
+        paging["pagination"] = pagination
+        paging["first"] = (pagination.page-1)*pagination.per_page
+        paging["last"] = min((pagination.page)*pagination.per_page,len(batch))
+            
+    return render_template(
+        "mdb-term-tabs.html",
+        title="Terms",
+        tabnames=tabnames,
+        subtabnames=subtabnames,
+        batches=batches,
+        subbatches=subbatches,
+        activetab=activetab,
+        activesubtab=activesubtab,
+        batch=batch,
+        paging=paging,
+    )
+
 
 @bp.route("/tags", defaults={'key':None,'value':None},methods=['GET','POST'])
 @bp.route("/tags/<key>", methods=['GET','POST'], defaults={'value':None})
