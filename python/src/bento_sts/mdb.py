@@ -193,7 +193,7 @@ could be used here for write and tag functionality."""
                                     "link": url_for("main.entities",
                                                     entities='terms',
                                                     id=t["nanoid"])}
-                                   for t in pr["terms"]]
+                                   for t in pr["terms"] if 'nanoid' in t]
         return result
 
     # ####################################################################### #
@@ -314,6 +314,15 @@ could be used here for write and tag functionality."""
         result = t_result[0]
         result["props"] = sorted(result["props"],
                                  key=lambda x:(x['handle'],x['model'],x.get('version')))
+        s_result = self.mdb.get_with_statement(
+            "match (t:term {nanoid:$id})-[:represents]->(c:concept)<-[:represents]-(s:term) "
+            "optional match (g:tag {key:'mapping_source'})<-[:has_tag]-(c) "
+            "return s.value as value, s.nanoid as id, s.origin_name as origin, collect(g.value) as sources", {"id": tid}
+            )
+        if s_result:
+            result["synonyms"] = sorted(s_result, key=lambda x:x['value'])
+        else:
+            result["synonyms"] = None
         return result
 
          

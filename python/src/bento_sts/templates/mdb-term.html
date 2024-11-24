@@ -41,7 +41,7 @@
     <br>
     <div>
       <h3> Properties Accepting </h3>
-      <div id="termDetail" name="termDetail" style="margin:20px; padding:20x">
+      <div id="termProps" name="termProps" style="margin:20px; padding:20x">
         <table class="table-striped">
           <tr>
             <th style="width:250px"> Property </th>
@@ -50,12 +50,33 @@
           </tr>
           {% for prop in mdb.props %}
             <tr>
-              <td>{{prop.handle}}</td>
+              <td><a href="{{url_for( 'main.entities', entities='properties', id=prop.nanoid ) }}">{{prop.handle}}</a></td>
               <td>{{prop.model}}</td>
               <td>{{prop.version}}</td>
             </tr>
           {% endfor %}
         </table>
+      </div>
+      <div>
+        <h3> Synonyms </h3>
+        <div id="termSyns" name="termSyns" style="margin:20px; padding:20x">
+          <table class="table-striped">
+            <tr>
+              <th style="width:250px"> Value </th>
+              <th style="width:250px"> Origin </th>
+              <th style="width:250px"> Mapping Sources </th>
+            </tr>
+            {% if mdb.synonyms %}
+              {% for syn in mdb.synonyms %}
+                <tr>
+                  <td><a href="{{url_for( 'main.entities', entities='terms', id=syn.id ) }}">{{syn.value}}</a></td>
+                  <td>{{syn.origin}}</td>
+                  <td>{{syn.sources}}</td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </table>
+        </div>
       </div>
     </div>
 {% block edit_functions %}
