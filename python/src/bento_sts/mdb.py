@@ -23,7 +23,7 @@ class mdb():
     """Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
 could be used here for write and tag functionality."""
     mdb_ = None
-
+    term_values = None
     def __init__(self):
         if mdb.mdb_ is None:
             mdb.mdb_ = SearchableMDB(current_app.config["NEO4J_MDB_URI"],
@@ -252,39 +252,32 @@ could be used here for write and tag functionality."""
     # TERMS
     # ####################################################################### #
 
-    @functools.lru_cache
-    def get_term_batch_info(nbatches, start=0, ct=None):
+    def get_term_batch_info(self, nbatches, start=0, ct=None):
         batches = []
         tabnames = []
+        if not mdb.term_values:
+            try:
+                res = self.mdb.get_with_statement(
+                    "match (t:term) with t.value as val return val order by val",
+                    {})
+            except Exception as e:
+                raise e
+            mdb.term_values = [x['val'] for x in res]
         if ct is None:
-            ct_result = mdb.mdb_.get_with_statement(
-                "match (t:term) return count(t) as ct", {})
-            ct = ct_result[0]['ct']
+            ct = len(self.term_values)
         bsize = ct // nbatches or ct
-        for n in range(start, start+ct, bsize):
-            try:
-                res = mdb.mdb_.get_with_statement(
-                    "match (t:term) with t order by t.value "
-                    "with apoc.agg.nth(t, $n) as first_term, "
-                    " apoc.agg.nth(t, $l) as last_term "
-                    "return first_term, last_term", {"n": n, "l": n+bsize-1})
-                batches.append({'first': n, 'first_term': res[0]['first_term'],
-                                'last': n+bsize-1, 'last_term': res[0]['last_term']})
-            except Exception as e:
-                raise e
-        if n+bsize != start+ct:
-            try:
-                res = mdb.mdb_.get_with_statement(
-                    "match (t:term) with t order by t.value "
-                    "with apoc.agg.nth(t, $n) as term "
-                    "return term", {"n": start+ct-1})
-                batches[-1]['last']= start+ct-1
-                batches[-1]['last_term'] = res[0]['term']
-            except Exception as e:
-                raise e
+        for n in range(start, min(start+ct, len(self.term_values)), bsize):
+            l = min(n+bsize-1,len(self.term_values)-1)
+            batches.append({'first': n, 'first_term': self.term_values[n],
+                            'last': l, 'last_term': self.term_values[l]})
+            
+        # if n+bsize != start+ct:
+        #     batches[-1]['last'] = start+ct-1
+        #     batches[-1]['last_term'] = self.term_values[start+ct-1]
+
         for n in range(0, len(batches)):
-            v1 = batches[n]['first_term'].get('value') or "__"
-            v2 = batches[n]['last_term'].get('value') or "__"
+            v1 = batches[n]['first_term'] or "___"
+            v2 = batches[n]['last_term'] or "___"
             tabnames.append("{}-{}".format(v1[0:3],v2[0:3]))
 
         return (batches, tabnames)

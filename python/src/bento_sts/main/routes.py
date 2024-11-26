@@ -216,8 +216,8 @@ def entities(entities, id):
 @bp.route("/terms/batch/<start>", methods=['GET', 'POST'])
 def terms(start, num=15):
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    m = mdb() # kludge - to instantiate singleton class mdb object
-    (batches, tabnames) = mdb.get_term_batch_info(num)
+    m = mdb() 
+    (batches, tabnames) = m.get_term_batch_info(num)
     activetab = -1
     activesubtab = -1
     subbatches = None
@@ -231,7 +231,7 @@ def terms(start, num=15):
             if batches[i]['first'] <= start and start <= batches[i]['last']:
                 activetab = i
                 break
-        (subbatches, subtabnames) = mdb.get_term_batch_info(
+        (subbatches, subtabnames) = m.get_term_batch_info(
             num, batches[i]['first'], bsize
         )
         for j in range(0, len(subbatches)):
