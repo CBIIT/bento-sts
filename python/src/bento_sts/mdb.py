@@ -346,10 +346,19 @@ could be used here for write and tag functionality."""
 
     # TAGS
     
-    def get_tagged_entities(self, tag_key, tag_value=None, model=None):
-        ents_by_tag = self.mdb.get_entities_by_tag(tag_key, tag_value, model)
+    def get_tagged_entities(self, tag_key, tag_value=None):
+        props="{key:$key, value:$value}" if tag_value else "{key:$key}"
+        ents_by_tag = self.mdb.get_with_statement(
+            f"match (t:tag {props}) "
+            "with t "
+            "match (e)-[:has_tag]->(t) "
+            "with t, {type:head(labels(e)), ent:e} as ee "
+            "return t.key as tag_key, t.value as tag_value, collect(ee) as entities",
+            {"key": tag_key, "value": tag_value})
+
         for i in range(0, len(ents_by_tag)):
-            ents_by_tag[i]['plural'] = plural[ents_by_tag[i]['entity']]
+            for j in range(0, len(ents_by_tag[i]['entities'])):
+                ents_by_tag[i]['entities'][j]['plural'] = plural[ents_by_tag[i]['entities'][j]['type']]
         return ents_by_tag
 
     def get_tags_and_values(self):

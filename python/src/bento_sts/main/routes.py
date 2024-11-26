@@ -284,7 +284,7 @@ def tags(key=None,value=None,model=None):
         pass
 
     if key:
-        ents = m.get_tagged_entities(key, val, model)
+        ents = m.get_tagged_entities(key, val)
     else:
         ents = m.get_tags_and_values()
 
@@ -297,7 +297,6 @@ def tags(key=None,value=None,model=None):
                 title="Tagged Entities",
                 key=key,
                 value=val,
-                model=model,
                 ents=ents,
                 display='entities')
         else:
