@@ -306,6 +306,7 @@ def tags(key=None,value=None,model=None):
                 ents=ents,
                 display='tags')
 
+
 @bp.route("/search")
 def search():
     if not g.search_form.validate():
@@ -320,6 +321,7 @@ def search():
         pass
 
     qstring = request.args.get("qstring")
+    entdisplay = request.args.get("entdisplay") or "nodes"
     ents = []
     thing = ""
     if request.args.get("terms"):
@@ -332,60 +334,44 @@ def search():
         abort(400)
     if format == 'json':
         return jsonify(ents)
-
+    paging = {}
     pg_tot = 0
+    if not ents:
+        thing = "no_hits"
     if thing == "terms":
-        if ents:
-            pg_tot = len(ents)
-    elif thing == "models":
-        if ents:
-            pg_tot = max(len(ents["nodes"]), len(ents["properties"]),
-                         len(ents["relationships"]))
-    else:
-        pass
-    pagination = Pagination(
-        page=request.args.get("page", 1, type=int),
-        record_name="Hits",
-        total=pg_tot,
-        per_page=current_app.config["HITS_PER_PAGE"],
+        pg_tot = len(ents)
+        pagination = Pagination(
+            page=request.args.get("page", 1, type=int),
+            record_name="Hits",
+            total=pg_tot,
+            per_page=current_app.config["HITS_PER_PAGE"],
         )
-    first = {}
-    last = {}
-    nohits = False
-    if thing == "terms":
-        if ents:
-            first["terms"] = (pagination.page-1)*pagination.per_page
-            last["terms"] = min(pagination.page*pagination.per_page, len(ents))
-        else:
-            thing = "no_hits"
+        paging["terms"] = {"pagination": pagination}
+        paging["terms"]['first'] = (pagination.page-1)*pagination.per_page
+        paging["terms"]['last'] = min(pagination.page*pagination.per_page, len(ents))
+        entdisplay = "terms"
     elif thing == "models":
-        if ents:
-            pp = round(pagination.per_page/3)
-            first["nodes"] = min(len(ents["nodes"])-pp,
-                                 pagination.page-1*pp)
-            last["nodes"] = min(len(ents["nodes"]),
-                                pagination.page*pp)
-            first["properties"] = min(len(ents["properties"])-pp,
-                                      pagination.page-1*pp)
-            last["properties"] = min(len(ents["properties"]),
-                                     pagination.page*pp)
-            first["relationships"] = min(len(ents["relationships"])-pp,
-                                         pagination.page-1*pp)
-            last["relationships"] = min(len(ents["relationships"]),
-                                        pagination.page*pp)
-        else:
-            thing = "no_hits"
-    else:
-        raise RuntimeError("Huh???")
+        paging = None
+        # for ent in ("nodes", "properties", "relationships"):
+        #     pagination = Pagination(
+        #         page=request.args.get("page",1,type=int),
+        #         record_name="Hits",
+        #         total=len(ents[ent]),
+        #         anchor=ent,
+        #         per_page=current_app.config["HITS_PER_PAGE"],
+        #     )
+        #     paging[ent] = {"pagination": pagination}
+        #     paging[ent]['first'] = (pagination.page-1)*pagination.per_page
+        #     paging[ent]['last'] = min(pagination.page*pagination.per_page,len(ents[ent]))
     
     return render_template(
         "search.html",
         title="Search",
         ents=ents,
         thing=thing,
-        pagination=pagination,
-        first=first,
-        last=last,
+        q=qstring,
+        entdisplay=entdisplay,
+        paging=paging,
     )
 
 @bp.route("/about-mdb")

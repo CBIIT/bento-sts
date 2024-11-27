@@ -368,7 +368,11 @@ could be used here for write and tag functionality."""
     # SEARCH
 
     def search_entity_handles(self, qstring):
-        return self.mdb.search_entity_handles(qstring)
+        res = {}
+        res["nodes"] = self.mdb.query_index("nodeHandle", qstring) or []
+        res["properties"] = self.mdb.query_index("propHandle", qstring) or []
+        res["relationships"] = self.mdb.query_index("edgeHandle", qstring) or []
+        return res
 
     def search_terms(self, qstring, search_values=True,
                      search_definitions=True):
