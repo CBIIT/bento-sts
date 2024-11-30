@@ -1,6 +1,6 @@
 [project]
 name = "bento-sts"
-version = "0.1.7"
+version = "0.1.9"
 authors = [
 { name="Mark Benson", email="mark.benson@nih.gov"},
 { name="Mark A. Jensen", email="mark.jensen@nih.gov"},
@@ -19,23 +19,24 @@ classifiers = [
 
 [tool.poetry]
 name = "bento-sts"
-version = "0.1.7"
+version = "0.1.9"
 description = "Bento Simple Terminology Server"
 authors = [
 	"Mark Benson <mark.benson@nih.gov>",
 	"Mark A. Jensen <mark.jensen@nih.gov>",
 ]
-license = "Apache 2.0"
+license = "Apache-2.0"
 readme = "README.md"
 packages = [
 	 { include = "bento_sts", from = "src" },
 	 { include = "swagger_server", from = "src" },
 	 ]
+repository = "https://github.com/CBIIT/bento-sts"         
 include = ["swagger_server"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-bento-meta = ">=0.2.9"
+bento-meta = ">=0.2.10"
 importlib_resources = ">=5.4.0"
 Flask-WTF =  ">=0.14.3"
 Bootstrap-Flask =  ">=1.5.2"
