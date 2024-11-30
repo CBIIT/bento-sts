@@ -57,12 +57,19 @@
 	 {{ pagination.links }}
 	 <table class="table-striped">
          <tr>
-             <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> <th style="width:300px"> Model</th>
+           <th style="width:250px">{{ "Value" if subtype == "terms" else "Handle" }}  </th>
+           <th style="width:250px">Model</th>
+           {% if subtype in ['nodes'] %}
+             <th style="width:250px">Version</th>
+           {% endif %}
 	   </tr>
          {% for entry in mdb[first:last] %}
 	 <tr>
 	   <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
 	   <td> {{ entry[2] }} </td>
+           {% if subtype in ['nodes'] %}
+             <td> {{ entry[3] }} </td>
+           {% endif %}
 	 </tr>
 	 {% endfor %}
        </table>
@@ -79,14 +86,16 @@
 	<table class="table-striped">
 	  <tr>
 	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }} </th> 
-	    <th style="width:300px"> Node</th> 
-	    <th style="width:300px"> Model</th>
+	    <th style="width:250px"> Node</th> 
+	    <th style="width:250px"> Model</th>
+	    <th style="width:250px"> Version</th>            
 	  </tr>
          {% for entry in mdb[first:last] %}
 	  <tr> 
-	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
-	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry[4] ) }}">{{ entry[3] }} </td>
-	    <td> {{ entry[2] }} </td>
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.prop_id ) }}">{{ entry.prop_handle }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry.node_id ) }}">{{ entry.node_handle }} </td>
+	    <td> {{ entry.node_model }} </td>
+            <td> {{ entry.node_version }} </td>
 	  </tr>
 	  {% endfor %}
 	</table>
@@ -102,21 +111,19 @@
 	{{pagination.links}}
 	<table class="table-striped">
 	  <tr>
-	    <th style="width:300px"> {{ "Value" if subtype == "terms" else "Handle" }}  </th> 
-	    <th style="width:300px"> Property</th> 
-	    <th style="width:250px"> Model</th>
-	    {% if subtype == "terms"%}
-	    <th style="width:250px"> Origin</th>
-	    {% endif %}
+	    <th style="width:250px">Value</th> 
+	    <th style="width:250px">Origin</th> 
+	    <th style="width:250px">Origin ID</th>
+	    <th style="width:250px">Origin Version</th>
 	  </tr>
 	  {% for entry in mdb[first:last] %}
 	  <tr> 
-	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.id ) }}">{{ entry.value }}</a> </td> 
-	    <td> <a href="{{url_for('main.entities', entities='properties', id=entry.propid ) }}">{{ entry.property }} </td>
-	    <td> {{ entry.model }} </td>
-	    {% if subtype == "terms" %}
-	    <td> {{ entry.origin }} </td>
-	    {% endif %}
+	    <td> <a href="{{url_for( 'main.entities', entities=subtype, id=entry.term.nanoid ) }}">{{ entry.value }}</a> </td> 
+	    <td> {{ entry.term.origin_name }} </td>
+            <td> {{ entry.term.origin_id }} </td>
+            <td> {{ entry.term.origin_version }} </td>
+	    {# <td> <a href="{{url_for('main.entities', entities='properties', id=entry.propid ) }}">{{ entry.property }} </td> #}
+	    {# <td> {{ entry.model }} </td> #}
 	  </tr>
 	  {% endfor %}
 	</table>

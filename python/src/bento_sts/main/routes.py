@@ -1,6 +1,6 @@
 import sys
-print("main routes", file=sys.stderr)
 import re
+from .. import mdb
 from flask import (
     render_template,
     flash,
@@ -14,7 +14,7 @@ from flask import (
     abort,
 )
 from flask_paginate import Pagination, get_page_parameter
-from .forms import SearchForm, SelectModelForm
+from .forms import SearchForm, SelectModelForm, SelectVersionForm
 # import app.search
 from . import bp
 from ..util import get_yaml_for
@@ -44,24 +44,21 @@ def index():
 @bp.route("/models/<name>")
 @bp.route("/models")
 def models(name=None):
-    format = request.args.get("format")
+    # format = request.args.get("format")
     m = mdb()
 
     if name is not None:
-        model_ = m.get_model_by_name(name)
-
-        if format == 'yaml':
-            yaml = get_yaml_for(model_.handle)
-            return Response(yaml, mimetype='text/plain')
-
-        else:
-            return render_template(
-                "mdb-model.html",
-                title="Model: {}".format(model_.handle),
-                mdb=model_,
-                subtype="main.models",
-                display="detail",
-            )
+        models_ = m.get_model_by_name(name)  # list of versions of model <name>
+        select_form = SelectVersionForm()
+        select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
+        return render_template(
+            "mdb-model.html",
+            title="Model: {}".format(models_[0].handle),
+            mdb=models_,
+            subtype="main.models",
+            display="detail",
+            form=select_form,
+        )
 
     else:
         models_ = m.get_list_of_models()
@@ -85,13 +82,22 @@ def entities(entities, id):
     else:
         format = ""
 
-    model = request.args.get("model") or request.form.get("model") or "All"
+    model = request.args.get("model") or request.form.get("model") or "ALL"
+    version = request.args.get("version") or request.form.get("version") or None
     id_ = request.args.get("id")
     page = request.args.get(get_page_parameter(), type=int, default=1)
     select_form = SelectModelForm()
-    select_form.model.choices = [(x['handle'],x['handle']) for x
-                                     in current_app.config["MODEL_LIST"]]
-    current_app.logger.info("model: {}, page: {}, format: {}".format(model, page, format))
+    select_form.model.choices = [(x, x) for x
+                                 in current_app.config["MODEL_LIST"]]
+    if model != "ALL":
+        select_form.version.choices = [(x, x) for x
+                                       in current_app.config["VERSIONS_BY_MODEL"][model]]
+        select_form.version.choices.insert(0, ("ALL", "ALL"))
+    else:
+        select_form.version.choices = [("ALL", "ALL")]
+        version = "*"
+        
+    current_app.logger.info(f"model: {model}, version: {version}, page: {page}, format: {format}")
     id = id or id_
     m = mdb()
     dispatch = {
@@ -100,7 +106,7 @@ def entities(entities, id):
             "list_title": "Nodes",
             "template": "mdb-node.html",
             "subtype": "nodes",
-            "sort_key": lambda x: x[1],
+            "sort_key": lambda x:(x[1], x[2], x[3]),
             "get_by_id": m.get_node_by_id,
             "get_list":m.get_list_of_nodes,
         },
@@ -109,7 +115,7 @@ def entities(entities, id):
             "list_title": "Properties",
             "template": "mdb-property.html",
             "subtype": "properties",
-            "sort_key": lambda x: (x[1], x[2], x[3]),
+            "sort_key": lambda x: (x["prop_handle"], x["node_model"], x["node_handle"]),
             "display": "prop-tuple",
             "get_by_id": m.get_property_by_id,
             "get_list": m.get_list_of_properties,
@@ -129,7 +135,7 @@ def entities(entities, id):
             "list_title": "Terms",
             "template": "mdb-term.html",
             "subtype": "terms",
-            "sort_key": lambda x: (x["model"], x["property"], x["value"] if type(x["value"]) == str else ""),
+            "sort_key": lambda x: (x["value"].lower()  if type(x["value"]) == str else ""),
             "display": "term-tuple",
             "get_by_id": m.get_term_by_id,
             "get_list": m.get_list_of_terms,
@@ -164,8 +170,11 @@ def entities(entities, id):
                 display="detail",
             )
 
-    # B: filter by model
-    ents_ = dispatch[entities]["get_list"]( None if model == 'All' else model)
+    # B: list, filter by model
+    get_list_args = (model, version)
+    if (entities in ['origins', 'terms']):
+        get_list_args = ()
+    ents_ = dispatch[entities]["get_list"](*get_list_args)
 
     if format == "json":
         return jsonify(ents_)
@@ -191,16 +200,71 @@ def entities(entities, id):
             last=min((pagination.page)*pagination.per_page,len(ents_)),
             pagination=pagination,
             form=select_form,
-            model=model
+            model=model,
         )
         # get a load of THIS kludge, dude.
         if model:
             rendered = re.sub('option value="{}"'.format(model),
-                            'option selected="true" value={}'.format(model),
-                            rendered)
+                              'option selected="true" value={}'.format(model),
+                              rendered)
 
         return rendered
 # ---------------------------------------------------------------------------
+
+
+@bp.route("/terms", defaults={'start': 0}, methods=['GET', 'POST'])
+@bp.route("/terms/batch/<start>", methods=['GET', 'POST'])
+def terms(start, num=15):
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    m = mdb() 
+    (batches, tabnames) = m.get_term_batch_info(num)
+    activetab = -1
+    activesubtab = -1
+    subbatches = None
+    subtabnames = None
+    batch = None
+    paging = {}
+    if start is not None:
+        start = int(start)
+        bsize = batches[0]['last'] - batches[0]['first'] + 1
+        for i in range(0, len(batches)):
+            if batches[i]['first'] <= start and start <= batches[i]['last']:
+                activetab = i
+                break
+        (subbatches, subtabnames) = m.get_term_batch_info(
+            num, batches[i]['first'], bsize
+        )
+        for j in range(0, len(subbatches)):
+            if subbatches[j]['first'] <= start and start < subbatches[j]['last']:
+                activesubtab = j
+                break
+        sbsize = subbatches[j]['last'] - subbatches[j]['first'] + 1 
+        batch =  mdb.get_term_batch(start, sbsize)
+        pgurl = url_for('main.terms',start=start)
+        pgurl += "?page={0}"
+        pagination = Pagination(
+            page=page,
+            total=len(batch),
+            record_name=entities,
+            href=pgurl
+        )
+        paging["pagination"] = pagination
+        paging["first"] = (pagination.page-1)*pagination.per_page
+        paging["last"] = min((pagination.page)*pagination.per_page,len(batch))
+            
+    return render_template(
+        "mdb-term-tabs.html",
+        title="Terms",
+        tabnames=tabnames,
+        subtabnames=subtabnames,
+        batches=batches,
+        subbatches=subbatches,
+        activetab=activetab,
+        activesubtab=activesubtab,
+        batch=batch,
+        paging=paging,
+    )
+
 
 @bp.route("/tags", defaults={'key':None,'value':None},methods=['GET','POST'])
 @bp.route("/tags/<key>", methods=['GET','POST'], defaults={'value':None})
@@ -220,7 +284,7 @@ def tags(key=None,value=None,model=None):
         pass
 
     if key:
-        ents = m.get_tagged_entities(key, val, model)
+        ents = m.get_tagged_entities(key, val)
     else:
         ents = m.get_tags_and_values()
 
@@ -233,7 +297,6 @@ def tags(key=None,value=None,model=None):
                 title="Tagged Entities",
                 key=key,
                 value=val,
-                model=model,
                 ents=ents,
                 display='entities')
         else:
@@ -242,6 +305,7 @@ def tags(key=None,value=None,model=None):
                 title="Tags",
                 ents=ents,
                 display='tags')
+
 
 @bp.route("/search")
 def search():
@@ -257,6 +321,7 @@ def search():
         pass
 
     qstring = request.args.get("qstring")
+    entdisplay = request.args.get("entdisplay") or "nodes"
     ents = []
     thing = ""
     if request.args.get("terms"):
@@ -269,60 +334,44 @@ def search():
         abort(400)
     if format == 'json':
         return jsonify(ents)
-
+    paging = {}
     pg_tot = 0
+    if not ents:
+        thing = "no_hits"
     if thing == "terms":
-        if ents:
-            pg_tot = len(ents)
-    elif thing == "models":
-        if ents:
-            pg_tot = max(len(ents["nodes"]), len(ents["properties"]),
-                         len(ents["relationships"]))
-    else:
-        pass
-    pagination = Pagination(
-        page=request.args.get("page", 1, type=int),
-        record_name="Hits",
-        total=pg_tot,
-        per_page=current_app.config["HITS_PER_PAGE"],
+        pg_tot = len(ents)
+        pagination = Pagination(
+            page=request.args.get("page", 1, type=int),
+            record_name="Hits",
+            total=pg_tot,
+            per_page=current_app.config["HITS_PER_PAGE"],
         )
-    first = {}
-    last = {}
-    nohits = False
-    if thing == "terms":
-        if ents:
-            first["terms"] = (pagination.page-1)*pagination.per_page
-            last["terms"] = min(pagination.page*pagination.per_page, len(ents))
-        else:
-            thing = "no_hits"
+        paging["terms"] = {"pagination": pagination}
+        paging["terms"]['first'] = (pagination.page-1)*pagination.per_page
+        paging["terms"]['last'] = min(pagination.page*pagination.per_page, len(ents))
+        entdisplay = "terms"
     elif thing == "models":
-        if ents:
-            pp = round(pagination.per_page/3)
-            first["nodes"] = min(len(ents["nodes"])-pp,
-                                 pagination.page-1*pp)
-            last["nodes"] = min(len(ents["nodes"]),
-                                pagination.page*pp)
-            first["properties"] = min(len(ents["properties"])-pp,
-                                      pagination.page-1*pp)
-            last["properties"] = min(len(ents["properties"]),
-                                     pagination.page*pp)
-            first["relationships"] = min(len(ents["relationships"])-pp,
-                                         pagination.page-1*pp)
-            last["relationships"] = min(len(ents["relationships"]),
-                                        pagination.page*pp)
-        else:
-            thing = "no_hits"
-    else:
-        raise RuntimeError("Huh???")
+        paging = None
+        # for ent in ("nodes", "properties", "relationships"):
+        #     pagination = Pagination(
+        #         page=request.args.get("page",1,type=int),
+        #         record_name="Hits",
+        #         total=len(ents[ent]),
+        #         anchor=ent,
+        #         per_page=current_app.config["HITS_PER_PAGE"],
+        #     )
+        #     paging[ent] = {"pagination": pagination}
+        #     paging[ent]['first'] = (pagination.page-1)*pagination.per_page
+        #     paging[ent]['last'] = min(pagination.page*pagination.per_page,len(ents[ent]))
     
     return render_template(
         "search.html",
         title="Search",
         ents=ents,
         thing=thing,
-        pagination=pagination,
-        first=first,
-        last=last,
+        q=qstring,
+        entdisplay=entdisplay,
+        paging=paging,
     )
 
 @bp.route("/about-mdb")

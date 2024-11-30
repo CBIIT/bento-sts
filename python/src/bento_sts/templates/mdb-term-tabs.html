@@ -1,0 +1,67 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block app_content %}
+
+  <h1>{{title}}</h1>
+  <div class="row">
+    <div class="col-4">
+    </div>
+    <div class="col">
+      {% if paging.pagination %}
+        {{ paging.pagination.info }}
+        {{ paging.pagination.links }}
+      {% endif %}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-2">
+      <ul class="nav nav-pills flex-column">
+        {% for lbl in tabnames %}
+          <li class="nav-item">
+            <a class="nav-link {% if loop.index0 == activetab %}active{% endif %}"
+               href="{{ url_for('main.terms', start=batches[loop.index0].first) }}">{{lbl}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% if subtabnames and subbatches %}
+    <div class="col-2">
+      <ul class="nav nav-pills flex-column">
+        {% for lbl in subtabnames %}
+          <li class="nav-item">
+            <a class="nav-link {% if loop.index0 == activesubtab %}active{% endif %}"
+               href="{{ url_for('main.terms', start=subbatches[loop.index0].first) }}">{{lbl}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <div id="term-table" class="col">
+      {% if batch %}
+        <table class="table table-striped">
+	  <tr>
+	    <th style="width:250px">Value</th> 
+	    <th style="width:250px">Origin</th> 
+	    <th style="width:250px">Origin ID</th>
+	    <th style="width:250px">Origin Version</th>
+	  </tr>
+	  {% for entry in batch[paging.first:paging.last] %}
+	    <tr> 
+	      <td> <a href="{{url_for( 'main.entities', entities='terms', id=entry.term.nanoid ) }}">{{ entry.term.value }}</a> </td> 
+	      <td> {{ entry.term.origin_name }} </td>
+              <td> {{ entry.term.origin_id }} </td>
+              <td> {{ entry.term.origin_version }} </td>
+	    </tr>
+          {% endfor %}
+        </table>
+        {% if paging.pagination %}
+          {{paging.pagination.links}}
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -35,7 +35,7 @@ include = ["swagger_server"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-bento-meta = ">=0.0.32"
+bento-meta = ">=0.2.9"
 importlib_resources = ">=5.4.0"
 Flask-WTF =  ">=0.14.3"
 Bootstrap-Flask =  ">=1.5.2"
@@ -48,6 +48,8 @@ itsdangerous = ">=0.24"
 Jinja2 = ">=2.11.3"
 MarkupSafe = ">=1.1.1"
 neo4j = ">=4.1"
+pytest = ">=8.0.0"
+pytest-docker = ">=3.1.1"
 python-dateutil =  ">=2.6.1"
 python-dotenv = ">=0.15.0"
 python-editor = ">=1.0.3"
@@ -62,8 +64,6 @@ WTForms = ">=2.1"
 WTForms-Components = ">=0.10.5"
 connexion = {version = ">= 2.6.0", optional = false}
 swagger-ui-bundle = {version = ">=0.0.9", optional = false}
-
-
 #[tool.poetry.extras]
 #swagger = ["connexion", "swagger-ui-bundle"]
 flask-testing = "^0.8.1"

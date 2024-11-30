@@ -9,14 +9,15 @@
       <h3>No hits for query</h3>
     {% endif %}
     {% if thing == "terms" %}
-      {% if pagination %}
-	{{ pagination.info }}
+      {% if paging %}
+	{{ paging[entdisplay].pagination.info }}
+	{{ paging[entdisplay].pagination.links }}
       {% endif %}
       <table class="table table-striped">
 	<tr>
 	  <th>Value</th><th>Definition</th><th>Origin</th><th>Origin ID</th><th>Score</th>
 	</tr>
-	{% for item in ents[first["terms"]:last["terms"]] %}
+	{% for item in ents[paging[entdisplay].first:paging[entdisplay].last] %}
 	  <tr>
 	    <td><a href={{ url_for('main.entities', entities="terms", id=item.ent["nanoid"])}}> {{item.ent["value"]}}</a></td>
 	    <td>
@@ -38,39 +39,59 @@
 	  </tr>
 	{% endfor %}
 	</table>
-      {% if pagination %}
-	{{pagination.links}}
+      {% if paging %}
+	{{paging[entdisplay].pagination.links}}
       {% endif %}
     {% endif %}
     {% if thing == "models" %}
-      {% if pagination %}
-	{{ pagination.info }}
-      {% endif %}
-      {% for type in ["nodes","properties","relationships"] %}
-	<h3>{{type | title }} ({{ents[type] | length }})</h3>
-	<table class="table table-striped">
-	  <tr>
-	    <th>Handle</th><th>Description</th><th>Model</th><th>Score</th>
-	  </tr>
-	  {% for item in ents[type][first[type]:last[type]] %}
-	    <tr>
-	      <td><a href={{ url_for('main.entities',entities=type, id=item.ent["nanoid"])}}>{{item.ent["handle"]}}</a></td>
-	      <td>
-		{% if item.ent["desc"] %}
-		  {{item.ent["desc"]}}
-		{% else %}
-		  <i>none</i>
-		{% endif %}
-	      </td>
-	      <td>{{item.ent["model"]}}</td>
-	      <td>{{item.score}}</td>
-	  </tr>
-	{% endfor %}
-	</table>
-      {% endfor %}
-      {% if pagination %}
-	{{pagination.links}}
-      {% endif %}
+      <div id="tabs">
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link"
+               href="#nodes">Nodes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link"
+               href="#properties">Properties</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link"
+               href="#relationships">Relationships</a>
+          </li>
+        </ul>
+        {% for entype in ('nodes', 'properties', 'relationships') %}
+          <div id={{entype}}>
+            {% if paging %}
+	      {{ paging[entype].pagination.info }} 
+	      {{ paging[entype].pagination.links }} 
+            {% endif %} 
+  	    <h3>{{entype | title }} ({{ents[entype] | length }})</h3>
+	    <table class="table table-striped">
+	      <tr>
+	        <th>Handle</th><th>Description</th><th>Model</th><th>Score</th>
+	      </tr>
+	      {# {% for item in ents[entype][paging[entype].first:paging[entype].last] %} #}
+              {% for item in ents[entype] %}
+	        <tr>
+	          <td><a href={{ url_for('main.entities',entities=entype, id=item.ent["nanoid"])}}>{{item.ent["handle"]}}</a></td>
+	          <td>
+		    {% if item.ent["desc"] %}
+		      {{item.ent["desc"]}}
+		    {% else %}
+		      <i>none</i>
+		    {% endif %}
+	          </td>
+	          <td>{{item.ent["model"]}}</td>
+	          <td>{{item.score}}</td>
+	        </tr>
+	      {% endfor %}
+	    </table>
+            {# {% if paging %} #}
+	    {#   {{ paging[entype].pagination.links }} #}
+            {# {% endif %} #}
+          </div>
+        {% endfor %}
+      </div>
     {% endif %}
     
 
