@@ -49,6 +49,7 @@ could be used here for write and tag functionality."""
                         ret[h]["name"] = ret[h]["handle"]
                     ret[h]["version"] = [mdl["m"]["version"]]
         return [x for x in ret.values()]
+
     def get_model_by_name(self, name):
         model_nodes = self.mdb.get_model_nodes(model=name)
         models = []

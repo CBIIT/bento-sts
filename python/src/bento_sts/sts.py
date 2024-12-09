@@ -48,7 +48,7 @@ def create_app(config_class=Config):
                 app.config['LATEST_VERSION_BY_MODEL'][m] = info['version']
     for m in app.config['MODEL_LIST']:
         if not app.config['LATEST_VERSION_BY_MODEL'].get(m):
-            app.config['LATEST_VERSION_BY_MODEL'][m] = app.config['VERSIONS_BY_MODEL'][m][-1]
+            app.config['LATEST_VERSION_BY_MODEL'][m] = app.config['VERSIONS_BY_MODEL'][m][0]
             
     app.config['MODEL_LIST'].insert(0,"ALL")
 

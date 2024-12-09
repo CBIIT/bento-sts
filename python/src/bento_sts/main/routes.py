@@ -41,35 +41,6 @@ def index():
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-@bp.route("/models/<name>")
-@bp.route("/models")
-def models(name=None):
-    # format = request.args.get("format")
-    m = mdb()
-
-    if name is not None:
-        models_ = m.get_model_by_name(name)  # list of versions of model <name>
-        select_form = SelectVersionForm()
-        select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
-        return render_template(
-            "mdb-model.html",
-            title="Model: {}".format(models_[0].handle),
-            mdb=models_,
-            subtype="main.models",
-            display="detail",
-            form=select_form,
-        )
-
-    else:
-        models_ = m.get_list_of_models()
-        return render_template(
-            "mdb-model.html",
-            title="Models",
-            mdb=sorted(models_, key=lambda x:x["name"]),
-            subtype="main.models",
-            display="list",
-        )
-
 @bp.route("/<entities>", defaults={'id': None}, methods=['GET','POST'])
 @bp.route('/<entities>/<id>', methods=['GET','POST'])
 
@@ -210,6 +181,39 @@ def entities(entities, id):
 
         return rendered
 # ---------------------------------------------------------------------------
+
+
+@bp.route("/models", methods=['GET'])
+@bp.route("/models/<name>", methods=['GET','POST'])
+def models(name=None):
+    m = mdb()
+    if name is not None:
+        if name not in current_app.config["MODEL_LIST"]:
+            return render_template('/errors/400.html'), 400
+        version = request.args.get("version") or request.form.get("version") or current_app.config["LATEST_VERSION_BY_MODEL"][name]
+        select_form = SelectVersionForm()
+        select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
+        return render_template(
+            "mdb-model.html",
+            title="Model: {}".format(name),
+            name=name,
+            version=version,
+            mdb={"nodes":m.get_list_of_nodes(name, version),
+                 "props":m.get_list_of_properties(name, version)},
+            subtype="main.models",
+            display="detail",
+            form=select_form,
+        )
+
+    else:
+        models_ = m.get_list_of_models()
+        return render_template(
+            "mdb-model.html",
+            title="Models",
+            mdb=sorted(models_, key=lambda x:x["name"]),
+            subtype="main.models",
+            display="list",
+        )
 
 
 @bp.route("/terms", defaults={'start': 0}, methods=['GET', 'POST'])

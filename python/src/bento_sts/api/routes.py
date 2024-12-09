@@ -145,3 +145,4 @@ def query_db(path):
     response = jsonify(ret)
     response.access_control_allow_origin = "*"
     return response
+

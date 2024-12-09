@@ -2,7 +2,7 @@
 
 {% block app_content %}
     <br>
-    <h1> {{ title }}</h1>
+    <h1> {{ title }} <i>{{mdb.term.value}}</i></h1>
     <div class="float-right">
       <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.term.nanoid, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
     </div>

@@ -34,15 +34,66 @@
 
     {% if display == 'detail' %}
      <div>
-       {{ render_form(form, form_type='inline', action=url_for('main.models', name=mdb[0].handle)) }}
+       {{ render_form(form, form_type='inline', action=url_for('main.models',name=name)) }}
      </div>
-     <ul>
-    <li><a href="{{url_for( 'main.entities', entities='nodes', model=mdb.handle ) }}"> Nodes </a></li>
-     <br>
-    <li><a href="{{mdb[0].repository}}">Model repository</a></li>
-    <ul>
-     <br>
-    <i> Some image or other? </i>
+     <div id="tabs">
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link"
+               href="#nodes">Nodes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link"
+               href="#properties">Properties</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link"
+               href="#viewer">Viewer</a>
+          </li>
+        </ul>
+        <div id="nodes">
+          <h2>Nodes</h2>
+	  <table class="table table-striped">
+            <tr>
+              <th style="width:250px">Handle</th>
+              <th style="width:250px">Model</th>
+              <th style="width:250px">Version</th>
+	    </tr>
+            {% for entry in mdb.nodes %}
+	      <tr>
+	        <td> <a href="{{url_for( 'main.entities', entities='nodes', id=entry[0] ) }}">{{ entry[1] }}</a> </td> 
+	        <td> {{ entry[2]}} </td>
+                <td> {{ entry[3] }} </td>
+	      </tr>
+	    {% endfor %}
+          </table>
+        </div>
+        <div id="properties">
+          <h2>Properties</h2>
+	<table class="table table-striped">
+	  <tr>
+	    <th style="width:300px"> Handle </th> 
+	    <th style="width:250px"> Node</th> 
+	    <th style="width:250px"> Model</th>
+	    <th style="width:250px"> Version</th>            
+	  </tr>
+         {% for entry in mdb.props %}
+	  <tr> 
+	    <td> <a href="{{url_for( 'main.entities', entities='properties', id=entry.prop_id ) }}">{{ entry.prop_handle }}</a> </td> 
+	    <td> <a href="{{url_for('main.entities', entities='nodes', id=entry.node_id ) }}">{{ entry.node_handle }} </td>
+	    <td> {{ entry.node_model }} </td>
+            <td> {{ entry.node_version }} </td>
+	  </tr>
+	  {% endfor %}
+	</table>
+        </div>
+        <div id="viewer">
+          <div id="standalone">
+          </div>
+        </div>
+       
+     </div>
+
    {% endif %}
 
 {% endblock %}
