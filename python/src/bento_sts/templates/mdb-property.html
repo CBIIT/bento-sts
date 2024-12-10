@@ -31,17 +31,32 @@
                 <td> Version </td> <td>{{mdb.version}} </td>
               </tr>
 	      
-              {% if mdb._for_nodehandle %}
+              {% if mdb.node.handle %}
                 <tr>
-                  <td> For Node </td> <td><a href="{{url_for( 'main.entities', entities='nodes',id=mdb._for_nodeid ) }}"> {{mdb._for_nodehandle}} </a> </td>
+                  <td> For Node </td> <td><a href="{{url_for('main.entities', entities='nodes',id=mdb.node.nanoid)}}"> {{mdb.node.handle}} </a> </td>
                   
                 </tr>
               {% endif %}
 	      
             </table>
-	    {% block edit_functions %}
-	    {% endblock edit_functions%}
           </div>
+
+          <h3> Terms Annotating </h3>
+          <div id="termsAnnotating" name="termsAnnotating" style="margin:20px; padding:20x">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row" style="width:200px"> Value </th> 
+                <th scope="row" style="width:100px"> Origin </th>
+              </tr>
+              {% for term in mdb.has_annots %}
+                <tr>
+                  <td> <a href={{term.link}}>{{term.value}} </td>
+                  <td>{{term.origin}}</td>
+                </tr>
+	      {% endfor %}
+            </table>
+          </div>
+          
         </div>     <!-- end col-->
 	
 	

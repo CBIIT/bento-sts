@@ -167,35 +167,47 @@ could be used here for write and tag functionality."""
         return result
 
     def get_property_by_id(self, pid, model=None):
-        p_result = self.mdb.get_prop_node_and_domain_by_prop_id(pid)
+        p_result = self.mdb.get_with_statement(
+            "match (p:property {nanoid:$pid})<-[:has_property]-(n:node) "
+            "with p,n "
+            "optional match (p)-[:has_concept]->(:concept)<-[:represents]-(a:term) "
+            "optional match (p)-[:has_value_set]->(vs:value_set)-[:has_term]->(t:term) "
+            "return p.nanoid as id, p.handle as handle, p.model as model, "
+            "p.version as version, "
+            "p.value_domain as value_domain, p as prop, n as node, "
+            "  vs as value_set, collect(distinct a) as annots, collect(t) as terms",
+            {"pid": pid}
+            )
         if not p_result:
             return {}
         pr = p_result[0]
-        result = {
-            "prop": pr["prop"],
-            "model": pr["model"],
-            "version": pr.get("version"),
-            "type": "property",
-            "link": "/properties/{}".format(pr["id"]),
-            "_for_nodehandle": pr["node"]["handle"],
-            "_for_nodeid": pr["node"]["nanoid"]
-            }
+        pr["type"] = "property"
+        pr["link"] = "/properties/{}".format(pr["id"])
+        # pr["version"] = pr.get("version"),
         if pr["value_set"]:
-            result["has_valueset"] = {
+            pr["has_valueset"] = {
                 "id": pr["value_set"]["nanoid"],
                 "type": "valueset",
                 "link": url_for("main.entities", entities='valuesets',
                                 id=pr["value_set"]["nanoid"])
                 }
         if pr["terms"]:
-            result["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
+            pr["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
                                     "origin": t["origin_name"] if "origin_name" in t else None,
                                     "type": "term",
                                     "link": url_for("main.entities",
                                                     entities='terms',
                                                     id=t["nanoid"])}
-                                   for t in pr["terms"] if 'nanoid' in t]
-        return result
+                               for t in pr["terms"] if 'nanoid' in t]
+        if pr["annots"]:
+            pr["has_annots"] = [{"id": t["nanoid"], "value": t["value"],
+                                    "origin": t["origin_name"] if "origin_name" in t else None,
+                                    "type": "term",
+                                    "link": url_for("main.entities",
+                                                    entities='terms',
+                                                    id=t["nanoid"])}
+                               for t in pr["annots"] if 'nanoid' in t]
+        return pr
 
     # ####################################################################### #
     # VALUESETS
