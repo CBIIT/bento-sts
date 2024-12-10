@@ -1,7 +1,11 @@
 <!-- -*-jinja2-*- -->
 {% extends "base.html" %}
 {% block app_content %}
-
+  <script>
+    $( function() {
+    $("#tabs").tabs({ active: {{ npr.index(activetab) }} });
+    } );
+  </script>
     <h2>Search Results</h1>
     <br>
 
@@ -48,24 +52,24 @@
         <ul class="nav nav-pills">
           <li class="nav-item">
             <a class="nav-link"
-               href="#nodes">Nodes</a>
+               href="#nodes">Nodes ({{ents.nodes | length}})</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link"
-               href="#properties">Properties</a>
+            <a class="nav-link "
+               href="#properties">Properties ({{ents.properties | length}})</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link"
-               href="#relationships">Relationships</a>
+            <a class="nav-link "
+               href="#relationships">Relationships ({{ents.relationships | length}})</a>
           </li>
         </ul>
         {% for entype in ('nodes', 'properties', 'relationships') %}
-          <div id={{entype}}>
+          <div id={{entype}} >
             {% if paging %}
 	      {{ paging[entype].pagination.info }} 
 	      {{ paging[entype].pagination.links }} 
             {% endif %} 
-  	    <h3>{{entype | title }} ({{ents[entype] | length }})</h3>
+  	    <h3>{{entype | title }})</h3>
 	    <table class="table table-striped">
 	      <tr>
 	        <th>Handle</th><th>Description</th><th>Model</th><th>Score</th>

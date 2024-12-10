@@ -340,6 +340,8 @@ def search():
         return jsonify(ents)
     paging = {}
     pg_tot = 0
+    activetab = 'nodes'
+
     if not ents:
         thing = "no_hits"
     if thing == "terms":
@@ -356,6 +358,13 @@ def search():
         entdisplay = "terms"
     elif thing == "models":
         paging = None
+        if len(ents['nodes']) == 0:
+            if len(ents['properties']) > 0:
+                activetab = 'properties'
+            elif len(ents['relationships']) > 0:
+                activetab = 'relationships'
+            else:
+                thing = "no_hits"
         # for ent in ("nodes", "properties", "relationships"):
         #     pagination = Pagination(
         #         page=request.args.get("page",1,type=int),
@@ -372,8 +381,10 @@ def search():
         "search.html",
         title="Search",
         ents=ents,
+        npr=['nodes','properties','relationships'],
         thing=thing,
         q=qstring,
+        activetab=activetab,
         entdisplay=entdisplay,
         paging=paging,
     )
