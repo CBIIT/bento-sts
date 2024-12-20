@@ -658,6 +658,34 @@ paths:
         "404":
           description: "No entity with specified nanoid"
       x-swagger-router-controller: "swagger_server.controllers.id_controller"
+  /cdes/{model}/{version}:
+    get:
+      tags:
+        - "cdes"
+      summary: "Get Permissible Values and Synonyms for a specified model and version."
+      operationId: "cdes_model_version_get"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "model"
+          in: "path"
+          description: "Model handle (e.g. 'CDS')"
+          required: true
+          type: "string"
+        - name: "version"
+          in: "path"
+          description: "Model version (e.g. '4.0.1')"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: >
+            "Permissible Values and Synonyms by model and version. CDE PVs if available."
+          schema:
+            $ref: "#/definitions/PermissibleValuesSynonyms"
+        "404":
+          description: "No CDEs found for specified model and version."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
 definitions:
   Entity:
     type: "object"
@@ -780,3 +808,29 @@ definitions:
         type: "string"
       nanoid:
         type: "string"
+  PermissibleValuesSynonyms:
+    type: "object"
+    required:
+      - "dataCommons"
+      - "permissibleValues"
+      - "property"
+      - "version"
+    properties:
+      - dataCommons:
+          type: "string"
+        permissibleValues:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              value:
+                type: "string"
+              synonyms:
+                type: "array"
+                items:
+                  type: "string"
+        property:
+          type: "string"
+        version:
+          type: "string"
+
