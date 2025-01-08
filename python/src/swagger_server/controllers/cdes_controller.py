@@ -1,4 +1,4 @@
-def cdes_model_handle_model_version(modelHandle, modelVersion):
+def cdes_model_version_get(modelHandle, modelVersion):
     """
     Get Permissible Values and Synonyms for a specified model and version.
 

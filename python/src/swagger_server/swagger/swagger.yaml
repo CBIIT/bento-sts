@@ -48,6 +48,11 @@ tags:
   externalDocs:
     description: "Explore on UI"
     url: "https://sts.ctos-data-team.org"
+- name: "cdes"
+  description: "Retrieve permissible values and synonyms for a specified model and version\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
 schemes:
 - "https"
 paths:
@@ -816,21 +821,21 @@ definitions:
       - "property"
       - "version"
     properties:
-      - dataCommons:
-          type: "string"
-        permissibleValues:
-          type: "array"
-          items:
-            type: "object"
-            properties:
-              value:
+      dataCommons:
+        type: "string"
+      permissibleValues:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            value:
+              type: "string"
+            synonyms:
+              type: "array"
+              items:
                 type: "string"
-              synonyms:
-                type: "array"
-                items:
-                  type: "string"
-        property:
-          type: "string"
-        version:
-          type: "string"
+      property:
+        type: "string"
+      version:
+        type: "string"
 
