@@ -15,7 +15,12 @@ from flask_paginate import Pagination, get_page_parameter
 from bento_sts.mdb import mdb
 
 from . import bp
-from .forms import SearchForm, SelectModelForm, SelectVersionForm
+from .forms import (
+    SearchForm,
+    SelectModelForm,
+    SelectModelVersionForm,
+    SelectVersionForm,
+)
 
 
 @bp.before_app_request
@@ -55,15 +60,14 @@ def models(name=None):
             form=select_form,
         )
 
-    else:
-        models_ = m.get_list_of_models()
-        return render_template(
-            "mdb-model.html",
-            title="Models",
-            mdb=sorted(models_, key=lambda x: x["name"]),
-            subtype="main.models",
-            display="list",
-        )
+    models_ = m.get_list_of_models()
+    return render_template(
+        "mdb-model.html",
+        title="Models",
+        mdb=sorted(models_, key=lambda x: x["name"]),
+        subtype="main.models",
+        display="list",
+    )
 
 
 @bp.route("/<entities>", defaults={"id": None}, methods=["GET", "POST"])
@@ -159,14 +163,13 @@ def entities(entities, id):
             ent_["has_properties"].sort(key=lambda x: x["handle"])
         if format == "json":
             return jsonify(ent_)
-        else:
-            return render_template(
-                dispatch[entities]["template"],
-                title=dispatch[entities]["title"],
-                mdb=ent_,
-                subtype=dispatch[entities]["subtype"],
-                display="detail",
-            )
+        return render_template(
+            dispatch[entities]["template"],
+            title=dispatch[entities]["title"],
+            mdb=ent_,
+            subtype=dispatch[entities]["subtype"],
+            display="detail",
+        )
 
     # B: list, filter by model
     get_list_args = (model, version)
@@ -176,38 +179,37 @@ def entities(entities, id):
 
     if format == "json":
         return jsonify(ents_)
-    else:
-        pgurl = url_for("main.entities", entities=entities)
-        pgurl += "?page={0}"
-        if model:
-            pgurl += f"&model={model}"
-        pagination = Pagination(
-            page=page,
-            total=len(ents_),
-            record_name=entities,
-            href=pgurl,
+    pgurl = url_for("main.entities", entities=entities)
+    pgurl += "?page={0}"
+    if model:
+        pgurl += f"&model={model}"
+    pagination = Pagination(
+        page=page,
+        total=len(ents_),
+        record_name=entities,
+        href=pgurl,
+    )
+    rendered = render_template(
+        "mdb.html",
+        title=dispatch[entities]["list_title"],
+        mdb=sorted(ents_, key=dispatch[entities]["sort_key"]),
+        subtype=dispatch[entities]["subtype"],
+        display=dispatch[entities].get("display") or "tuple",
+        first=(pagination.page - 1) * pagination.per_page,
+        last=min((pagination.page) * pagination.per_page, len(ents_)),
+        pagination=pagination,
+        form=select_form,
+        model=model,
+    )
+    # get a load of THIS kludge, dude.
+    if model:
+        rendered = re.sub(
+            f'option value="{model}"',
+            f'option selected="true" value={model}',
+            rendered,
         )
-        rendered = render_template(
-            "mdb.html",
-            title=dispatch[entities]["list_title"],
-            mdb=sorted(ents_, key=dispatch[entities]["sort_key"]),
-            subtype=dispatch[entities]["subtype"],
-            display=dispatch[entities].get("display") or "tuple",
-            first=(pagination.page - 1) * pagination.per_page,
-            last=min((pagination.page) * pagination.per_page, len(ents_)),
-            pagination=pagination,
-            form=select_form,
-            model=model,
-        )
-        # get a load of THIS kludge, dude.
-        if model:
-            rendered = re.sub(
-                f'option value="{model}"',
-                f'option selected="true" value={model}',
-                rendered,
-            )
 
-        return rendered
+    return rendered
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +231,7 @@ def terms(start, num=15):
         start = int(start)
         bsize = batches[0]["last"] - batches[0]["first"] + 1
         for i in range(len(batches)):
-            if batches[i]["first"] <= start and start <= batches[i]["last"]:
+            if batches[i]["first"] <= start <= batches[i]["last"]:
                 activetab = i
                 break
         (subbatches, subtabnames) = m.get_term_batch_info(
@@ -238,7 +240,7 @@ def terms(start, num=15):
             bsize,
         )
         for j in range(len(subbatches)):
-            if subbatches[j]["first"] <= start and start < subbatches[j]["last"]:
+            if subbatches[j]["first"] <= start < subbatches[j]["last"]:
                 activesubtab = j
                 break
         sbsize = subbatches[j]["last"] - subbatches[j]["first"] + 1
@@ -293,7 +295,7 @@ def tags(key=None, value=None, model=None):
 
     if format == "json":
         return jsonify(ents)
-    elif key:
+    if key:
         return render_template(
             "mdb-tag.html",
             title="Tagged Entities",
@@ -302,8 +304,7 @@ def tags(key=None, value=None, model=None):
             ents=ents,
             display="entities",
         )
-    else:
-        return render_template("mdb-tag.html", title="Tags", ents=ents, display="tags")
+    return render_template("mdb-tag.html", title="Tags", ents=ents, display="tags")
 
 
 @bp.route("/search")
@@ -399,13 +400,44 @@ def versionhistory():
     return render_template("version-history.html")
 
 
-# @bp.route("/cdes", defaults={"model": None, "version": None}, methods=["GET", "POST"])
 # @bp.route("/cdes/<model>", methods=["GET", "POST"], defaults={"version": None})
+@bp.route(
+    "/cdes",
+    defaults={"model": None, "version": None},
+    methods=["GET", "POST"],
+    strict_slashes=False,
+)
 @bp.route("/cdes/<model>/<version>", methods=["GET", "POST"])
 def cde_pvs_and_synonyms(model, version):
     """Get CDE PVs and synonyms for a given model and version."""
-    model = model or request.args.get("model")
-    version = version or request.args.get("version")
+    model = model or request.args.get("model") or request.form.get("model") or "ALL"
+    version = (
+        version or request.args.get("version") or request.form.get("version") or None
+    )
+
+    select_form = SelectModelVersionForm()
+    select_form.model.choices = [(x, x) for x in current_app.config["MODEL_LIST"]]
+    if model != "ALL":
+        select_form.version.choices = [
+            (x, x) for x in current_app.config["VERSIONS_BY_MODEL"][model]
+        ]
+        select_form.version.choices.insert(0, ("ALL", "ALL"))
+    else:
+        select_form.version.choices = [("ALL", "ALL")]
+        version = "*"
+    if model == "ALL":
+        return render_template(
+            "mdb-cdes-base.html",
+            title="CDE Permissible Values and Synonyms",
+            model=model,
+            version=version,
+            form=select_form,
+        )
+
+    if select_form.validate_on_submit():
+        model = select_form.model.data
+        version = select_form.version.data
+
     ents = []
     mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
@@ -417,7 +449,7 @@ def cde_pvs_and_synonyms(model, version):
     else:
         pass
 
-    ents = mdb.get_cde_pvs(model, version)
+    ents = mdb.get_model_pvs_synonyms(model, version)
 
     if fmt == "json":
         # remove attrs other than values from props

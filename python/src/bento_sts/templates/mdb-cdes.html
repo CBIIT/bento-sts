@@ -18,6 +18,7 @@
     <th class="px-2">Model</th>
     <th class="px-2">Version</th>
     <th class="px-2">Property</th>
+    <th class="px-2">CDE Name</th>
     <th class="px-2">Permissible Values</th>
     <th class="px-2">Synonyms</th>
   </tr>
@@ -37,6 +38,7 @@
         {{ item['property']['handle'] }}
       </a>
     </th>
+    <th class="px-2" rowspan="{{ row_count }}">{{ item['CDEFullName'] }}</th>
   </tr>
   {% for pv in item['permissibleValues'] %}
   <tr>

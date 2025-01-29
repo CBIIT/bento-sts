@@ -158,8 +158,7 @@ class mdb:
             return [
                 (x["nanoid"], x["handle"], x["model"], x["version"]) for x in result
             ]
-        else:
-            return []
+        return []
 
     # ####################################################################### #
     # PROPERTIES
@@ -396,8 +395,7 @@ class mdb:
         result = [{x["o"]["nanoid"]: x["o"]["name"]} for x in origins]
         if result:
             return result
-        else:
-            return []
+        return []
 
     def get_origin_by_id(self, oid):
         result = self.mdb.get_origin_by_id(oid)
@@ -449,22 +447,23 @@ class mdb:
 
     @functools.lru_cache
     @staticmethod
-    def get_cde_pvs(model: str | None = None, version: str | None = None):
+    def get_model_pvs_synonyms(model: str | None = None, version: str | None = None):
         qry = (
             "MATCH (n {model: $dataCommons, version: $version})-[:has_property]->"
             "(p:property) "
             "WITH collect(p) AS props "
             "UNWIND props AS prop "
             "OPTIONAL MATCH (prop)-[:has_concept]->(c:concept)<-[:represents]-"
-            "(cde:term {origin_name: 'caDSR'}) "
+            "(cde:term) WHERE toLower(cde.origin_name) CONTAINS 'cadsr' "
             "OPTIONAL MATCH (prop)-[:has_value_set]->(:value_set)-[:has_term]->(t:term)"
-            " WITH prop, cde.origin_id + '|' + cde.origin_version "
+            " WITH prop, cde.origin_id AS CDECode, cde.origin_version AS CDEVersion, "
+            "cde.value AS CDEFullName, cde.origin_id + '|' + cde.origin_version "
             "AS cde_hdl, collect(t) AS model_pvs, "
             "CASE WHEN cde IS NOT NULL THEN true ELSE false END AS has_cde "
             "OPTIONAL MATCH (v:value_set {handle: cde_hdl})-[:has_term]->(cde_pv:term) "
-            "WITH prop, model_pvs, has_cde, collect(cde_pv) AS cde_pvs "
-            "WITH prop, model_pvs, has_cde, cde_pvs, "
-            "CASE WHEN has_cde AND size(cde_pvs) > 0 "
+            "WITH prop, CDECode, CDEVersion, CDEFullName, model_pvs, has_cde, "
+            "collect(cde_pv) AS cde_pvs WITH prop, CDECode, CDEVersion, CDEFullName, "
+            "model_pvs, has_cde, cde_pvs, CASE WHEN has_cde AND size(cde_pvs) > 0 "
             "AND NONE(p in cde_pvs WHERE p.value =~ 'https?://.*') THEN cde_pvs "
             "WHEN has_cde and size(cde_pvs) > 0 "
             "AND ANY(p in cde_pvs WHERE p.value =~ 'https?://.*') "
@@ -474,13 +473,13 @@ class mdb:
             "UNWIND pvs AS pv "
             "OPTIONAL MATCH (pv)-[:represents]->(c:concept)<-[:represents]-"
             "(syn:term), (c)-[:has_tag]->(g:tag {key: 'mapping_source', value: 'NCIm'})"
-            " WHERE pv <> syn "
-            "WITH prop, model_pvs, pv.value AS pv_val, "
-            "collect(DISTINCT syn.value) AS syn_vals "
-            "WITH prop, model_pvs, "
+            " WHERE pv <> syn and pv.value <> syn.value "
+            "WITH prop, CDECode, CDEVersion, CDEFullName, model_pvs, "
+            "pv.value AS pv_val, collect(DISTINCT syn.value) AS syn_vals "
+            "WITH prop, CDECode, CDEVersion, CDEFullName, model_pvs, "
             "collect({value: pv_val, synonyms: syn_vals}) AS formatted_pvs "
             "RETURN $dataCommons AS dataCommons, $version AS version, "
-            "prop AS property, "
+            "prop AS property, CDECode, CDEVersion, CDEFullName, "
             "formatted_pvs AS permissibleValues"
         )
 

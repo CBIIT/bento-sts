@@ -1,0 +1,11 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %} {% from 'bootstrap4/form.html' import render_form,
+render_field %} {% block app_content %}
+<br />
+<h1>{{title}}</h1>
+<div class="float-right">
+  {{ render_form(form, form_type='inline',
+  action=url_for('main.cde_pvs_and_synonyms', model=form.model.data,
+  version=form.version.data)) }}
+</div>
+{% endblock %}
