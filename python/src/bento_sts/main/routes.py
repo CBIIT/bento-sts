@@ -476,7 +476,17 @@ def cde_pvs_by_id(id, version):
         current_app.logger.warning(msg)
 
     if fmt == "json":
-        return jsonify(ents)
+        return jsonify(
+            [
+                {
+                    "CDECode": item["cde"].get("origin_id", ""),
+                    "CDEVersion": item["cde"].get("origin_version", ""),
+                    "CDEFullName": item["cde"].get("value", ""),
+                    "permissibleValues": [pv.get("value", "") for pv in item["pvs"]],
+                }
+                for item in ents
+            ],
+        )
     return render_template(
         "mdb-cde-pvs.html",
         title="Common Data Element (CDE) Permissible Values",
@@ -485,3 +495,49 @@ def cde_pvs_by_id(id, version):
         id=cde_id,
         version=cde_version,
     )
+
+
+@bp.route(
+    "/term-by-origin/<origin_name>/<origin_id>",
+    defaults={"origin_version": None},
+    methods=["GET", "POST"],
+    strict_slashes=False,
+)
+@bp.route(
+    "/term-by-origin/<origin_name>/<origin_id>/<origin_version>",
+    methods=["GET", "POST"],
+    strict_slashes=False,
+)
+def term_by_origin(origin_name, origin_id, origin_version):
+    """Get term by origin, origin_id, and origin_version."""
+    origin_name = origin_name or request.args.get("origin_name")
+    origin_id = origin_id or request.args.get("origin_id")
+    origin_version = origin_version or request.args.get("origin_version") or ""
+
+    ents = []
+    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
+
+    fmt = request.args.get("format")
+    if request.form.get("format"):
+        fmt = request.args.get("format")
+    elif request.form.get("export"):
+        fmt = "json"
+    else:
+        pass
+
+    term_nanoids = (
+        mdb.get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
+    )
+    if term_nanoids:
+        term_nanoid = term_nanoids[0]["term_nanoid"]
+    if len(term_nanoids) > 1:
+        msg = (
+            f"More than one Term found for origin: {origin_name} "
+            f"with id: {origin_id} and version: {origin_version}. "
+            "Displaying first result only."
+        )
+        current_app.logger.warning(msg)
+
+    if fmt == "json":
+        return jsonify(ents)
+    return entities(entities="terms", id=term_nanoid)

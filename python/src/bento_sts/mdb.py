@@ -502,3 +502,25 @@ class mdb:
         parms = {"cde_id": id, "cde_version": version}
 
         return mdb.mdb_.get_with_statement(qry, parms)
+
+    @functools.lru_cache
+    @staticmethod
+    def get_term_nanoid_by_origin(
+        origin_name: str | None = None,
+        origin_id: str | None = None,
+        origin_version: str | None = None,
+    ):
+        """Get terms by origin, origin_id, and origin_version."""
+        qry = (
+            "MATCH (t:term) WHERE t.origin_name = $origin_name "
+            "AND t.origin_id = $origin_id AND ($origin_version IS NULL "
+            "OR $origin_version = '' OR t.origin_version = $origin_version) "
+            "RETURN t.nanoid as term_nanoid"
+        )
+        parms = {
+            "origin_name": origin_name,
+            "origin_id": origin_id,
+            "origin_version": origin_version,
+        }
+
+        return mdb.mdb_.get_with_statement(qry, parms)
