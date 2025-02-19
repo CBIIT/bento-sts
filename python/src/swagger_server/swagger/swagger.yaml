@@ -663,12 +663,12 @@ paths:
         "404":
           description: "No entity with specified nanoid"
       x-swagger-router-controller: "swagger_server.controllers.id_controller"
-  /cdes/{model}/{version}:
+  /model-pvs/{model}/{version}:
     get:
       tags:
         - "cdes"
       summary: "Get Permissible Values and Synonyms for a specified model and version."
-      operationId: "cdes_model_version_get"
+      operationId: "pvs_synonyms_model_version_get"
       produces:
         - "application/json"
       parameters:
@@ -690,6 +690,61 @@ paths:
             $ref: "#/definitions/PermissibleValuesSynonyms"
         "404":
           description: "No CDEs found for specified model and version."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /cde-pvs/{id}/{version}:
+    get:
+      tags:
+        - "cdes"
+      summary: "Get PVs for a given CDE id and version."
+      operationId: "cde_pvs_by_id_with_version_get"
+      parameters:
+        - in: path
+          name: id
+          description: "CDE ID"
+          required: true
+          type: string
+        - in: path
+          name: version
+          description: "CDE Version"
+          required: false
+          type: string
+      responses:
+        "200":
+          description: "CDE Permissible Values"
+          schema:
+            $ref: "#/definitions/CDEPermissibleValues"
+        "404":
+          description: "No CDEs found for specified ID and version."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /term-by-origin/{origin_name}/{origin_id}/{origin_version}:
+    get:
+      tags:
+        - "cdes"
+      summary: "Get term by origin, origin_id, and origin_version."
+      operationId: "term_by_origin_with_version_get"
+      parameters:
+        - in: path
+          name: origin_name
+          description: "Origin Name"
+          required: true
+          type: string
+        - in: path
+          name: origin_id
+          description: "Origin ID"
+          required: true
+          type: string
+        - in: path
+          name: origin_version
+          description: "Origin Version"
+          required: false
+          type: string
+      responses:
+        "200":
+          description: "Term information"
+          schema:
+            $ref: "#/definitions/Term"
+        "404":
+          description: "No terms found."
       x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
 definitions:
   Entity:
@@ -838,4 +893,18 @@ definitions:
         type: "string"
       version:
         type: "string"
-
+  CDEPermissibleValues:
+    type: array
+    items:
+      type: object
+      properties:
+        CDECode:
+          type: string
+        CDEVersion:
+          type: string
+        CDEFullName:
+          type: string
+        permissibleValues:
+          type: array
+          items:
+            type: string
