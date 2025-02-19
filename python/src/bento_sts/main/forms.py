@@ -27,9 +27,3 @@ class SelectModelForm(FlaskForm):
 class SelectVersionForm(FlaskForm):
     version = SelectField("Version")
     submit_version = SubmitField("Filter")
-
-
-class SelectModelVersionForm(FlaskForm):
-    model = SelectField("Model")
-    version = SelectField("Version")
-    get_pvs = SubmitField("Get Permissible Values and Synonyms")

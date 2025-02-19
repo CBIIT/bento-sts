@@ -18,7 +18,6 @@ from . import bp
 from .forms import (
     SearchForm,
     SelectModelForm,
-    SelectModelVersionForm,
     SelectVersionForm,
 )
 
@@ -400,43 +399,21 @@ def versionhistory():
     return render_template("version-history.html")
 
 
-# @bp.route("/cdes/<model>", methods=["GET", "POST"], defaults={"version": None})
 @bp.route(
-    "/cdes",
-    defaults={"model": None, "version": None},
+    "/model-pvs/<model>/<version>",
     methods=["GET", "POST"],
     strict_slashes=False,
 )
-@bp.route("/cdes/<model>/<version>", methods=["GET", "POST"])
-def cde_pvs_and_synonyms(model, version):
-    """Get CDE PVs and synonyms for a given model and version."""
+def cde_pvs_and_synonyms_by_model(model, version):
+    """
+    Get PVs and synonyms for a given model and version.
+
+    Follows Data Hub logic for using PVs from CDE or model.
+    """
     model = model or request.args.get("model") or request.form.get("model") or "ALL"
     version = (
         version or request.args.get("version") or request.form.get("version") or None
     )
-
-    select_form = SelectModelVersionForm()
-    select_form.model.choices = [(x, x) for x in current_app.config["MODEL_LIST"]]
-    if model != "ALL":
-        select_form.version.choices = [
-            (x, x) for x in current_app.config["VERSIONS_BY_MODEL"][model]
-        ]
-        select_form.version.choices.insert(0, ("ALL", "ALL"))
-    else:
-        select_form.version.choices = [("ALL", "ALL")]
-        version = "*"
-    if model == "ALL":
-        return render_template(
-            "mdb-cdes-base.html",
-            title="CDE Permissible Values and Synonyms",
-            model=model,
-            version=version,
-            form=select_form,
-        )
-
-    if select_form.validate_on_submit():
-        model = select_form.model.data
-        version = select_form.version.data
 
     ents = []
     mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
@@ -457,10 +434,54 @@ def cde_pvs_and_synonyms(model, version):
             [{**item, "property": item["property"].get("handle", "")} for item in ents],
         )
     return render_template(
-        "mdb-cdes.html",
-        title="CDE Permissible Values and Synonyms",
+        "mdb-model-pvs.html",
+        title="CDE Permissible Values and Synonyms by Model",
         ents=ents,
         display="cdes",
         model=model,
         version=version,
+    )
+
+
+@bp.route("/cde-pvs/<id>/<version>", methods=["GET", "POST"], strict_slashes=False)
+@bp.route(
+    "/cde-pvs/<id>",
+    defaults={"version": None},
+    methods=["GET", "POST"],
+    strict_slashes=False,
+)
+def cde_pvs_by_id(id, version):
+    """Get PVs for a given CDE id and optional version."""
+    cde_id = id or request.args.get("id")
+    cde_version = version or request.args.get("version") or ""
+    ents = []
+    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
+
+    fmt = request.args.get("format")
+    if request.form.get("format"):
+        fmt = request.args.get("format")
+    elif request.form.get("export"):
+        fmt = "json"
+    else:
+        pass
+
+    ents = mdb.get_cde_pvs_by_id(cde_id, cde_version)
+    if ents:
+        ent = ents[0]
+    if len(ents) > 1:
+        msg = (
+            f"More than one CDE found for id and version: {cde_id}, {cde_version}."
+            "Displaying first result only."
+        )
+        current_app.logger.warning(msg)
+
+    if fmt == "json":
+        return jsonify(ents)
+    return render_template(
+        "mdb-cde-pvs.html",
+        title="Common Data Element (CDE) Permissible Values",
+        ent=ent,
+        display="cde_pvs",
+        id=cde_id,
+        version=cde_version,
     )
