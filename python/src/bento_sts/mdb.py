@@ -492,12 +492,11 @@ class mdb:
     def get_cde_pvs_by_id(id: str | None = None, version: str | None = None):
         """Get CDE PVs for a given CDE id and optional version."""
         qry = (
-            "MATCH (cde:term {origin_id: $cde_id}),  "
-            "(vs:value_set)-[:has_term]->(pv:term) "
-            "WHERE vs.handle = $cde_id + '|' + $cde_version AND "
-            "(cde.origin_version = $cde_version OR "
-            "($cde_version = '' AND cde.origin_version IS NULL)) "
-            "RETURN cde, vs.url as value_set_url, collect(pv) as pvs"
+            "MATCH (cde:term {origin_id: $cde_id}) "
+            "WHERE ($cde_version = '' OR cde.origin_version = $cde_version) "
+            "OPTIONAL MATCH (vs:value_set)-[:has_term]->(pv:term) "
+            "WHERE vs.handle = $cde_id + '|' + coalesce(cde.origin_version, '') "
+            "RETURN cde, vs.url as value_set_url, COLLECT(pv) as pvs"
         )
         parms = {"cde_id": id, "cde_version": version}
 
