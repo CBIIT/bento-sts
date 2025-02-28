@@ -514,6 +514,7 @@ class mdb:
             "MATCH (t:term) WHERE t.origin_name = $origin_name "
             "AND t.origin_id = $origin_id AND ($origin_version IS NULL "
             "OR $origin_version = '' OR t.origin_version = $origin_version) "
+            "WITH t ORDER by split(t.origin_version, '.') DESC "
             "RETURN t.nanoid as term_nanoid"
         )
         parms = {
