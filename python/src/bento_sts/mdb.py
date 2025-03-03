@@ -34,7 +34,6 @@ could be used here for write and tag functionality."""
     def close(self):
         self.mdb.close()
 
-
     def get_list_of_models(self):
         models = self.mdb.get_model_nodes()
         ret = {}
