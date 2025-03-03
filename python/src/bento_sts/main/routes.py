@@ -199,8 +199,9 @@ def entities(entities, id):
     )
     # get a load of THIS kludge, dude.
     if model:
+        safe_model = re.escape(model)
         rendered = re.sub(
-            f'option value="{model}"',
+            f'option value="{safe_model}"',
             f'option selected="true" value={model}',
             rendered,
         )
