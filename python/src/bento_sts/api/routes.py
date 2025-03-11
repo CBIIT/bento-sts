@@ -1,5 +1,6 @@
 import sys
 import re
+from pdb import set_trace
 from flask import (
     render_template,
     redirect,
@@ -14,7 +15,6 @@ from flask import (
 )
 from werkzeug.exceptions import HTTPException
 from . import bp
-from ..mdb import mdb
 # sys.path.insert(0,"/Users/jensenma/Code/bento-meta/python")  # noqa E231
 
 from ..query import Query
@@ -66,9 +66,9 @@ def query_db(path):
     if not Query.paths:
         Query.set_paths(current_app.config["QUERY_PATHS"])
     current_app.logger.info(path)
-    m = mdb()
-    skip = request.args.get("skip")
-    limit = request.args.get("limit")
+    mdb = current_app.config['MDB']
+    skip = int(request.args.get("skip") or 0)
+    limit = int(request.args.get("limit") or 0)
     if not limit or limit > current_app.config['MAX_ENTS_PER_REQ']:
         limit = current_app.config['MAX_ENTS_PER_REQ'] 
     q = None
@@ -78,10 +78,11 @@ def query_db(path):
     except Exception as e:
         abort(404, e)
     # look for a paired 'count'
+
     if not path.endswith('count'):
         try:
             qct = Query(path+"/count")
-            ret = m.mdb.get_with_statement(str(qct), qct.params)
+            ret = mdb.get_with_statement(str(qct), qct.params)
             total_rows = list(ret[0].values())[0]
         except Exception as e:
             current_app.logger.warn(e)
@@ -102,7 +103,7 @@ def query_db(path):
     current_app.logger.info(q.params)
     ret = None
     try:
-        ret = m.mdb.get_with_statement(stmt, q.params)
+        ret = mdb.get_with_statement(stmt, q.params)
     except Exception as e:
         abort(500, "MDB issue: {}".format(str(e)))
     if not ret:

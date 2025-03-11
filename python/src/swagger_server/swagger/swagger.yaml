@@ -663,9 +663,10 @@ paths:
         "404":
           description: "No entity with specified nanoid"
       x-swagger-router-controller: "swagger_server.controllers.id_controller"
-  /model-pvs/{model}/{version}:
+  /terms/model-pvs/{model}/{version}/pvs:
     get:
       tags:
+        - "terms"
         - "cdes"
       summary: "Get Permissible Values and Synonyms for a specified model and version."
       operationId: "pvs_synonyms_model_version_get"
@@ -691,9 +692,10 @@ paths:
         "404":
           description: "No CDEs found for specified model and version."
       x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
-  /cde-pvs/{id}/{version}:
+  /terms/cde-pvs/{id}/{version}/pvs:
     get:
       tags:
+        - "terms"
         - "cdes"
       summary: "Get PVs for a given CDE id and version."
       operationId: "cde_pvs_by_id_with_version_get"
@@ -716,27 +718,54 @@ paths:
         "404":
           description: "No CDEs found for specified ID and version."
       x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
-  /term-by-origin/{origin_name}/{origin_id}/{origin_version}:
+  /term/origin/{origin_name}/id/{origin_id}:
     get:
       tags:
+        - "term"
+        - "cdes"
+      summary: "Get term by origin and origin_id."
+      operationId: "term_by_origin_get"
+      parameters:
+        - in: path
+          name: origin
+          description: "Origin Name"
+          required: true
+          type: string
+        - in: path
+          name: id
+          description: "Origin ID"
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Term information"
+          schema:
+            $ref: "#/definitions/Term"
+        "404":
+          description: "No terms found."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /term/origin/{origin_name}/id/{origin_id}/version/{origin_version}:
+    get:
+      tags:
+        - "term"
         - "cdes"
       summary: "Get term by origin, origin_id, and origin_version."
       operationId: "term_by_origin_with_version_get"
       parameters:
         - in: path
-          name: origin_name
+          name: origin
           description: "Origin Name"
           required: true
           type: string
         - in: path
-          name: origin_id
+          name: id
           description: "Origin ID"
           required: true
           type: string
         - in: path
-          name: origin_version
+          name: version
           description: "Origin Version"
-          required: false
+          required: true
           type: string
       responses:
         "200":

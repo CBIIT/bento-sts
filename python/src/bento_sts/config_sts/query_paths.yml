@@ -49,6 +49,8 @@
 # /tag/$key/$value/count
 # /term/$value
 # /term/$value/count
+# /terms/model-pvs/$model/$version/pvs
+# /terms/cde-pvs/$origin_id/$origin_version/pvs
 # /id/$nanoid
   
 paths:
@@ -239,15 +241,12 @@ paths:
           _nodes:
             - "*"
           _func: count@count
-    $origin_name:
-      _prop: origin_name
-      _return: _items
-      $origin_id:
-        _prop: origin_id
-        return: _items
-        $origin_version:
-          _prop: origin_version
+    by-origin:
+      $origin_name:
+        $origin_id:
           _return: _items
+          $origin_version:
+            _return: _items
   terms:
     model-pvs:
       _node: node

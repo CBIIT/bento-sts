@@ -29,18 +29,17 @@ class mdb:
     mdb_ = None
     term_values = None
 
-    def __init__(self):
+    def __init__(self, uri, user, pw):
         if mdb.mdb_ is None:
-            mdb.mdb_ = SearchableMDB(
-                current_app.config["NEO4J_MDB_URI"],
-                user=current_app.config["NEO4J_MDB_USER"],
-                password=current_app.config["NEO4J_MDB_PASS"],
-            )
+            mdb.mdb_ = SearchableMDB(uri, user, pw)
         self.mdb = mdb.mdb_
 
     def close(self):
         self.mdb.close()
 
+    def get_with_statement(self, statement, params):
+        return self.mdb.get_with_statement(statement, params)
+    
     def get_list_of_models(self):
         models = self.mdb.get_model_nodes()
         ret = {}

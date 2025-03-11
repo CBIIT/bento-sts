@@ -12,8 +12,6 @@ from flask import (
 )
 from flask_paginate import Pagination, get_page_parameter
 
-from bento_sts.mdb import mdb
-
 from . import bp
 from .forms import (
     SearchForm,
@@ -21,6 +19,9 @@ from .forms import (
     SelectVersionForm,
 )
 
+def mdb():
+    # only called in app context
+    return current_app.config['MDB']
 
 @bp.before_app_request
 def before_request():
@@ -44,10 +45,9 @@ def index():
 @bp.route("/models")
 def models(name=None):
     # format = request.args.get("format")
-    m = mdb()
 
     if name is not None:
-        models_ = m.get_model_by_name(name)  # list of versions of model <name>
+        models_ = mdb().get_model_by_name(name)  # list of versions of model <name>
         select_form = SelectVersionForm()
         select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
         return render_template(
@@ -59,7 +59,7 @@ def models(name=None):
             form=select_form,
         )
 
-    models_ = m.get_list_of_models()
+    models_ = mdb().get_list_of_models()
     return render_template(
         "mdb-model.html",
         title="Models",
@@ -95,7 +95,6 @@ def entities(entities, id):
         f"model: {model}, version: {version}, page: {page}, format: {format}",
     )
     id = id or id_
-    m = mdb()
     dispatch = {
         "nodes": {
             "title": "Node",
@@ -103,8 +102,8 @@ def entities(entities, id):
             "template": "mdb-node.html",
             "subtype": "nodes",
             "sort_key": lambda x: (x[1], x[2], x[3]),
-            "get_by_id": m.get_node_by_id,
-            "get_list": m.get_list_of_nodes,
+            "get_by_id": mdb().get_node_by_id,
+            "get_list": mdb().get_list_of_nodes,
         },
         "properties": {
             "title": "Property",
@@ -113,8 +112,8 @@ def entities(entities, id):
             "subtype": "properties",
             "sort_key": lambda x: (x["prop_handle"], x["node_model"], x["node_handle"]),
             "display": "prop-tuple",
-            "get_by_id": m.get_property_by_id,
-            "get_list": m.get_list_of_properties,
+            "get_by_id": mdb().get_property_by_id,
+            "get_list": mdb().get_list_of_properties,
         },
         "valuesets": {
             "title": "Value Set",
@@ -123,8 +122,8 @@ def entities(entities, id):
             "subtype": "valuesets",
             "sort_key": lambda x: x["handle"],
             "display": "list",
-            "get_by_id": m.get_valueset_by_id,
-            "get_list": m.get_list_of_valuesets,
+            "get_by_id": mdb().get_valueset_by_id,
+            "get_list": mdb().get_list_of_valuesets,
         },
         "terms": {
             "title": "Term",
@@ -135,8 +134,8 @@ def entities(entities, id):
                 x["value"].lower() if type(x["value"]) == str else ""
             ),
             "display": "term-tuple",
-            "get_by_id": m.get_term_by_id,
-            "get_list": m.get_list_of_terms,
+            "get_by_id": mdb().get_term_by_id,
+            "get_list": mdb().get_list_of_terms,
         },
         "origins": {
             "title": "Origin",
@@ -145,8 +144,8 @@ def entities(entities, id):
             "subtype": "origins",
             "sort_key": lambda x: list(x.values())[0],
             "display": "list",
-            "get_list": m.get_list_of_origins,
-            "get_by_id": m.get_origin_by_id,
+            "get_list": mdb().get_list_of_origins,
+            "get_by_id": mdb().get_origin_by_id,
         },
     }
 
@@ -216,8 +215,7 @@ def entities(entities, id):
 @bp.route("/terms/batch/<start>", methods=["GET", "POST"])
 def terms(start, num=15):
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    m = mdb()
-    (batches, tabnames) = m.get_term_batch_info(num)
+    (batches, tabnames) = mdb().get_term_batch_info(num)
     activetab = -1
     activesubtab = -1
     subbatches = None
@@ -231,7 +229,7 @@ def terms(start, num=15):
             if batches[i]["first"] <= start <= batches[i]["last"]:
                 activetab = i
                 break
-        (subbatches, subtabnames) = m.get_term_batch_info(
+        (subbatches, subtabnames) = mdb().get_term_batch_info(
             num,
             batches[i]["first"],
             bsize,
@@ -241,7 +239,7 @@ def terms(start, num=15):
                 activesubtab = j
                 break
         sbsize = subbatches[j]["last"] - subbatches[j]["first"] + 1
-        batch = mdb.get_term_batch(start, sbsize)
+        batch = mdb().get_term_batch(start, sbsize)
         pgurl = url_for("main.terms", start=start)
         pgurl += "?page={0}"
         pagination = Pagination(
@@ -276,7 +274,6 @@ def tags(key=None, value=None, model=None):
     val = value or request.args.get("value")
     model = model or request.args.get("model")
     ents = []
-    m = mdb()
     format = request.args.get("format")
     if request.form.get("format"):
         format = request.args.get("format")
@@ -286,9 +283,9 @@ def tags(key=None, value=None, model=None):
         pass
 
     if key:
-        ents = m.get_tagged_entities(key, val)
+        ents = mdb().get_tagged_entities(key, val)
     else:
-        ents = m.get_tags_and_values()
+        ents = mdb().get_tags_and_values()
 
     if format == "json":
         return jsonify(ents)
@@ -308,7 +305,6 @@ def tags(key=None, value=None, model=None):
 def search():
     if not g.search_form.validate():
         return redirect(url_for("main.index"))
-    m = mdb()
     format = request.args.get("format")
     if request.form.get("format"):
         format = request.args.get("format")
@@ -322,10 +318,10 @@ def search():
     ents = []
     thing = ""
     if request.args.get("terms"):
-        ents = m.search_terms(qstring)
+        ents = mdb().search_terms(qstring)
         thing = "terms"
     elif request.args.get("models"):
-        ents = m.search_entity_handles(qstring)
+        ents = mdb().search_entity_handles(qstring)
         thing = "models"
     else:
         abort(400)
@@ -414,7 +410,7 @@ def cde_pvs_and_synonyms_by_model(model, version):
     )
 
     ents = []
-    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
+#    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
     fmt = request.args.get("format")
     if request.form.get("format"):
@@ -424,7 +420,7 @@ def cde_pvs_and_synonyms_by_model(model, version):
     else:
         pass
 
-    ents = mdb.get_model_pvs_synonyms(model, version)
+    ents = mdb().get_model_pvs_synonyms(model, version)
 
     if fmt == "json":
         # remove attrs other than values from props
@@ -453,7 +449,7 @@ def cde_pvs_by_id(id, version):
     cde_id = id or request.args.get("id")
     cde_version = version or request.args.get("version") or ""
     ents = []
-    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
+#    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
     fmt = request.args.get("format")
     if request.form.get("format"):
@@ -463,7 +459,7 @@ def cde_pvs_by_id(id, version):
     else:
         pass
 
-    ents = mdb.get_cde_pvs_by_id(cde_id, cde_version)
+    ents = mdb().get_cde_pvs_by_id(cde_id, cde_version)
 
     if fmt == "json":
         return jsonify(
@@ -504,10 +500,10 @@ def term_by_origin(origin_name, origin_id, origin_version):
     origin_id = origin_id or request.args.get("origin_id")
     origin_version = origin_version or request.args.get("origin_version") or ""
 
-    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
+ #   mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
     term_nanoids = (
-        mdb.get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
+        mdb().get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
     )
     if term_nanoids:
         term_nanoid = term_nanoids[0]["term_nanoid"]

@@ -1,7 +1,7 @@
 import logging
 from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
-from bento_meta.mdb import MDB
+from .mdb import mdb
 from flask import Flask #, request, current_app
 from flask_bootstrap import Bootstrap4
 from flask_moment import Moment
@@ -26,10 +26,13 @@ def create_app(config_class=Config):
     """ or set to None for default theme """
     app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = 'spacelab'
 
-    mdb = MDB(app.config["NEO4J_MDB_URI"],
-              user=app.config["NEO4J_MDB_USER"],
-              password=app.config["NEO4J_MDB_PASS"])
-    minfo = mdb.get_model_info()
+    app.config['MDB'] = mdb(
+                app.config["NEO4J_MDB_URI"],
+                app.config["NEO4J_MDB_USER"],
+                app.config["NEO4J_MDB_PASS"],
+            )
+
+    minfo = app.config['MDB'].mdb_.get_model_info()
 
     app.config['MODEL_LIST'] = sorted(set([x['handle'] for x in minfo]))
     app.config['VERSIONS_BY_MODEL'] = {m: sorted(

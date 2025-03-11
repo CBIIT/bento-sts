@@ -15,6 +15,7 @@ class Config(object):
     NEO4J_MDB_PASS = os.environ.get("NEO4J_MDB_PASS")
     FLASK_LOGFILE = os.environ.get("STS_LOGFILE") or "sts.log"
     LANGUAGES = ["en"]
+    MDB = None # set in sts.py
     MODEL_LIST = [] # set by MDB query in sts.py
     HITS_PER_PAGE = 25
     MAX_ENTS_PER_REQ = 500
