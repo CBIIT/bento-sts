@@ -4,7 +4,7 @@ version = "0.1.10"
 authors = [
 { name="Mark Benson", email="mark.benson@nih.gov"},
 { name="Mark A. Jensen", email="mark.jensen@nih.gov"},
-{ name="Nelson W Jensen", email="nelson.moore@essential-soft.com"},
+{ name="Nelson W Moore", email="nelson.moore@essential-soft.com"},
 ]
 maintainer = "Mark A. Jensen"
 maintainer_email = "mark.jensen@nih.gov"
