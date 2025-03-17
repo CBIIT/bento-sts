@@ -13,3 +13,12 @@
     padding: .1em .25em;
     font-size: 150%;
 }
+.ui-widget-content a {
+    color: #3399f3;
+    text-decoration: none;
+    background-color: transparent;
+}
+.ui-widget-content a:hover {
+  color: #0c73cd;
+  text-decoration: underline;
+}

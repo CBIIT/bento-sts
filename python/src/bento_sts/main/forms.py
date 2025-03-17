@@ -25,5 +25,10 @@ class SelectModelForm(FlaskForm):
 
 
 class SelectVersionForm(FlaskForm):
-    version = SelectField("Version")
-    submit_version = SubmitField("Filter")
+    version = SelectField('Version')
+    submit_version = SubmitField('Version')
+    
+
+
+
+        

@@ -41,33 +41,8 @@ def index():
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-@bp.route("/models/<name>")
-@bp.route("/models")
-def models(name=None):
-    # format = request.args.get("format")
-
-    if name is not None:
-        models_ = mdb().get_model_by_name(name)  # list of versions of model <name>
-        select_form = SelectVersionForm()
-        select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
-        return render_template(
-            "mdb-model.html",
-            title=f"Model: {models_[0].handle}",
-            mdb=models_,
-            subtype="main.models",
-            display="detail",
-            form=select_form,
-        )
-
-    models_ = mdb().get_list_of_models()
-    return render_template(
-        "mdb-model.html",
-        title="Models",
-        mdb=sorted(models_, key=lambda x: x["name"]),
-        subtype="main.models",
-        display="list",
-    )
-
+@bp.route("/<entities>", defaults={'id': None}, methods=['GET','POST'])
+@bp.route('/<entities>/<id>', methods=['GET','POST'])
 
 @bp.route("/<entities>", defaults={"id": None}, methods=["GET", "POST"])
 @bp.route("/<entities>/<id>", methods=["GET", "POST"])
@@ -211,8 +186,41 @@ def entities(entities, id):
 # ---------------------------------------------------------------------------
 
 
-@bp.route("/terms", defaults={"start": 0}, methods=["GET", "POST"])
-@bp.route("/terms/batch/<start>", methods=["GET", "POST"])
+@bp.route("/models", methods=['GET'])
+@bp.route("/models/<name>", methods=['GET','POST'])
+def models(name=None):
+    m = mdb()
+    if name is not None:
+        if name not in current_app.config["MODEL_LIST"]:
+            return render_template('/errors/400.html'), 400
+        version = request.args.get("version") or request.form.get("version") or current_app.config["LATEST_VERSION_BY_MODEL"][name]
+        select_form = SelectVersionForm()
+        select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
+        return render_template(
+            "mdb-model.html",
+            title="Model: {}".format(name),
+            name=name,
+            version=version,
+            mdb={"nodes":m.get_list_of_nodes(name, version),
+                 "props":m.get_list_of_properties(name, version)},
+            subtype="main.models",
+            display="detail",
+            form=select_form,
+        )
+
+    else:
+        models_ = m.get_list_of_models()
+        return render_template(
+            "mdb-model.html",
+            title="Models",
+            mdb=sorted(models_, key=lambda x:x["name"]),
+            subtype="main.models",
+            display="list",
+        )
+
+
+@bp.route("/terms", defaults={'start': 0}, methods=['GET', 'POST'])
+@bp.route("/terms/batch/<start>", methods=['GET', 'POST'])
 def terms(start, num=15):
     page = request.args.get(get_page_parameter(), type=int, default=1)
     (batches, tabnames) = mdb().get_term_batch_info(num)
@@ -239,7 +247,7 @@ def terms(start, num=15):
                 activesubtab = j
                 break
         sbsize = subbatches[j]["last"] - subbatches[j]["first"] + 1
-        batch = mdb().get_term_batch(start, sbsize)
+        batch = type(mdb()).get_term_batch(start, sbsize)
         pgurl = url_for("main.terms", start=start)
         pgurl += "?page={0}"
         pagination = Pagination(
@@ -329,6 +337,8 @@ def search():
         return jsonify(ents)
     paging = {}
     pg_tot = 0
+    activetab = 'nodes'
+
     if not ents:
         thing = "no_hits"
     if thing == "terms":
@@ -345,6 +355,13 @@ def search():
         entdisplay = "terms"
     elif thing == "models":
         paging = None
+        if len(ents['nodes']) == 0:
+            if len(ents['properties']) > 0:
+                activetab = 'properties'
+            elif len(ents['relationships']) > 0:
+                activetab = 'relationships'
+            else:
+                thing = "no_hits"
         # for ent in ("nodes", "properties", "relationships"):
         #     pagination = Pagination(
         #         page=request.args.get("page",1,type=int),
@@ -361,8 +378,10 @@ def search():
         "search.html",
         title="Search",
         ents=ents,
+        npr=['nodes','properties','relationships'],
         thing=thing,
         q=qstring,
+        activetab=activetab,
         entdisplay=entdisplay,
         paging=paging,
     )
