@@ -1,0 +1,50 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %} {% block app_content %}
+<br />
+<h1>{{title}}</h1>
+<div class="float-right">
+  <a
+    href="{{ url_for('main.cde_pvs_and_synonyms_by_model',  model=model, 
+					version=version, format='json') }}"
+    class="btn btn-outline-primary btn-sm"
+  >
+    Export JSON
+  </a>
+  <br /><br />
+</div>
+{% if display == 'cdes' %}
+<table class="table-bordered">
+  <tr>
+    <th class="px-2">Model</th>
+    <th class="px-2">Version</th>
+    <th class="px-2">Property</th>
+    <th class="px-2">CDE Name</th>
+    <th class="px-2">Permissible Values</th>
+    <th class="px-2">Synonyms</th>
+  </tr>
+  {% for item in ents %} {% set row_count = item['permissibleValues'] | length + 1%}
+  <tr>
+    <th class="px-2" rowspan="{{ row_count }}">
+      <a href="{{ url_for('main.models', name=item['dataCommons']) }}">
+        {{ item['dataCommons'] }}
+      </a>
+    </th>
+    <th class="px-2" rowspan="{{ row_count }}">{{ item['version'] }}</th>
+    <th class="px-2" rowspan="{{ row_count }}">
+      <a
+        href="{{ url_for('main.entities', entities='properties',
+								id=item['property']['nanoid']) }}"
+      >
+        {{ item['property']['handle'] }}
+      </a>
+    </th>
+    <th class="px-2" rowspan="{{ row_count }}">{{ item['CDEFullName'] }}</th>
+  </tr>
+  {% for pv in item['permissibleValues'] %}
+  <tr>
+    <td class="px-2">{{ pv['value'] }}</td>
+    <td class="px-2">{{ pv['synonyms'] | join(", ")}}</td>
+  </tr>
+  {% endfor %} {% endfor %}
+</table>
+{% endif %} {% endblock %}

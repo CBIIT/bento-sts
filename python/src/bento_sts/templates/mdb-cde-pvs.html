@@ -1,0 +1,81 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %} {% block app_content %}
+<br />
+<h1>{{title}}</h1>
+<div class="float-right">
+  <a
+    href="{{ url_for('main.cde_pvs_by_id',  id=id, 
+					version=version, format='json') }}"
+    class="btn btn-outline-primary btn-sm"
+  >
+    Export JSON
+  </a>
+  <br /><br />
+</div>
+{% for ent in ents %} 
+<div>
+  <h3>CDE Details</h3>
+  <div id="cdeDetail" name="cdeDetail" style="margin: 20px; padding: 20x">
+    <table class="table-striped">
+      <tr>
+        <th style="width: 300px">CDE Name</th>
+        <td style="width: 300px">
+          <a
+            href="{{ url_for('main.entities', entities='terms', id=ent['cde']['nanoid']) }}"
+          >
+            {{ ent['cde']['value'] }}
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <th>MDB ID</th>
+        <td>{{ ent['cde']['nanoid'] }}</td>
+      </tr>
+      <tr>
+        <th>CDE ID</th>
+        <td>{{ ent['cde']['origin_id'] }}</td>
+      </tr>
+      <tr>
+        <th>CDE Version</th>
+        <td>{{ ent['cde']['origin_version'] }}</td>
+      </tr>
+      <tr>
+        <th>caDSR URL</th>
+        <td><a
+          href="{{ ent['value_set_url'] }}"
+        >{{ "link" }}</td>
+      </tr>
+    </table>
+  </div>
+</div>
+<div>
+  <h3>Permissible Values</h3>
+  <div id="cdePVs" name="cdePVs" style="margin: 20px; padding: 20x">
+    <table class="table-striped">
+      <tr>
+        <th class="px-2">Permissible Value</th>
+        <th class="px-2">caDSR ID</th>
+        <th class="px-2">Version</th>                
+        <th class="px-2">Definition</th>
+        <th class="px-2">MDB ID</th>
+      </tr>
+      {% for pv in ent["pvs"] %} {% set row_count =  ent["pvs"] | length + 1%}
+      <tr>
+        <td class="px-2">
+          <a
+          href="{{ url_for('main.entities', entities='terms', id=pv['nanoid']) }}"
+          >
+          {{ pv['value'] }}
+        </a>
+        </td>
+        <td class="px-2">{{ pv['origin_id'] }}</td>
+        <td class="px-2">{{ pv['origin_version'] }}</td>
+        <td class="px-2">{{ pv['origin_definition'] }}</td>
+        <td class="px-2">{{ pv['nanoid'] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

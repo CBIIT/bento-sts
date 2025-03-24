@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from bento_meta.util.cypher.entities import (  # noqa E402
     N, R, P, N0, R0, G,
     _as, _var, _plain, _anon,
@@ -7,12 +8,14 @@ from bento_meta.util.cypher.functions import (
     count, exists, labels, group, And, Or, Not,
     )
 from bento_meta.util.cypher.clauses import (
-    Match, Where, With, Return,
-    Statement
+    Match, OptionalMatch, Where, With, Unwind,
+    Return,Statement,
     )
 from pdb import set_trace  # noqa E402
 
 avail_funcs = {x.__name__: x for x in (count, exists, labels, group, And, Or, Not)}
+avail_clauses = {'match': Match, 'optional match': OptionalMatch, 'where': Where,
+                 'with': With, 'return': Return}
 
 class _engine(object):
     paths = None
@@ -33,7 +36,7 @@ class _engine(object):
     def parse(self, toks):
         toks = toks
         pth = self.paths
-        return self._walk(None, toks, pth)
+        return self._walk(None, toks, pth, [])
 
     def _process_node(self, block):
         ret = None
@@ -129,6 +132,10 @@ class _engine(object):
             return False
         return ret
                 
+    def _process_query(self, qry, ent, pad):
+        return eval(f"Statement({pad['_return']['_query']}, use_params=True)")
+        
+        
     def _create_statement(self, ent, pad):
         match_clause = Match(ent)
         ret_clause = None
@@ -223,6 +230,12 @@ class _engine(object):
                                 a.append(_as(e, types[e.Type]))
                             else:
                                 a.append(e)
+            if retblock.get('_query'):
+                a.append(1)
+                self.statement = self._process_query(retblock['_query'],ent, pad)
+                if retblock.get('_params'):
+                    self.statement._params = Statement(eval(retblock['_params'])).params
+                pass
             if not a:
                 self.error = {
                     "description": "No named nodes or edges matching the path _return spec",
@@ -246,18 +259,20 @@ class _engine(object):
                 "pad": pad,
                 }
             return False
-        self.statement = Statement(match_clause, ret_clause,
-                                   use_params=self.use_params)
+        if not self.statement:
+            self.statement = Statement(match_clause, ret_clause,
+                                       use_params=self.use_params)
         self.params = self.statement.params
         return True
 
-    def _walk(self, ent, toks, pth):
+    def _walk(self, ent, toks, pth, curtoks):
         if not toks or not pth:
             self.error = {
                 "description": "_walk: Either toks or pth is empty"
                 }
             return False
         tok = toks[0]
+        curtoks.append(tok)
         pad = {}
         parm = None
         if tok in pth:
@@ -314,7 +329,11 @@ class _engine(object):
                     return False # bad _func spec
                 for k in _func:
                     pad[k] = _func[k]
+            elif opn == "_query":
+                pad["_query"] = pth["_query"]
             pass
+        pad['curtoks'] = curtoks
+        pad['pth'] = pth
 
         # pad ready for operations
         new_ent = None
@@ -389,4 +408,4 @@ class _engine(object):
                     }
                 return False  # ERR reached end of toks, no _return found
             else:
-                return self._walk(new_ent or ent, toks[1:], pth)
+                return self._walk(new_ent or ent, toks[1:], pth, curtoks)

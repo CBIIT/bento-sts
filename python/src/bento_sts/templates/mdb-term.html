@@ -1,85 +1,103 @@
-{% extends "base.html" %}
-
-{% block app_content %}
-    <br>
-    <h1> {{ title }}</h1>
-    <div class="float-right">
-      <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.term.nanoid, format='json' ) }}" class="btn btn-outline-primary btn-sm"> Export JSON </a>
-    </div>
-    <br><br>
-    <div>
-      <h3> Details </h3>
-      <div id="termDetail" name="termDetail" style="margin:20px; padding:20x">
+{% extends "base.html" %} {% block app_content %}
+<br />
+<h1>{{ title }}</h1>
+<div class="float-right">
+  <a
+    href="{{url_for( 'main.entities', entities=subtype, id=mdb.term.nanoid, format='json' ) }}"
+    class="btn btn-outline-primary btn-sm"
+  >
+    Export JSON
+  </a>
+</div>
+<br /><br />
+<div>
+  <h3>Details</h3>
+  <div id="termDetail" name="termDetail" style="margin: 20px; padding: 20x">
+    <table class="table-striped">
+      <tr>
+        <th style="width: 300px">Term Value</th>
+        <td style="width: 300px">
+          <a
+            href="{{url_for( 'main.entities', entities=subtype, id=mdb.term.nanoid ) }}"
+          >
+            {{mdb.term.value}}
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <th>Id</th>
+        <td>{{mdb.term.nanoid}}</td>
+      </tr>
+      <tr>
+        <th>Origin</th>
+        <td>
+          {% if mdb.origin %}
+          <a href="/origins/{{mdb.origin.nanoid}}">{{mdb.term.origin_name}}</a>
+          {% else %} {{mdb.term.origin_name}} {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Origin Id</th>
+        <td>{{mdb.term.origin_id}}</td>
+      </tr>
+      {% if mdb.term.origin_definition %}
+      <tr>
+        <th>Origin Definition</th>
+        <td>{{mdb.origin_definition}}</td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+</div>
+<br />
+<div>
+  <h3>Properties Accepting</h3>
+  <div id="termProps" name="termProps" style="margin: 20px; padding: 20x">
+    <table class="table-striped">
+      <tr>
+        <th style="width: 250px">Property</th>
+        <th style="width: 250px">Model</th>
+        <th style="width: 250px">Version</th>
+      </tr>
+      {% for prop in mdb.props %}
+      <tr>
+        <td>
+          <a
+            href="{{url_for( 'main.entities', entities='properties', id=prop.nanoid ) }}"
+            >{{prop.handle}}</a
+          >
+        </td>
+        <td>{{prop.model}}</td>
+        <td>{{prop.version}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div>
+    <h3>Synonyms</h3>
+    <div id="termSyns" name="termSyns" style="margin: 20px; padding: 20x">
       <table class="table-striped">
-         <tr>
-            <th style="width:300px"> Term Value </th> 
-            <td style="width:300px"> <a href="{{url_for( 'main.entities', entities=subtype, id=mdb.term.nanoid ) }}"> {{mdb.term.value}} </a>        </td>
-         </tr>
-         <tr>
-             <th> Id </th> <td>{{mdb.term.nanoid}} </td>
-         </tr>
-	 <tr>
-	   <th> Origin </th> <td>
-             {% if mdb.origin %}
-               <a href="/origins/{{mdb.origin.nanoid}}">{{mdb.term.origin_name}}</a>
-             {% else %}
-               {{mdb.term.origin_name}}
-             {% endif %}
-           </td>
-	 </tr>
-         <tr>
-           <th> Origin Id </th> <td>{{mdb.term.origin_id}} </td>
-         </tr>
-         {% if mdb.term.origin_definition %}
-         <tr>
-           <th> Origin Definition </th> <td>{{mdb.origin_definition}} </td>
-         </tr>
-       {% endif %}
+        <tr>
+          <th style="width: 250px">Value</th>
+          <th style="width: 250px">Origin</th>
+          <th style="width: 250px">Mapping Sources</th>
+        </tr>
+        {% if mdb.synonyms %} {% for syn in mdb.synonyms %}
+        <tr>
+          <td>
+            <a
+              href="{{url_for( 'main.entities', entities='terms', id=syn.id ) }}"
+              >{{syn.value}}</a
+            >
+          </td>
+          <td>{{syn.origin}}</td>
+          <td>{{syn.sources}}</td>
+        </tr>
+        {% endfor %} {% endif %}
       </table>
-      </div>
     </div>
-    <br>
-    <div>
-      <h3> Properties Accepting </h3>
-      <div id="termProps" name="termProps" style="margin:20px; padding:20x">
-        <table class="table-striped">
-          <tr>
-            <th style="width:250px"> Property </th>
-            <th style="width:250px"> Model </th>
-            <th style="width:250px"> Version </th>
-          </tr>
-          {% for prop in mdb.props %}
-            <tr>
-              <td><a href="{{url_for( 'main.entities', entities='properties', id=prop.nanoid ) }}">{{prop.handle}}</a></td>
-              <td>{{prop.model}}</td>
-              <td>{{prop.version}}</td>
-            </tr>
-          {% endfor %}
-        </table>
-      </div>
-      <div>
-        <h3> Synonyms </h3>
-        <div id="termSyns" name="termSyns" style="margin:20px; padding:20x">
-          <table class="table-striped">
-            <tr>
-              <th style="width:250px"> Value </th>
-              <th style="width:250px"> Origin </th>
-              <th style="width:250px"> Mapping Sources </th>
-            </tr>
-            {% if mdb.synonyms %}
-              {% for syn in mdb.synonyms %}
-                <tr>
-                  <td><a href="{{url_for( 'main.entities', entities='terms', id=syn.id ) }}">{{syn.value}}</a></td>
-                  <td>{{syn.origin}}</td>
-                  <td>{{syn.sources}}</td>
-                </tr>
-              {% endfor %}
-            {% endif %}
-          </table>
-        </div>
-      </div>
-    </div>
-{% block edit_functions %}
-{% endblock edit_functions %}
-    <br><br>
+  </div>
+</div>
+{% block edit_functions %} {% endblock edit_functions %}
+<br /><br />
 {% endblock %}

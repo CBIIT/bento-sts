@@ -48,6 +48,11 @@ tags:
   externalDocs:
     description: "Explore on UI"
     url: "https://sts.ctos-data-team.org"
+- name: "cdes"
+  description: "Retrieve permissible values and synonyms for a specified model and version\n"
+  externalDocs:
+    description: "Explore on UI"
+    url: "https://sts.ctos-data-team.org"
 schemes:
 - "https"
 paths:
@@ -658,6 +663,118 @@ paths:
         "404":
           description: "No entity with specified nanoid"
       x-swagger-router-controller: "swagger_server.controllers.id_controller"
+  /terms/model-pvs/{model}/{version}/pvs:
+    get:
+      tags:
+        - "terms"
+        - "cdes"
+      summary: "Get Permissible Values and Synonyms for a specified model and version."
+      operationId: "pvs_synonyms_model_version_get"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "model"
+          in: "path"
+          description: "Model handle (e.g. 'CDS')"
+          required: true
+          type: "string"
+        - name: "version"
+          in: "path"
+          description: "Model version (e.g. '4.0.1')"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: >
+            "Permissible Values and Synonyms by model and version. CDE PVs if available."
+          schema:
+            $ref: "#/definitions/PermissibleValuesSynonyms"
+        "404":
+          description: "No CDEs found for specified model and version."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /terms/cde-pvs/{id}/{version}/pvs:
+    get:
+      tags:
+        - "terms"
+        - "cdes"
+      summary: "Get PVs for a given CDE id and version."
+      operationId: "cde_pvs_by_id_with_version_get"
+      parameters:
+        - in: path
+          name: id
+          description: "CDE ID"
+          required: true
+          type: string
+        - in: path
+          name: version
+          description: "CDE Version"
+          required: false
+          type: string
+      responses:
+        "200":
+          description: "CDE Permissible Values"
+          schema:
+            $ref: "#/definitions/CDEPermissibleValues"
+        "404":
+          description: "No CDEs found for specified ID and version."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /term/origin/{origin_name}/id/{origin_id}:
+    get:
+      tags:
+        - "term"
+        - "cdes"
+      summary: "Get term by origin and origin_id."
+      operationId: "term_by_origin_get"
+      parameters:
+        - in: path
+          name: origin
+          description: "Origin Name"
+          required: true
+          type: string
+        - in: path
+          name: id
+          description: "Origin ID"
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Term information"
+          schema:
+            $ref: "#/definitions/Term"
+        "404":
+          description: "No terms found."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /term/origin/{origin_name}/id/{origin_id}/version/{origin_version}:
+    get:
+      tags:
+        - "term"
+        - "cdes"
+      summary: "Get term by origin, origin_id, and origin_version."
+      operationId: "term_by_origin_with_version_get"
+      parameters:
+        - in: path
+          name: origin
+          description: "Origin Name"
+          required: true
+          type: string
+        - in: path
+          name: id
+          description: "Origin ID"
+          required: true
+          type: string
+        - in: path
+          name: version
+          description: "Origin Version"
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Term information"
+          schema:
+            $ref: "#/definitions/Term"
+        "404":
+          description: "No terms found."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
 definitions:
   Entity:
     type: "object"
@@ -780,3 +897,43 @@ definitions:
         type: "string"
       nanoid:
         type: "string"
+  PermissibleValuesSynonyms:
+    type: "object"
+    required:
+      - "dataCommons"
+      - "permissibleValues"
+      - "property"
+      - "version"
+    properties:
+      dataCommons:
+        type: "string"
+      permissibleValues:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            value:
+              type: "string"
+            synonyms:
+              type: "array"
+              items:
+                type: "string"
+      property:
+        type: "string"
+      version:
+        type: "string"
+  CDEPermissibleValues:
+    type: array
+    items:
+      type: object
+      properties:
+        CDECode:
+          type: string
+        CDEVersion:
+          type: string
+        CDEFullName:
+          type: string
+        permissibleValues:
+          type: array
+          items:
+            type: string
