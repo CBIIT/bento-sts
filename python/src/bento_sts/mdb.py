@@ -32,10 +32,16 @@ class mdb:
     def __init__(self, uri, user, pw):
         if mdb.mdb_ is None:
             mdb.mdb_ = SearchableMDB(uri, user, pw)
-        self.mdb = mdb.mdb_
 
     def close(self):
         self.mdb.close()
+
+    @property
+    def mdb(self):
+        return mdb.mdb_
+    
+    def get_with_statement(self, qry, parms):
+        return self.mdb.get_with_statement(qry, parms)
 
     def get_list_of_models(self):
         models = self.mdb.get_model_nodes()
@@ -187,7 +193,7 @@ class mdb:
         return result
 
     def get_property_by_id(self, pid, model=None):
-        p_result = self.mdb.get_with_statement(
+        p_result = self.get_with_statement(
             "match (p:property {nanoid:$pid})<-[:has_property]-(n:node) "
             "with p,n "
             "optional match (p)-[:has_concept]->(:concept)<-[:represents]-(a:term) "
@@ -308,7 +314,7 @@ class mdb:
         tabnames = []
         if not mdb.term_values:
             try:
-                res = self.mdb.get_with_statement(
+                res = self.get_with_statement(
                     "match (t:term) with t.value as val return val order by val",
                     {},
                 )
@@ -354,7 +360,7 @@ class mdb:
         return res
 
     def get_term_by_id(self, tid):
-        t_result = self.mdb.get_with_statement(
+        t_result = self.get_with_statement(
             "match (t:term {nanoid:$id}) "
             "optional match (t)<-[:has_term]-(v:value_set)<-[:has_value_set]-(p:property) "
             "with t as term, t.origin_name as oname,  collect(p) as props "
@@ -369,7 +375,7 @@ class mdb:
             result["props"],
             key=lambda x: (x["handle"], x["model"], x.get("version")),
         )
-        s_result = self.mdb.get_with_statement(
+        s_result = self.get_with_statement(
             "match (t:term {nanoid:$id})-[:represents]->(c:concept)<-[:represents]-(s:term) "
             "optional match (g:tag {key:'mapping_source'})<-[:has_tag]-(c) "
             "return s.value as value, s.nanoid as id, s.origin_name as origin, collect(g.value) as sources",
@@ -382,7 +388,7 @@ class mdb:
         return result
 
     def get_list_of_terms(self, start=None, end=None):
-        t_result = self.mdb.get_with_statement(
+        t_result = self.get_with_statement(
             "match (t:term)<-[:has_term]-(:value_set) "
             "with distinct t as t "
             "return t.value as value, t as term",
@@ -409,7 +415,7 @@ class mdb:
 
     def get_tagged_entities(self, tag_key, tag_value=None):
         props = "{key:$key, value:$value}" if tag_value else "{key:$key}"
-        ents_by_tag = self.mdb.get_with_statement(
+        ents_by_tag = self.get_with_statement(
             f"match (t:tag {props}) "
             "with t "
             "match (e)-[:has_tag]->(t) "
