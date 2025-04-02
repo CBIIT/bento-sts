@@ -19,6 +19,8 @@ from .forms import (
     SelectVersionForm,
 )
 
+from pdb import set_trace
+
 def mdb():
     # only called in app context
     return current_app.config['MDB']
@@ -439,7 +441,7 @@ def cde_pvs_and_synonyms_by_model(model, version):
     else:
         pass
 
-    ents = mdb().get_model_pvs_synonyms(model, version)
+    ents = type(mdb()).get_model_pvs_synonyms(model, version)
 
     if fmt == "json":
         # remove attrs other than values from props
@@ -478,7 +480,7 @@ def cde_pvs_by_id(id, version):
     else:
         pass
 
-    ents = mdb().get_cde_pvs_by_id(cde_id, cde_version)
+    ents = type(mdb()).get_cde_pvs_by_id(cde_id, cde_version)
 
     if fmt == "json":
         return jsonify(
@@ -522,7 +524,7 @@ def term_by_origin(origin_name, origin_id, origin_version):
  #   mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
     term_nanoids = (
-        mdb().get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
+        type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
     )
     if term_nanoids:
         term_nanoid = term_nanoids[0]["term_nanoid"]
