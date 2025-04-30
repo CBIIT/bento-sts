@@ -516,14 +516,30 @@ class mdb:
     @functools.lru_cache
     @staticmethod
     def get_cde_pvs_by_id(id: str | None = None, version: str | None = None):
-        """Get CDE PVs for a given CDE id and optional version."""
+        """Get CDE PVs and synonyms for a given CDE id and optional version."""
         qry = (
             "MATCH (cde:term {origin_id: $cde_id}) "
             "WHERE ($cde_version = '' OR cde.origin_version = $cde_version) "
             "OPTIONAL MATCH (vs:value_set)-[:has_term]->(pv:term) "
             "WHERE vs.handle = $cde_id + '|' + coalesce(cde.origin_version, '') "
             "WITH cde, vs.url as value_set_url, COLLECT(pv) as pvs "
-            "RETURN cde, vs.url as value_set_url, COLLECT(pv) as pvs"
+            "UNWIND pvs AS pv "
+            "OPTIONAL MATCH (pv)-[:represents]->(c_cadsr:concept)<-[:represents]-"
+            "(ncit_term:term {origin_name: 'NCIt'}), "
+            "(c_cadsr)-[:has_tag]->(:tag {key: 'mapping_source', value: 'caDSR'}) "
+            "OPTIONAL MATCH (ncit_term)-[:represents]->(c_ncim:concept)<-[:represents]"
+            "-(syn:term), "
+            "(c_ncim)-[:has_tag]->(:tag {key: 'mapping_source', value: 'NCIm'}) "
+            "WHERE pv <> syn and pv.value <> syn.value "
+            "WITH cde, value_set_url, pvs, pv.value as pv_val, ncit_term.origin_id "
+            "AS ncit_oid, ncit_term.value AS ncit_value, collect(DISTINCT syn.value) "
+            "AS distinct_syn_vals WITH cde, value_set_url, pvs, pv_val, ncit_oid, "
+            "CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] "
+            "ELSE distinct_syn_vals END AS syn_vals "
+            "WITH cde, value_set_url, pvs, pv_val, "
+            "collect({value: pv_val, synonyms: syn_vals, ncit_concept_code: ncit_oid}) AS formatted_item "  # noqa: E501
+            "WITH cde, value_set_url, pvs, collect(formatted_item) AS formatted_pvs "
+            "RETURN cde, value_set_url, pvs, formatted_pvs AS permissibleValues"
         )
         parms = {"cde_id": id, "cde_version": version}
 

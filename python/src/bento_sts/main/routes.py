@@ -491,7 +491,7 @@ def cde_pvs_by_id(id, version):
                     "CDECode": item["cde"].get("origin_id", ""),
                     "CDEVersion": item["cde"].get("origin_version", ""),
                     "CDEFullName": item["cde"].get("value", ""),
-                    "permissibleValues": [pv.get("value", "") for pv in item["pvs"]],
+                    "permissibleValues": item["permissibleValues"],
                 }
                 for item in ents
             ],
