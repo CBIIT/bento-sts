@@ -4,7 +4,7 @@ import functools
 
 from bento_meta.mdb import SearchableMDB
 from bento_meta.model import Model
-from flask import current_app, url_for
+from flask import url_for
 
 plural = {
     "node": "nodes",
@@ -39,7 +39,7 @@ class mdb:
     @property
     def mdb(self):
         return mdb.mdb_
-    
+
     def get_with_statement(self, qry, parms):
         return self.mdb.get_with_statement(qry, parms)
 
@@ -202,8 +202,8 @@ class mdb:
             "p.version as version, "
             "p.value_domain as value_domain, p as prop, n as node, "
             "  vs as value_set, collect(distinct a) as annots, collect(t) as terms",
-            {"pid": pid}
-            )
+            {"pid": pid},
+        )
         if not p_result:
             return {}
         pr = p_result[0]
@@ -221,21 +221,29 @@ class mdb:
                 ),
             }
         if pr["terms"]:
-            pr["has_terms"] = [{"id": t["nanoid"], "value": t["value"],
-                                    "origin": t["origin_name"] if "origin_name" in t else None,
-                                    "type": "term",
-                                    "link": url_for("main.entities",
-                                                    entities='terms',
-                                                    id=t["nanoid"])}
-                               for t in pr["terms"] if 'nanoid' in t]
+            pr["has_terms"] = [
+                {
+                    "id": t["nanoid"],
+                    "value": t["value"],
+                    "origin": t["origin_name"] if "origin_name" in t else None,
+                    "type": "term",
+                    "link": url_for("main.entities", entities="terms", id=t["nanoid"]),
+                }
+                for t in pr["terms"]
+                if "nanoid" in t
+            ]
         if pr["annots"]:
-            pr["has_annots"] = [{"id": t["nanoid"], "value": t["value"],
-                                    "origin": t["origin_name"] if "origin_name" in t else None,
-                                    "type": "term",
-                                    "link": url_for("main.entities",
-                                                    entities='terms',
-                                                    id=t["nanoid"])}
-                               for t in pr["annots"] if 'nanoid' in t]
+            pr["has_annots"] = [
+                {
+                    "id": t["nanoid"],
+                    "value": t["value"],
+                    "origin": t["origin_name"] if "origin_name" in t else None,
+                    "type": "term",
+                    "link": url_for("main.entities", entities="terms", id=t["nanoid"]),
+                }
+                for t in pr["annots"]
+                if "nanoid" in t
+            ]
         return pr
 
     # ####################################################################### #
@@ -481,13 +489,21 @@ class mdb:
             "WHEN NOT has_cde AND size(model_pvs) > 0 THEN model_pvs "
             "ELSE [null] END AS pvs "
             "UNWIND pvs AS pv "
-            "OPTIONAL MATCH (pv)-[:represents]->(c:concept)<-[:represents]-"
-            "(syn:term), (c)-[:has_tag]->(g:tag {key: 'mapping_source', value: 'NCIm'})"
-            " WHERE pv <> syn and pv.value <> syn.value "
+            "OPTIONAL MATCH (pv)-[:represents]->(c_cadsr:concept)<-[:represents]-"
+            "(ncit_term:term {origin_name: 'NCIt'}), "
+            "(c_cadsr)-[:has_tag]->(:tag {key: 'mapping_source', value: 'caDSR'}) "
+            "OPTIONAL MATCH (ncit_term)-[:represents]->(c_ncim:concept)<-[:represents]"
+            "-(syn:term), "
+            "(c_ncim)-[:has_tag]->(:tag {key: 'mapping_source', value: 'NCIm'}) "
+            "WHERE pv <> syn and pv.value <> syn.value "
             "WITH prop, CDECode, CDEVersion, CDEFullName, model_pvs, "
-            "pv.value AS pv_val, collect(DISTINCT syn.value) AS syn_vals "
+            "pv.value AS pv_val, ncit_term.origin_id AS ncit_oid, ncit_term.value "
+            "AS ncit_value, collect(DISTINCT syn.value) AS distinct_syn_vals "
+            "WITH prop, CDECode, CDEVersion, CDEFullName, model_pvs, pv_val, ncit_oid, "
+            "CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] "
+            "ELSE distinct_syn_vals END AS syn_vals "
             "WITH prop, CDECode, CDEVersion, CDEFullName, model_pvs, "
-            "collect({value: pv_val, synonyms: syn_vals}) AS formatted_pvs "
+            "collect({value: pv_val, synonyms: syn_vals, ncit_concept_code: ncit_oid}) AS formatted_pvs "  # noqa: E501
             "RETURN $dataCommons AS dataCommons, $version AS version, "
             "prop AS property, CDECode, CDEVersion, CDEFullName, "
             "formatted_pvs AS permissibleValues"
@@ -506,6 +522,7 @@ class mdb:
             "WHERE ($cde_version = '' OR cde.origin_version = $cde_version) "
             "OPTIONAL MATCH (vs:value_set)-[:has_term]->(pv:term) "
             "WHERE vs.handle = $cde_id + '|' + coalesce(cde.origin_version, '') "
+            "WITH cde, vs.url as value_set_url, COLLECT(pv) as pvs "
             "RETURN cde, vs.url as value_set_url, COLLECT(pv) as pvs"
         )
         parms = {"cde_id": id, "cde_version": version}
@@ -532,5 +549,24 @@ class mdb:
             "origin_id": origin_id,
             "origin_version": origin_version,
         }
+
+        return mdb.mdb_.get_with_statement(qry, parms)
+
+    @functools.lru_cache
+    @staticmethod
+    def get_cde_pvs_and_synonyms_by_id(
+        id: str | None = None,
+        version: str | None = None,
+    ):
+        """Get CDE PVs for a given CDE id and optional version."""
+        qry = (
+            "MATCH (cde:term {origin_id: $cde_id}) "
+            "WHERE ($cde_version = '' OR cde.origin_version = $cde_version) "
+            "OPTIONAL MATCH (vs:value_set)-[:has_term]->(pv:term) "
+            "WHERE vs.handle = $cde_id + '|' + coalesce(cde.origin_version, '') "
+            "WITH cde, vs.url as value_set_url, COLLECT(pv) as pvs "
+            "RETURN cde, vs.url as value_set_url, COLLECT(pv) as pvs"
+        )
+        parms = {"cde_id": id, "cde_version": version}
 
         return mdb.mdb_.get_with_statement(qry, parms)
