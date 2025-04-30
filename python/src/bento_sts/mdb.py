@@ -533,13 +533,12 @@ class mdb:
             "WHERE pv <> syn and pv.value <> syn.value "
             "WITH cde, value_set_url, pvs, pv.value as pv_val, ncit_term.origin_id "
             "AS ncit_oid, ncit_term.value AS ncit_value, collect(DISTINCT syn.value) "
-            "AS distinct_syn_vals WITH cde, value_set_url, pvs, pv_val, ncit_oid, "
-            "CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] "
-            "ELSE distinct_syn_vals END AS syn_vals "
-            "WITH cde, value_set_url, pvs, pv_val, "
-            "collect({value: pv_val, synonyms: syn_vals, ncit_concept_code: ncit_oid}) AS formatted_item "  # noqa: E501
-            "WITH cde, value_set_url, pvs, collect(formatted_item) AS formatted_pvs "
-            "RETURN cde, value_set_url, pvs, formatted_pvs AS permissibleValues"
+            "AS distinct_syn_vals "
+            "WITH cde, value_set_url, pvs, "
+            "COLLECT({value: pv_val, synonyms: CASE WHEN ncit_value IS NOT NULL THEN "
+            "distinct_syn_vals + [ncit_value] ELSE distinct_syn_vals END, "
+            "ncit_concept_code: ncit_oid}) AS permissibleValues "
+            "RETURN cde, value_set_url, pvs, permissibleValues"
         )
         parms = {"cde_id": id, "cde_version": version}
 
@@ -586,3 +585,56 @@ class mdb:
         parms = {"cde_id": id, "cde_version": version}
 
         return mdb.mdb_.get_with_statement(qry, parms)
+
+    @functools.lru_cache
+    @staticmethod
+    def get_all_pvs_and_synonyms():
+        """Get all CDE PVs and synonyms used by models in MDB."""
+        qry = (
+            "MATCH (cde:term) WHERE toLower(cde.origin_name) CONTAINS 'cadsr' WITH cde "
+            "OPTIONAL MATCH (ent)-[:has_property]->(p:property)-[:has_concept]->(:concept)"  # noqa: E501
+            "<-[:represents]-(cde) WHERE p.model IS NOT NULL AND p.version IS NOT NULL "
+            "WITH cde,COLLECT(DISTINCT {model: p.model, version: p.version, "
+            "property: ent.handle + '.' + p.handle}) AS models "
+            # asdf
+            "WITH cde, models, cde.origin_id + '|' + COALESCE(cde.origin_version, '') "
+            "AS cde_hdl "
+            # asdf
+            "OPTIONAL MATCH (prop: property)-[:has_concept]->(c:concept)<-[:represents]-(cde) "  # noqa: E501
+            "OPTIONAL MATCH (prop)-[:has_value_set]->(:value_set)-[:has_term]->(model_pv:term) "  # noqa: E501
+            "WITH cde, models, cde_hdl, COLLECT(DISTINCT model_pv) AS model_pvs "
+            # asdf
+            "OPTIONAL MATCH (vs:value_set {handle: cde_hdl})-[:has_term]->(cde_pv:term) "  # noqa: E501
+            "WITH cde, models, model_pvs, COLLECT(DISTINCT cde_pv) AS cde_pvs "
+            # asdf
+            "WITH cde, models, model_pvs, cde_pvs, "
+            "CASE "
+            "  WHEN size(cde_pvs) > 0 AND NONE(p in cde_pvs WHERE p.value =~ 'https?://.*') THEN cde_pvs "  # noqa: E501
+            "  WHEN size(cde_pvs) > 0 AND ANY(p in cde_pvs WHERE p.value =~ 'https?://.*') AND size(model_pvs) > 0 THEN model_pvs "  # noqa: E501
+            "  WHEN size(model_pvs) > 0 THEN model_pvs "
+            "  ELSE [] "
+            "END AS pvs "
+            "WHERE size(pvs) > 0 "
+            # asdf
+            "UNWIND pvs AS pv "
+            "OPTIONAL MATCH (pv)-[:represents]->(c_cadsr:concept)<-[:represents]-"
+            "(ncit_term:term {origin_name: 'NCIt'}), "
+            "(c_cadsr)-[:has_tag]->(:tag {key: 'mapping_source', value: 'caDSR'}) "
+            "OPTIONAL MATCH (ncit_term)-[:represents]->(c_ncim:concept)<-[:represents]"
+            "-(syn:term), "
+            "(c_ncim)-[:has_tag]->(:tag {key: 'mapping_source', value: 'NCIm'}) "
+            "WHERE pv <> syn and pv.value <> syn.value "
+            # asdf
+            "WITH cde, pv, models, pv.value as pv_val, ncit_term.origin_id AS ncit_oid,"
+            " ncit_term.value AS ncit_value, collect(DISTINCT syn.value) "
+            "AS distinct_syn_vals WITH cde, pv, models, pv_val, ncit_oid, "
+            "CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] "
+            "ELSE distinct_syn_vals END AS syn_vals "
+            # asdf
+            "WITH cde, models, collect({value: pv_val, synonyms: syn_vals, "
+            "ncit_concept_code: ncit_oid}) AS formatted_pvs "
+            "RETURN cde.origin_id AS CDECode, cde.origin_version AS CDEVersion, "
+            "cde.value AS CDEFullName, models, formatted_pvs AS permissibleValues "
+            "LIMIT 25"  # TODO: remove limit after testing
+        )
+        return mdb.mdb_.get_with_statement(qry, {})

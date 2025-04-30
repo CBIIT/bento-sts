@@ -1,0 +1,92 @@
+<!-- -*-jinja2-*- -->
+{% extends "base.html" %} {% block app_content %}
+<br />
+<h1>{{title}}</h1>
+<div class="float-right">
+  <a
+    href="{{ url_for('main.all_cde_pvs_and_synonyms', format='json') }}"
+    class="btn btn-outline-primary btn-sm"
+  >
+    Export JSON
+  </a>
+  <br /><br />
+</div>
+{% if display == 'cdes' %}
+<table class="table-bordered">
+  <tr>
+    <th class="px-2">CDE Code</th>
+    <th class="px-2">CDE Version</th>
+    <th class="px-2">CDE Name</th>
+    <th class="px-2">Used In</th>
+    <th class="px-2">Permissible Values</th>
+    <th class="px-2">Synonyms</th>
+    <th class="px-2">NCIt Code</th>
+  </tr>
+  {% for item in ents %} {% set pv_rows = item['permissibleValues'] | length %}
+  {% set model_rows = item['models'] | length %} {% set row_count = pv_rows if
+  pv_rows > model_rows else model_rows %} {% if row_count == 0 %}{% set
+  row_count = 1 %}{% endif %}
+  <tr>
+    <td class="px-2" rowspan="{{ row_count }}">{{ item['CDECode'] }}</td>
+    <td class="px-2" rowspan="{{ row_count }}">{{ item['CDEVersion'] }}</td>
+    <td class="px-2" rowspan="{{ row_count }}">{{ item['CDEFullName'] }}</td>
+    <td class="px-2">
+      {% for model in item['models'] %}
+      <div>
+        <a href="{{ url_for('main.models', name=model['model']) }}">
+          {{ model['model'] }}
+        </a>
+        v{{ model['version'] }}: {{ model['property'] }}
+      </div>
+      {% else %}
+      <div>Not used in any model</div>
+      {% endfor %}
+    </td>
+
+    {% if item['permissibleValues'] and item['permissibleValues'][0] %}
+    <td class="px-2">{{ item['permissibleValues'][0]['value'] }}</td>
+    <td class="px-2">
+      {{ item['permissibleValues'][0]['synonyms'] | join(", ") }}
+    </td>
+    <td class="px-2">
+      {{ item['permissibleValues'][0]['ncit_concept_code'] }}
+    </td>
+    {% else %}
+    <td class="px-2" colspan="3">No permissible values</td>
+    {% endif %}
+  </tr>
+
+  {% for pv in item['permissibleValues'][1:] %}
+  <tr>
+    {% if loop.index == 1 and model_rows > 1 %}
+    <td class="px-2" rowspan="{{ row_count - 1 }}">
+      {% for model in item['models'][1:] %}
+      <div>
+        <a href="{{ url_for('main.models', name=model['model']) }}">
+          {{ model['model'] }}
+        </a>
+        v{{ model['version'] }}: {{ model['property'] }}
+      </div>
+      {% endfor %}
+    </td>
+    {% elif loop.index >= model_rows %}
+    <td class="px-2"></td>
+    {% endif %}
+    <td class="px-2">{{ pv['value'] }}</td>
+    <td class="px-2">{{ pv['synonyms'] | join(", ") }}</td>
+    <td class="px-2">{{ pv['ncit_concept_code'] }}</td>
+  </tr>
+  {% endfor %} {% if pv_rows == 0 and model_rows > 1 %} {% for model in
+  item['models'][1:] %}
+  <tr>
+    <td class="px-2">
+      <a href="{{ url_for('main.models', name=model['model']) }}">
+        {{ model['model'] }}
+      </a>
+      v{{ model['version'] }}: {{ model['property'] }}
+    </td>
+    <td class="px-2" colspan="3"></td>
+  </tr>
+  {% endfor %} {% endif %} {% endfor %}
+</table>
+{% endif %} {% endblock %}

@@ -538,3 +538,37 @@ def term_by_origin(origin_name, origin_id, origin_version):
         current_app.logger.warning(msg)
 
     return entities(entities="terms", id=term_nanoid)
+
+
+@bp.route(
+    "/all-pvs",
+    methods=["GET", "POST"],
+    strict_slashes=False,
+)
+def all_cde_pvs_and_synonyms():
+    """
+    Get all PVs and synonyms for a given model and version.
+
+    Follows Data Hub logic for using PVs from CDE or model.
+    """
+    ents = []
+
+    fmt = request.args.get("format")
+    if request.form.get("format"):
+        fmt = request.args.get("format")
+    elif request.form.get("export"):
+        fmt = "json"
+    else:
+        pass
+
+    ents = type(mdb()).get_all_pvs_and_synonyms()
+
+    if fmt == "json":
+        # remove attrs other than values from props
+        return jsonify(ents)
+    return render_template(
+        "mdb-all-pvs.html",
+        title="CDE Permissible Values and Synonyms",
+        ents=ents,
+        display="cdes",
+    )
