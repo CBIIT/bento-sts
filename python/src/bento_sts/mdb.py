@@ -625,6 +625,5 @@ class mdb:
             "ncit_concept_code: ncit_oid}) AS formatted_pvs "
             "RETURN cde.origin_id AS CDECode, cde.origin_version AS CDEVersion, "
             "cde.value AS CDEFullName, models, formatted_pvs AS permissibleValues "
-            "LIMIT 25"  # TODO: remove limit after testing
         )
         return mdb.mdb_.get_with_statement(qry, {})

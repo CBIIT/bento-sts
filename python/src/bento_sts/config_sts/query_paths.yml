@@ -329,7 +329,6 @@ paths:
           With('cde, models, pv_val, ncit_oid, CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] ELSE distinct_syn_vals END AS syn_vals'),
           With('cde, models, COLLECT({value: pv_val, synonyms: syn_vals, ncit_concept_code: ncit_oid}) AS formatted_pvs'),
           Return('cde.origin_id AS CDECode, cde.origin_version AS CDEVersion, cde.value AS CDEFullName, models, formatted_pvs AS permissibleValues'),
-          Limit('25')
   id:
     _node: _var
     $nanoid:
