@@ -78,3 +78,6 @@ def test_pv_paths(client):
     # negative control:
     response = client.get('/v1/terms/cde-pvs/14425/1.0')    
     assert response.status_code == 404
+
+    response = client.get('/v1/terms/all-pvs')
+    assert response.status_code == 200
