@@ -23,8 +23,7 @@ For testing:
 
 For production, consider using
 [gunicorn](https://docs.gunicorn.org/en/latest/index.html). [./src](./src)
-contains two gunicorn config file examples, for development and
-production.
+contains two gunicorn config file examples, for development and production.
 
     gunicorn -c gunicorn.conf.dev.py
 
@@ -68,4 +67,12 @@ You should be able to see the frontend on your machine at http://localhost:5000.
 
 ## API Docs
 
-[in progress]
+The API is documented in an [OpenAPI (Swagger) schema](/swagger/swagger.yaml). 
+
+Docker is probably the easiest way to run a local Swagger server. 
+This will bring up a Swagger server at port 6000:
+
+    # from the repo root, run...
+    docker run -p 6000:8080 -e SWAGGER_JSON=/work/swagger.json -v ${PWD}/swagger:/work docker.swagger.io/swaggerapi/swagger-ui
+
+(see [https://swagger.io/docs/open-source-tools/swagger-ui/usage/installation/](https://swagger.io/docs/open-source-tools/swagger-ui/usage/installation/))
