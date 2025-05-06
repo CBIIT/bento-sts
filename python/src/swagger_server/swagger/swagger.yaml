@@ -718,6 +718,32 @@ paths:
         "404":
           description: "No CDEs found for specified ID and version."
       x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
+  /terms/all-pvs:
+    get:
+      tags:
+        - "terms"
+        - "cdes"
+      summary: "Get all PVs and synonyms for all models and CDEs"
+      operationId: "all_pvs_get"
+      parameters:
+        - name: "skip"
+          in: "query"
+          description: "Pagination - number of items to skip\n"
+          required: false
+          type: "integer"
+        - name: "limit"
+          in: "query"
+          description: "Pagination - number of items to return\n"
+          required: false
+          type: "integer"
+      responses:
+        "200":
+          description: "CDE Permissible Values and model information"
+          schema:
+            $ref: "#/definitions/CDEPermissibleValuesWithModelInfo"
+        "404":
+          description: "No PVs found."
+      x-swagger-router-controller: "swagger_server.controllers.cdes_controller"
   /term/origin/{origin_name}/id/{origin_id}:
     get:
       tags:
@@ -779,8 +805,8 @@ definitions:
   Entity:
     type: "object"
     required:
-    - "label"
-    - "nanoid"
+      - "label"
+      - "nanoid"
     properties:
       label:
         type: "string"
@@ -792,9 +818,9 @@ definitions:
   Model:
     type: "object"
     required:
-    - "handle"
-    - "version"
-    - "nanoid"
+      - "handle"
+      - "version"
+      - "nanoid"
     properties:
       handle:
         type: "string"
@@ -815,10 +841,10 @@ definitions:
   Node:
     type: "object"
     required:
-    - "handle"
-    - "model"
-    - "version"
-    - "nanoid"
+      - "handle"
+      - "model"
+      - "version"
+      - "nanoid"
     properties:
       handle:
         type: "string"
@@ -836,11 +862,11 @@ definitions:
   Property:
     type: "object"
     required:
-    - "handle"
-    - "model"
-    - "version"
-    - "nanoid"
-    - "value_domain"
+      - "handle"
+      - "model"
+      - "version"
+      - "nanoid"
+      - "value_domain"
     properties:
       handle:
         type: "string"
@@ -870,9 +896,9 @@ definitions:
   Term:
     type: "object"
     required:
-    - "nanoid"
-    - "origin_name"
-    - "value"
+      - "nanoid"
+      - "origin_name"
+      - "value"
     properties:
       value:
         type: "string"
@@ -887,9 +913,9 @@ definitions:
   Tag:
     type: "object"
     required:
-    - "key"
-    - "nanoid"
-    - "value"
+      - "key"
+      - "nanoid"
+      - "value"
     properties:
       key:
         type: "string"
@@ -933,6 +959,32 @@ definitions:
           type: string
         CDEFullName:
           type: string
+        permissibleValues:
+          type: array
+          items:
+            type: string
+  CDEPermissibleValuesWithModelInfo:
+    type: array
+    items:
+      type: object
+      properties:
+        CDECode:
+          type: string
+        CDEVersion:
+          type: string
+        CDEFullName:
+          type: string
+        models:
+          type: array
+          items:
+            type: object
+            properties:
+              model:
+                type: string
+              version:
+                type: string
+              property:
+                type: string
         permissibleValues:
           type: array
           items:
