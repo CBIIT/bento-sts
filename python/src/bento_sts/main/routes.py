@@ -19,11 +19,10 @@ from .forms import (
     SelectVersionForm,
 )
 
-from pdb import set_trace
-
 def mdb():
     # only called in app context
-    return current_app.config['MDB']
+    return current_app.config["MDB"]
+
 
 @bp.before_app_request
 def before_request():
@@ -43,9 +42,8 @@ def index():
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-@bp.route("/<entities>", defaults={'id': None}, methods=['GET','POST'])
-@bp.route('/<entities>/<id>', methods=['GET','POST'])
-
+@bp.route("/<entities>", defaults={"id": None}, methods=["GET", "POST"])
+@bp.route("/<entities>/<id>", methods=["GET", "POST"])
 @bp.route("/<entities>", defaults={"id": None}, methods=["GET", "POST"])
 @bp.route("/<entities>/<id>", methods=["GET", "POST"])
 def entities(entities, id):
@@ -188,41 +186,46 @@ def entities(entities, id):
 # ---------------------------------------------------------------------------
 
 
-@bp.route("/models", methods=['GET'])
-@bp.route("/models/<name>", methods=['GET','POST'])
+@bp.route("/models", methods=["GET"])
+@bp.route("/models/<name>", methods=["GET", "POST"])
 def models(name=None):
     m = mdb()
     if name is not None:
         if name not in current_app.config["MODEL_LIST"]:
-            return render_template('/errors/400.html'), 400
-        version = request.args.get("version") or request.form.get("version") or current_app.config["LATEST_VERSION_BY_MODEL"][name]
+            return render_template("/errors/400.html"), 400
+        version = (
+            request.args.get("version")
+            or request.form.get("version")
+            or current_app.config["LATEST_VERSION_BY_MODEL"][name]
+        )
         select_form = SelectVersionForm()
         select_form.version.choices = current_app.config["VERSIONS_BY_MODEL"][name]
         return render_template(
             "mdb-model.html",
-            title="Model: {}".format(name),
+            title=f"Model: {name}",
             name=name,
             version=version,
-            mdb={"nodes":m.get_list_of_nodes(name, version),
-                 "props":m.get_list_of_properties(name, version)},
+            mdb={
+                "nodes": m.get_list_of_nodes(name, version),
+                "props": m.get_list_of_properties(name, version),
+            },
             subtype="main.models",
             display="detail",
             form=select_form,
         )
 
-    else:
-        models_ = m.get_list_of_models()
-        return render_template(
-            "mdb-model.html",
-            title="Models",
-            mdb=sorted(models_, key=lambda x:x["name"]),
-            subtype="main.models",
-            display="list",
-        )
+    models_ = m.get_list_of_models()
+    return render_template(
+        "mdb-model.html",
+        title="Models",
+        mdb=sorted(models_, key=lambda x: x["name"]),
+        subtype="main.models",
+        display="list",
+    )
 
 
-@bp.route("/terms", defaults={'start': 0}, methods=['GET', 'POST'])
-@bp.route("/terms/batch/<start>", methods=['GET', 'POST'])
+@bp.route("/terms", defaults={"start": 0}, methods=["GET", "POST"])
+@bp.route("/terms/batch/<start>", methods=["GET", "POST"])
 def terms(start, num=15):
     page = request.args.get(get_page_parameter(), type=int, default=1)
     (batches, tabnames) = mdb().get_term_batch_info(num)
@@ -339,7 +342,7 @@ def search():
         return jsonify(ents)
     paging = {}
     pg_tot = 0
-    activetab = 'nodes'
+    activetab = "nodes"
 
     if not ents:
         thing = "no_hits"
@@ -357,11 +360,11 @@ def search():
         entdisplay = "terms"
     elif thing == "models":
         paging = None
-        if len(ents['nodes']) == 0:
-            if len(ents['properties']) > 0:
-                activetab = 'properties'
-            elif len(ents['relationships']) > 0:
-                activetab = 'relationships'
+        if len(ents["nodes"]) == 0:
+            if len(ents["properties"]) > 0:
+                activetab = "properties"
+            elif len(ents["relationships"]) > 0:
+                activetab = "relationships"
             else:
                 thing = "no_hits"
         # for ent in ("nodes", "properties", "relationships"):
@@ -380,7 +383,7 @@ def search():
         "search.html",
         title="Search",
         ents=ents,
-        npr=['nodes','properties','relationships'],
+        npr=["nodes", "properties", "relationships"],
         thing=thing,
         q=qstring,
         activetab=activetab,
@@ -431,7 +434,6 @@ def cde_pvs_and_synonyms_by_model(model, version):
     )
 
     ents = []
-#    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
     fmt = request.args.get("format")
     if request.form.get("format"):
@@ -470,7 +472,6 @@ def cde_pvs_by_id(id, version):
     cde_id = id or request.args.get("id")
     cde_version = version or request.args.get("version") or ""
     ents = []
-#    mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
 
     fmt = request.args.get("format")
     if request.form.get("format"):
@@ -489,7 +490,7 @@ def cde_pvs_by_id(id, version):
                     "CDECode": item["cde"].get("origin_id", ""),
                     "CDEVersion": item["cde"].get("origin_version", ""),
                     "CDEFullName": item["cde"].get("value", ""),
-                    "permissibleValues": [pv.get("value", "") for pv in item["pvs"]],
+                    "permissibleValues": item["permissibleValues"],
                 }
                 for item in ents
             ],
@@ -521,8 +522,6 @@ def term_by_origin(origin_name, origin_id, origin_version):
     origin_id = origin_id or request.args.get("origin_id")
     origin_version = origin_version or request.args.get("origin_version") or ""
 
- #   mdb()  # instantiate so mdb.mdb_ is available for get_cde_pvs
-
     term_nanoids = (
         type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
     )
@@ -537,3 +536,37 @@ def term_by_origin(origin_name, origin_id, origin_version):
         current_app.logger.warning(msg)
 
     return entities(entities="terms", id=term_nanoid)
+
+
+@bp.route(
+    "/all-pvs",
+    methods=["GET", "POST"],
+    strict_slashes=False,
+)
+def all_cde_pvs_and_synonyms():
+    """
+    Get all PVs and synonyms for a given model and version.
+
+    Follows Data Hub logic for using PVs from CDE or model.
+    """
+    ents = []
+
+    fmt = request.args.get("format")
+    if request.form.get("format"):
+        fmt = request.args.get("format")
+    elif request.form.get("export"):
+        fmt = "json"
+    else:
+        pass
+
+    ents = type(mdb()).get_all_pvs_and_synonyms()
+
+    if fmt == "json":
+        # remove attrs other than values from props
+        return jsonify(ents)
+    return render_template(
+        "mdb-all-pvs.html",
+        title="CDE Permissible Values and Synonyms",
+        ents=ents,
+        display="cdes",
+    )

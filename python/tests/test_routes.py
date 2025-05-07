@@ -108,20 +108,5 @@ def test_api_pv_paths(client):
     response = client.get('/v1/terms/cde-pvs/14425/1.0')    
     assert response.status_code == 404
 
-def test_main_pv_paths(client):
-    set_mdb_responses([
-        [{'count': 1}],
-        [{'key': 'value'}]
-    ])
-    response = client.get('/model-pvs/ICDC/1.0')
+    response = client.get('/v1/terms/all-pvs')
     assert response.status_code == 200
-    set_mdb_responses([
-        [{'count': 1}],
-        [{'key': 'value'}]
-    ])
-    response = client.get('/v1/terms/cde-pvs/14425/1.0/pvs')
-    assert response.status_code == 200
-    # negative control:
-    response = client.get('/v1/terms/cde-pvs/14425/1.0')    
-    assert response.status_code == 404
-    
