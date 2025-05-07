@@ -12,7 +12,7 @@ description = "Bento Simple Terminology Server"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache License"
+    "License :: OSI Approved :: Apache Software License"
 ]
 [project.urls]
 "Homepage" = "https://github.com/CBIIT/bento-sts"
