@@ -19,7 +19,6 @@ from .forms import (
     SelectVersionForm,
 )
 
-
 def mdb():
     # only called in app context
     return current_app.config["MDB"]
@@ -524,8 +523,7 @@ def term_by_origin(origin_name, origin_id, origin_version):
     origin_version = origin_version or request.args.get("origin_version") or ""
 
     term_nanoids = (
-        type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version)
-        or []
+        type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
     )
     if term_nanoids:
         term_nanoid = term_nanoids[0]["term_nanoid"]
