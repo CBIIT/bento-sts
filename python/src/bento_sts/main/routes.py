@@ -8,6 +8,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_from_directory,
     url_for,
 )
 from flask_paginate import Pagination, get_page_parameter
@@ -18,6 +19,7 @@ from .forms import (
     SelectModelForm,
     SelectVersionForm,
 )
+
 
 def mdb():
     # only called in app context
@@ -123,6 +125,10 @@ def entities(entities, id):
             "get_by_id": mdb().get_origin_by_id,
         },
     }
+
+    # Validate entity type before proceeding
+    if entities not in dispatch:
+        abort(404)
 
     # A: single entity
     if id is not None:
@@ -402,6 +408,11 @@ def about_sts():
     return render_template("about-sts.html", title="About STS")
 
 
+@bp.route("/favicon.ico")
+def favicon():
+    return send_from_directory("static", "favicon.ico")
+
+
 @bp.errorhandler(413)
 def too_large(e):
     return "File is too large", 413
@@ -490,7 +501,7 @@ def cde_pvs_by_id(id, version):
                     "CDECode": item["cde"].get("origin_id", ""),
                     "CDEVersion": item["cde"].get("origin_version", ""),
                     "CDEFullName": item["cde"].get("value", ""),
-                    "permissibleValues": item["permissibleValues"],
+                    "permissibleValues": item.get("permissibleValues", []),
                 }
                 for item in ents
             ],
@@ -523,7 +534,8 @@ def term_by_origin(origin_name, origin_id, origin_version):
     origin_version = origin_version or request.args.get("origin_version") or ""
 
     term_nanoids = (
-        type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
+        type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version)
+        or []
     )
     if term_nanoids:
         term_nanoid = term_nanoids[0]["term_nanoid"]
