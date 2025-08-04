@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 bind = "127.0.0.1:8000"
 wsgi_app = "bento_sts.sts:create_app()"
@@ -10,3 +11,4 @@ workers = 2
 # certfile = "/var/www/prv/fullchain.pem"
 # keyfile = "/var/www/prv/privkey.pem"
 # ca_certs = "/etc/ssl/certs/ca-certificates.crt"
+timeout = 300

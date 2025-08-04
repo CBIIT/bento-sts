@@ -292,16 +292,16 @@ paths:
                   'vs.handle = $', list(ent.props['origin_id'].param)[0],
                   ' + \'|\' +', ' coalesce(',
                   ent.var, '.origin_version', ', "")' ]) ),
-                With( 'cde, vs.url as value_set_url, COLLECT(pv) as pvs' ),
-                Unwind('pvs AS pv'),
+                With( "".join([ent.var, ', vs.url as value_set_url, COLLECT(pv) as pvs']) ),
+                With( "".join([ent.var, ', value_set_url, pvs, CASE WHEN size(pvs) > 0 THEN pvs ELSE [null] END as pvs_to_process']) ),
+                Unwind('pvs_to_process AS pv'),
                 OptionalMatch('(pv)-[:represents]->(c_cadsr:concept)<-[:represents]-(ncit_term:term {origin_name: "NCIt"}), (c_cadsr)-[:has_tag]->(:tag {key: "mapping_source", value: "caDSR"})'),
+                Where( 'pv IS NOT NULL' ),
                 OptionalMatch('(ncit_term)-[:represents]->(c_ncim:concept)<-[:represents]-(syn:term), (c_ncim)-[:has_tag]->(:tag {key: "mapping_source", value: "NCIm"})'),
-                Where( 'pv <> syn and pv.value <> syn.value' ),
-                With( 'cde, value_set_url, pvs, pv.value as pv_val, ncit_term.origin_id AS ncit_oid, ncit_term.value AS ncit_value, collect(DISTINCT syn.value) AS distinct_syn_vals' ),
-                With( 'cde, value_set_url, pvs, pv_val, ncit_oid, CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] ELSE distinct_syn_vals END AS syn_vals' ),
-                With( 'cde, value_set_url, pvs, pv_val, collect({value: pv_val, synonyms: syn_vals, ncit_concept_code: ncit_oid}) AS formatted_item' ),
-                With( 'cde, value_set_url, pvs, collect(formatted_item) AS formatted_pvs' ),
-                Return( 'cde, value_set_url, pvs, formatted_pvs AS permissibleValues' )
+                Where( 'pv IS NOT NULL AND pv <> syn and pv.value <> syn.value' ),
+                With( "".join([ent.var, ', value_set_url, pvs, CASE WHEN pv IS NULL THEN null ELSE pv.value END as pv_val, CASE WHEN pv IS NULL THEN null ELSE ncit_term.origin_id END AS ncit_oid, CASE WHEN pv IS NULL THEN null ELSE ncit_term.value END AS ncit_value, collect(DISTINCT syn.value) AS distinct_syn_vals']) ),
+                With( "".join([ent.var, ', value_set_url, pvs, CASE WHEN pv_val IS NULL THEN [] ELSE COLLECT({value: pv_val, synonyms: CASE WHEN ncit_value IS NOT NULL THEN distinct_syn_vals + [ncit_value] ELSE distinct_syn_vals END, ncit_concept_code: ncit_oid}) END AS permissibleValues']) ),
+                Return( "".join([ent.var, '.origin_id AS CDECode, ', ent.var, '.origin_version AS CDEVersion, ', ent.var, '.value AS CDEFullName, permissibleValues']) )
               _params: |
                 Match(ent)
     all-pvs:
@@ -319,7 +319,7 @@ paths:
           With('cde, models, cde_hdl, COLLECT(DISTINCT model_pv) AS model_pvs'),
           OptionalMatch('(vs:value_set {handle: cde_hdl})-[:has_term]->(cde_pv:term)'),
           With('cde, models, model_pvs, COLLECT(DISTINCT cde_pv) AS cde_pvs'),
-          With('cde, models, model_pvs, cde_pvs, CASE WHEN size(cde_pvs) > 0 AND NONE(p in cde_pvs WHERE p.value =~ "https?://.*") THEN cde_pvs WHEN size(cde_pvs) > 0 AND ANY(p in cde_pvs WHERE p.value =~ "https?://.*") AND size(model_pvs) > 0 THEN model_pvs WHEN size(model_pvs) > 0 THEN model_pvs ELSE [] END AS pvs'),
+          With('cde, models, model_pvs, cde_pvs, CASE WHEN size(cde_pvs) > 0 AND NONE(p in cde_pvs WHERE p.value =~ "https?://.*") THEN cde_pvs WHEN size(cde_pvs) > 0 AND ANY(p in cde_pvs WHERE p.value =~ "https?://.*") AND size(model_pvs) > 0 THEN model_pvs ELSE [] END AS pvs'),
           Where('size(pvs) > 0'),
           Unwind('pvs AS pv'),
           OptionalMatch('(pv)-[:represents]->(c_cadsr:concept)<-[:represents]-(ncit_term:term {origin_name: "NCIt"}), (c_cadsr)-[:has_tag]->(:tag {key: "mapping_source", value: "caDSR"})'),
