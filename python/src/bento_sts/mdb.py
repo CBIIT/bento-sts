@@ -22,8 +22,9 @@ plural = {
 
 class mdb:
     """
-    Read functionality for driving STS UI. Mixins mdb_update and mdb_tags
-    could be used here for write and tag functionality.
+    Read functionality for driving STS UI.
+
+    Mixins mdb_update and mdb_tags could be used here for write and tag functionality.
     """
 
     mdb_ = None
@@ -56,7 +57,7 @@ class mdb:
                     if not ret[h].get("name"):
                         ret[h]["name"] = ret[h]["handle"]
                     ret[h]["version"] = [mdl["m"]["version"]]
-        return [x for x in ret.values()]
+        return list(ret.values())
 
     def get_model_by_name(self, name):
         model_nodes = self.mdb.get_model_nodes(model=name)

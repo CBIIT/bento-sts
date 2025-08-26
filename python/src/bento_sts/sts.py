@@ -35,7 +35,7 @@ def create_app(config_class=Config):
 
     minfo = app.config["MDB"].mdb_.get_model_info()
 
-    app.config["MODEL_LIST"] = sorted(set([x["handle"] for x in minfo]))
+    app.config["MODEL_LIST"] = sorted({x["handle"] for x in minfo})
     app.config["VERSIONS_BY_MODEL"] = {
         m: sorted([v["version"] for v in minfo if v["handle"] == m])
         for m in app.config["MODEL_LIST"]
