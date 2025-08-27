@@ -1,104 +1,132 @@
 <!-- -*-jinja2-*- -->
-{% from 'bootstrap4/form.html' import render_form, render_field %}
-<!doctype html>
+<!DOCTYPE html>
+{% from "bootstrap4/form.html" import render_form, render_field %}
+
 <html lang="en">
-    <head>
-      {% block head %}
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        
-        <!-- Favicon -->
-        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        
-        {% block styles %}
-          <!-- Bootstrap Icons-->
-          
-          <!-- Bootstrap CSS -->
-          {{ bootstrap.load_css() }}
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet">
-          <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
-	  <link href="/static/sts.css" rel="stylesheet">
-          
-        {% endblock %}
-        
-        {% block scripts %}
-          {{ moment.include_moment() }}
-          {{ moment.lang(g.locale) }}
-          {{ bootstrap.load_js() }}
-          <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-          <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
-          <script>
-            $( function() {
-            $( "#tabs" ).tabs();
-            } );
-          </script>
-        {% endblock %}
-            <title>STS</title>
+  <head>
+    {% block head %}
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
 
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
 
-        {% endblock %}
-    </head>
+    {% block styles %}
+    <!-- Bootstrap Icons-->
 
-    <body>
+    <!-- Bootstrap CSS -->
+    {{ bootstrap.load_css() }}
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css"
+    />
+    <link href="/static/sts.css" rel="stylesheet" />
 
-        {% block navbar %}
-        
-            <nav class="navbar navbar-expand-md navbar-dark bg-primary">
+    {% endblock %} {% block scripts %} {{ moment.include_moment() }} {{
+    moment.lang(g.locale) }} {{ bootstrap.load_js() }}
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+    <script>
+      $(function () {
+        $("#tabs").tabs();
+      });
+    </script>
+    {% endblock %}
+    <title>STS</title>
 
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">STS</a>
+    {% endblock %}
+  </head>
 
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+  <body>
+    {% block navbar %}
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav  mr-auto">    
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.models') }}">{{ 'Models' }}</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.entities',entities='nodes') }}">{{ 'Nodes' }}</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.entities',entities='properties') }}">{{ 'Properties' }}</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.entities',entities='terms') }}">{{ 'Terms' }}</a>
-                            </li>
-			    <li class="nav-item">
-			      <a class="nav-link" href="{{ url_for('main.tags') }}">{{ 'Tags' }}</a>
-			    </li>
-                        </ul>
-                        {% if g.search_form %}
-			  {{ render_form( g.search_form, form_type="inline", method="get",
-			  action=url_for("main.search"), extra_classes="my-2 my-md-0",
-			  button_size="sm",
-			  button_map={"models":"outline-light", "terms":"outline-light"} ) }}"
-                        {% endif %}
-                    </div>
+    <nav class="navbar navbar-expand-md navbar-dark bg-primary">
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">STS</a>
 
-                    
-            </nav>
-        
-        {% endblock %}
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        {% block content %}
-            <div class="container">
-                {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-info" role="alert">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-                {% endwith %}
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.models') }}"
+              >{{ 'Models' }}</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for('main.entities',entities='nodes') }}"
+              >{{ 'Nodes' }}</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for('main.entities',entities='properties') }}"
+              >{{ 'Properties' }}</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for('main.entities',entities='terms') }}"
+              >{{ 'Terms' }}</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.tags') }}"
+              >{{ 'Tags' }}</a
+            >
+          </li>
+        </ul>
+        {% if g.search_form %} {{ render_form( g.search_form,
+        form_type="inline", method="get", action=url_for("main.search"),
+        extra_classes="my-2 my-md-0", button_size="sm",
+        button_map={"models":"outline-light", "terms":"outline-light"} ) }}" {%
+        endif %}
+      </div>
+    </nav>
 
-                {# application content needs to be provided in the app_content block #}
-                
-                {% block app_content %}{% endblock %}
-
-            </div>
-        {% endblock %}
-</body>
+    {% endblock %} {% block content %}
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ 'success' if category == 'success' else ('danger' if category == 'error' else 'info') }}"
+        role="alert"
+      >
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %} {% endwith %} {# application content needs to be
+      provided in the app_content block #} {% block app_content %}{% endblock %}
+    </div>
+    {% endblock %}
+  </body>
 </html>

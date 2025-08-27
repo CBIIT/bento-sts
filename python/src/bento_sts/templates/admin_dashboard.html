@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2>Admin Dashboard</h2>
+                    <p class="text-muted">Cache management tools for STS application</p>
+                </div>
+                <div class="text-right">
+                    <span class="badge badge-info badge-lg">
+                        <i class="bi bi-box"></i> Bento-STS v{{ package_version }}
+                    </span>
+                </div>
+            </div>
+            <hr>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Clear All Caches - Primary Action -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-arrow-clockwise"></i> Clear All Caches
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Clears all application caches in one operation:</p>
+                    <ul class="small">
+                        <li>LRU function caches (6 functions)</li>
+                        <li>MDB/SearchableMDB instance & indexes</li>
+                        <li>Model lists and term values</li>
+                    </ul>
+                    <form method="POST" action="{{ url_for('main.admin_clear_all_caches') }}" style="display:inline;">
+                        <button type="submit" class="btn btn-primary btn-block" 
+                                onclick="return confirm('Clear all caches? This will refresh all cached data.')">
+                            <i class="bi bi-arrow-clockwise"></i> Clear All Caches
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Individual Cache Tools -->
+        <div class="col-md-6 col-lg-8">
+            <div class="row">
+                <!-- LRU Caches -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-memory"></i> LRU Caches
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text small">Clear function-level LRU caches for CDE data, terms, and model queries.</p>
+                            <form method="POST" action="{{ url_for('main.admin_clear_lru_caches') }}" style="display:inline;">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm btn-block" 
+                                        onclick="return confirm('Clear LRU caches?')">
+                                    Clear LRU Caches
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MDB Instance -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-database"></i> MDB Instance
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text small">Refresh SearchableMDB connection and rebuild search indexes.</p>
+                            <form method="POST" action="{{ url_for('main.admin_refresh_mdb') }}" style="display:inline;">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm btn-block" 
+                                        onclick="return confirm('Refresh MDB instance? This may take a moment.')">
+                                    Refresh MDB
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Model Lists -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-list-ul"></i> Model Lists
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text small">Regenerate model lists, versions, and term values from database.</p>
+                            <form method="POST" action="{{ url_for('main.admin_refresh_model_lists') }}" style="display:inline;">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm btn-block" 
+                                        onclick="return confirm('Refresh model lists?')">
+                                    Refresh Models
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Indexes -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-search"></i> Search Indexes
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text small">Compare cached vs. current FULLTEXT indexes to test refresh behavior.</p>
+                            <a href="{{ url_for('main.admin_list_indexes') }}" 
+                               class="btn btn-outline-info btn-sm btn-block"
+                               target="_blank">
+                                Compare Indexes (JSON)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle"></i> Cache Management Info</h6>
+                <ul class="mb-0 small">
+                    <li><strong>LRU Caches:</strong> Clear Python function-level caches for improved data freshness</li>
+                    <li><strong>MDB Instance:</strong> Refresh database connection and FULLTEXT search indexes</li>
+                    <li><strong>Model Lists:</strong> Update cached model information and term values from the database</li>
+                    <li><strong>Search Indexes:</strong> View current Neo4j indexes and test search functionality</li>
+                    <li><strong>Clear All:</strong> Performs LRU + MDB + Model operations in the correct order</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('main.index') }}" class="btn btn-link">
+                <i class="bi bi-arrow-left"></i> Back to STS
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

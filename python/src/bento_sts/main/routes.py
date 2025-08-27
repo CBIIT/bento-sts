@@ -1,8 +1,14 @@
+"""Routes for the main STSapplication."""
+
 import re
+from importlib import metadata
+from pathlib import Path
 
 from flask import (
+    Response,
     abort,
     current_app,
+    flash,
     g,
     jsonify,
     redirect,
@@ -20,10 +26,31 @@ from .forms import (
     SelectVersionForm,
 )
 
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 
 def mdb():
     # only called in app context
     return current_app.config["MDB"]
+
+
+def _get_package_version() -> str:
+    """Get the current package version from metadata or source."""
+    try:
+        return metadata.version("bento-sts")
+    except metadata.PackageNotFoundError:
+        try:
+            pyproject_path = (
+                Path(__file__).parent.parent.parent.parent / "pyproject.toml"
+            )
+            with pyproject_path.open("rb") as f:
+                pyproject_data = tomllib.load(f)
+            return pyproject_data["project"]["version"]
+        except Exception:
+            return "Development"
 
 
 @bp.before_app_request
@@ -581,4 +608,303 @@ def all_cde_pvs_and_synonyms():
         title="CDE Permissible Values and Synonyms",
         ents=ents,
         display="cdes",
+    )
+
+
+# =============================================================================
+# ADMIN ROUTES - Cache Management Tools
+# =============================================================================
+
+
+@bp.route("/admin/", methods=["GET"])
+@bp.route("/admin/dashboard", methods=["GET"])
+def admin_dashboard() -> str:
+    """Admin dashboard with cache management tools."""
+    package_version = _get_package_version()
+
+    return render_template(
+        "admin_dashboard.html",
+        title="Admin Dashboard",
+        package_version=package_version,
+    )
+
+
+@bp.route("/admin/clear-lru-caches", methods=["POST"])
+def admin_clear_lru_caches() -> str:
+    """Clear all LRU caches from the mdb class."""
+    try:
+        cleared_count = 0
+
+        if hasattr(type(mdb()).get_term_batch, "cache_clear"):
+            type(mdb()).get_term_batch.cache_clear()
+            cleared_count += 1
+
+        if hasattr(type(mdb()).get_model_pvs_synonyms, "cache_clear"):
+            type(mdb()).get_model_pvs_synonyms.cache_clear()
+            cleared_count += 1
+
+        if hasattr(type(mdb()).get_cde_pvs_by_id, "cache_clear"):
+            type(mdb()).get_cde_pvs_by_id.cache_clear()
+            cleared_count += 1
+
+        if hasattr(type(mdb()).get_term_nanoid_by_origin, "cache_clear"):
+            type(mdb()).get_term_nanoid_by_origin.cache_clear()
+            cleared_count += 1
+
+        if hasattr(type(mdb()).get_cde_pvs_and_synonyms_by_id, "cache_clear"):
+            type(mdb()).get_cde_pvs_and_synonyms_by_id.cache_clear()
+            cleared_count += 1
+
+        if hasattr(type(mdb()).get_all_pvs_and_synonyms, "cache_clear"):
+            type(mdb()).get_all_pvs_and_synonyms.cache_clear()
+            cleared_count += 1
+
+        flash(f"Cleared {cleared_count} LRU caches successfully.", "success")
+
+    except Exception as e:
+        current_app.logger.exception("Error clearing LRU caches")
+        flash(f"Error clearing LRU caches: {e!s}", "error")
+
+    return redirect(url_for("main.admin_dashboard"))
+
+
+@bp.route("/admin/refresh-mdb", methods=["POST"])
+def admin_refresh_mdb() -> str:
+    """Refresh the MDB/SearchableMDB instance."""
+    try:
+        if (
+            current_app.config["MDB"]
+            and hasattr(current_app.config["MDB"], "mdb_")
+            and current_app.config["MDB"].mdb_
+        ):
+            current_app.config["MDB"].mdb_.close()
+
+        type(mdb()).mdb_ = None
+
+        current_app.config["MDB"] = type(mdb())(
+            current_app.config["NEO4J_MDB_URI"],
+            current_app.config["NEO4J_MDB_USER"],
+            current_app.config["NEO4J_MDB_PASS"],
+        )
+
+        flash(
+            "MDB instance refreshed successfully (includes search indexes).",
+            "success",
+        )
+
+    except Exception as e:
+        current_app.logger.exception("Error refreshing MDB")
+        flash(f"Error refreshing MDB: {e!s}", "error")
+
+    return redirect(url_for("main.admin_dashboard"))
+
+
+@bp.route("/admin/refresh-model-lists", methods=["POST"])
+def admin_refresh_model_lists() -> str:
+    """Regenerate model lists from MDB."""
+    try:
+        type(mdb()).term_values = None
+
+        minfo = current_app.config["MDB"].mdb_.get_model_info()
+
+        current_app.config["MODEL_LIST"] = sorted({x["handle"] for x in minfo})
+        current_app.config["VERSIONS_BY_MODEL"] = {}
+        current_app.config["LATEST_VERSION_BY_MODEL"] = {}
+
+        # Rebuild version mappings
+        for m in current_app.config["MODEL_LIST"]:
+            for info in [x for x in minfo if x["handle"] == m]:
+                if current_app.config["VERSIONS_BY_MODEL"].get(m):
+                    current_app.config["VERSIONS_BY_MODEL"][m].append(info["version"])
+                else:
+                    current_app.config["VERSIONS_BY_MODEL"][m] = [info["version"]]
+                if (
+                    info.get("latest_version") == True
+                    or info.get("is_latest_version") == True
+                ):
+                    current_app.config["LATEST_VERSION_BY_MODEL"][m] = info["version"]
+
+        for m in current_app.config["MODEL_LIST"]:
+            if not current_app.config["LATEST_VERSION_BY_MODEL"].get(m):
+                current_app.config["LATEST_VERSION_BY_MODEL"][m] = current_app.config[
+                    "VERSIONS_BY_MODEL"
+                ][m][0]
+
+        if "ALL" not in current_app.config["MODEL_LIST"]:
+            current_app.config["MODEL_LIST"].insert(0, "ALL")
+
+        model_count = len(current_app.config["MODEL_LIST"]) - 1
+        flash(
+            f"Model lists refreshed successfully ({model_count} models found).",
+            "success",
+        )
+
+    except Exception as e:
+        current_app.logger.exception("Error refreshing model lists")
+        flash(f"Error refreshing model lists: {e!s}", "error")
+
+    return redirect(url_for("main.admin_dashboard"))
+
+
+@bp.route("/admin/clear-all-caches", methods=["POST"])
+def admin_clear_all_caches():
+    """Clear all caches: LRU caches, refresh MDB, and regenerate model lists."""
+    try:
+        cleared_lru = 0
+        if hasattr(type(mdb()).get_term_batch, "cache_clear"):
+            type(mdb()).get_term_batch.cache_clear()
+            cleared_lru += 1
+        if hasattr(type(mdb()).get_model_pvs_synonyms, "cache_clear"):
+            type(mdb()).get_model_pvs_synonyms.cache_clear()
+            cleared_lru += 1
+        if hasattr(type(mdb()).get_cde_pvs_by_id, "cache_clear"):
+            type(mdb()).get_cde_pvs_by_id.cache_clear()
+            cleared_lru += 1
+        if hasattr(type(mdb()).get_term_nanoid_by_origin, "cache_clear"):
+            type(mdb()).get_term_nanoid_by_origin.cache_clear()
+            cleared_lru += 1
+        if hasattr(type(mdb()).get_cde_pvs_and_synonyms_by_id, "cache_clear"):
+            type(mdb()).get_cde_pvs_and_synonyms_by_id.cache_clear()
+            cleared_lru += 1
+        if hasattr(type(mdb()).get_all_pvs_and_synonyms, "cache_clear"):
+            type(mdb()).get_all_pvs_and_synonyms.cache_clear()
+            cleared_lru += 1
+
+        type(mdb()).term_values = None
+
+        if current_app.config["MDB"] and hasattr(current_app.config["MDB"], "mdb_"):
+            if current_app.config["MDB"].mdb_ and hasattr(
+                current_app.config["MDB"].mdb_,
+                "close",
+            ):
+                current_app.config["MDB"].mdb_.close()
+
+        type(mdb()).mdb_ = None
+        current_app.config["MDB"] = type(mdb())(
+            current_app.config["NEO4J_MDB_URI"],
+            current_app.config["NEO4J_MDB_USER"],
+            current_app.config["NEO4J_MDB_PASS"],
+        )
+
+        minfo = current_app.config["MDB"].mdb_.get_model_info()
+        current_app.config["MODEL_LIST"] = sorted({x["handle"] for x in minfo})
+        current_app.config["VERSIONS_BY_MODEL"] = {}
+        current_app.config["LATEST_VERSION_BY_MODEL"] = {}
+
+        for m in current_app.config["MODEL_LIST"]:
+            for info in [x for x in minfo if x["handle"] == m]:
+                if current_app.config["VERSIONS_BY_MODEL"].get(m):
+                    current_app.config["VERSIONS_BY_MODEL"][m].append(info["version"])
+                else:
+                    current_app.config["VERSIONS_BY_MODEL"][m] = [info["version"]]
+                if (
+                    info.get("latest_version") == True
+                    or info.get("is_latest_version") == True
+                ):
+                    current_app.config["LATEST_VERSION_BY_MODEL"][m] = info["version"]
+
+        for m in current_app.config["MODEL_LIST"]:
+            if not current_app.config["LATEST_VERSION_BY_MODEL"].get(m):
+                current_app.config["LATEST_VERSION_BY_MODEL"][m] = current_app.config[
+                    "VERSIONS_BY_MODEL"
+                ][m][0]
+
+        if "ALL" not in current_app.config["MODEL_LIST"]:
+            current_app.config["MODEL_LIST"].insert(0, "ALL")
+
+        model_count = len(current_app.config["MODEL_LIST"]) - 1
+        flash(
+            f"All caches cleared successfully! Refreshed {cleared_lru} LRU caches, "
+            f"MDB instance (with indexes), and {model_count} models.",
+            "success",
+        )
+
+    except Exception as e:
+        current_app.logger.exception("Error clearing all caches")
+        flash(f"Error clearing all caches: {e!s}", "error")
+
+    return redirect(url_for("main.admin_dashboard"))
+
+
+@bp.route("/admin/indexes", methods=["GET"])
+def admin_list_indexes():
+    """Compare cached vs current Neo4j indexes to test refresh behavior."""
+    try:
+        cached_indexes = mdb().mdb.available_indexes()
+
+        show_indexes_stmt = (
+            "SHOW INDEXES YIELD name, state, type, labelsOrTypes, properties "
+            "RETURN name, state, type, labelsOrTypes, properties"
+        )
+        current_indexes = mdb().get_with_statement(show_indexes_stmt, {})
+
+        current_fulltext = {
+            idx["name"]: {
+                "state": idx.get("state", "unknown"),
+                "entity_type": idx.get("labelsOrTypes", []),
+                "properties": idx.get("properties", []),
+            }
+            for idx in current_indexes
+            if idx.get("type") == "FULLTEXT"
+        }
+
+        comparison = {}
+        all_index_names = set(cached_indexes.keys()) | set(current_fulltext.keys())
+
+        for index_name in all_index_names:
+            in_cache = index_name in cached_indexes
+            in_db = index_name in current_fulltext
+
+            if in_cache and in_db:
+                comparison[index_name] = {
+                    "status": "✅ Cached and Available",
+                    "cached": cached_indexes[index_name],
+                    "current": current_fulltext[index_name],
+                }
+            elif in_cache and not in_db:
+                comparison[index_name] = {
+                    "status": "⚠️ Cached but Missing from DB",
+                    "cached": cached_indexes[index_name],
+                    "current": None,
+                }
+            elif not in_cache and in_db:
+                comparison[index_name] = {
+                    "status": "🔄 Available but Not Cached (needs refresh)",
+                    "cached": None,
+                    "current": current_fulltext[index_name],
+                }
+
+        needs_refresh = any(
+            status["status"].startswith("⚠️") or status["status"].startswith("🔄")
+            for status in comparison.values()
+        )
+
+        return jsonify(
+            {
+                "cached_indexes": cached_indexes,
+                "current_fulltext_indexes": current_fulltext,
+                "comparison": comparison,
+                "needs_refresh": needs_refresh,
+                "all_indexes": current_indexes,  # Keep for debugging
+                "status": "success",
+            },
+        )
+
+    except Exception as e:
+        current_app.logger.exception("Error listing indexes")
+        flash(f"Error listing indexes: {e!s}", "error")
+        return redirect(url_for("main.admin_dashboard"))
+
+
+@bp.route("/admin/version", methods=["GET"])
+def admin_version_info() -> Response:
+    """Return version information as JSON."""
+    package_version = _get_package_version()
+
+    return jsonify(
+        {
+            "package": "bento-sts",
+            "version": package_version,
+            "status": "running",
+        },
     )
