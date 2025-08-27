@@ -888,12 +888,8 @@ def admin_list_indexes():
 
     except Exception as e:
         current_app.logger.exception("Error listing indexes")
-        return jsonify(
-            {
-                "error": str(e),
-                "status": "error",
-            },
-        ), 500
+        flash(f"Error listing indexes: {e!s}", "error")
+        return redirect(url_for("main.admin_dashboard"))
 
 
 @bp.route("/admin/version", methods=["GET"])
