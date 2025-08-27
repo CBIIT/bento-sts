@@ -4,7 +4,6 @@ import re
 from importlib import metadata
 from pathlib import Path
 
-import tomllib
 from flask import (
     Response,
     abort,
@@ -26,6 +25,11 @@ from .forms import (
     SelectModelForm,
     SelectVersionForm,
 )
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 
 def mdb():
