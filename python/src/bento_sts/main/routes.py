@@ -439,6 +439,9 @@ def about_sts():
 def favicon():
     return send_from_directory("static", "favicon.ico")
 
+@bp.route("/swagger")
+def swagger_ui():
+    return render_template("swagger-ui.html")
 
 @bp.errorhandler(413)
 def too_large(e):
