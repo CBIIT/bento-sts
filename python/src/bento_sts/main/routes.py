@@ -439,9 +439,11 @@ def about_sts():
 def favicon():
     return send_from_directory("static", "favicon.ico")
 
+
 @bp.route("/swagger")
 def swagger_ui():
     return render_template("swagger-ui.html")
+
 
 @bp.errorhandler(413)
 def too_large(e):
@@ -588,10 +590,13 @@ def all_cde_pvs_and_synonyms():
     """
     Get all PVs and synonyms for a given model and version.
 
-    Follows Data Hub logic for using PVs from CDE or model.
+    Follows Data Hub logic for using PVs from CDE or model. Optional model filter to
+    limit results to cdes/pvs used by specific models.
     """
     ents = []
-
+    model_filter = [
+        m.strip() for m in request.args.getlist(key="model", type=str) if m.strip()
+    ]  # remove empty strings and whitespace
     fmt = request.args.get("format")
     if request.form.get("format"):
         fmt = request.args.get("format")
@@ -600,7 +605,7 @@ def all_cde_pvs_and_synonyms():
     else:
         pass
 
-    ents = mdb().get_all_pvs_and_synonyms()
+    ents = mdb().get_all_pvs_and_synonyms(model_filter)
 
     if fmt == "json":
         # remove attrs other than values from props

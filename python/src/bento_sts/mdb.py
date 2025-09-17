@@ -591,13 +591,16 @@ class mdb:
 
         return self.mdb.get_with_statement(qry, parms)
 
-    def get_all_pvs_and_synonyms(self):
+    def get_all_pvs_and_synonyms(self, model_filter: list[str] | None = None):
         """Get all CDE PVs and synonyms used by models in MDB."""
+        model_filter_clause = "AND p.model in $model_filter" if model_filter else ""
+
         qry = (
             "MATCH (cde:term) WHERE toLower(cde.origin_name) CONTAINS 'cadsr' WITH cde "
             "MATCH (ent)-[:has_property]->(p:property)-[:has_concept]->"
             "(:concept)<-[:represents]-(cde) WHERE p.model IS NOT NULL AND p.version "
-            "IS NOT NULL WITH cde,COLLECT(DISTINCT {model: p.model, version: p.version,"
+            f"IS NOT NULL {model_filter_clause} "
+            "WITH cde,COLLECT(DISTINCT {model: p.model, version: p.version,"
             " property: ent.handle + '.' + p.handle}) AS models "
             "WITH cde, models, cde.origin_id + '|' + COALESCE(cde.origin_version, '') "
             "AS cde_hdl "
@@ -630,4 +633,4 @@ class mdb:
             "RETURN cde.origin_id AS CDECode, cde.origin_version AS CDEVersion, "
             "cde.value AS CDEFullName, models, formatted_pvs AS permissibleValues "
         )
-        return self.mdb.get_with_statement(qry, {})
+        return self.mdb.get_with_statement(qry, {"model_filter": model_filter})
