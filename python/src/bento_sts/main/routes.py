@@ -481,7 +481,7 @@ def cde_pvs_and_synonyms_by_model(model, version):
     else:
         pass
 
-    ents = type(mdb()).get_model_pvs_synonyms(model, version)
+    ents = mdb().get_model_pvs_synonyms(model, version)
 
     if fmt == "json":
         # remove attrs other than values from props
@@ -519,7 +519,7 @@ def cde_pvs_by_id(id, version):
     else:
         pass
 
-    ents = type(mdb()).get_cde_pvs_by_id(cde_id, cde_version)
+    ents = mdb().get_cde_pvs_by_id(cde_id, cde_version)
 
     if fmt == "json":
         return jsonify(
@@ -561,8 +561,7 @@ def term_by_origin(origin_name, origin_id, origin_version):
     origin_version = origin_version or request.args.get("origin_version") or ""
 
     term_nanoids = (
-        type(mdb()).get_term_nanoid_by_origin(origin_name, origin_id, origin_version)
-        or []
+        mdb().get_term_nanoid_by_origin(origin_name, origin_id, origin_version) or []
     )
     if term_nanoids:
         term_nanoid = term_nanoids[0]["term_nanoid"]
@@ -598,7 +597,7 @@ def all_cde_pvs_and_synonyms():
     else:
         pass
 
-    ents = type(mdb()).get_all_pvs_and_synonyms()
+    ents = mdb().get_all_pvs_and_synonyms()
 
     if fmt == "json":
         # remove attrs other than values from props
@@ -639,27 +638,7 @@ def admin_clear_lru_caches() -> str:
             type(mdb()).get_term_batch.cache_clear()
             cleared_count += 1
 
-        if hasattr(type(mdb()).get_model_pvs_synonyms, "cache_clear"):
-            type(mdb()).get_model_pvs_synonyms.cache_clear()
-            cleared_count += 1
-
-        if hasattr(type(mdb()).get_cde_pvs_by_id, "cache_clear"):
-            type(mdb()).get_cde_pvs_by_id.cache_clear()
-            cleared_count += 1
-
-        if hasattr(type(mdb()).get_term_nanoid_by_origin, "cache_clear"):
-            type(mdb()).get_term_nanoid_by_origin.cache_clear()
-            cleared_count += 1
-
-        if hasattr(type(mdb()).get_cde_pvs_and_synonyms_by_id, "cache_clear"):
-            type(mdb()).get_cde_pvs_and_synonyms_by_id.cache_clear()
-            cleared_count += 1
-
-        if hasattr(type(mdb()).get_all_pvs_and_synonyms, "cache_clear"):
-            type(mdb()).get_all_pvs_and_synonyms.cache_clear()
-            cleared_count += 1
-
-        flash(f"Cleared {cleared_count} LRU caches successfully.", "success")
+        flash(f"Cleared {cleared_count} LRU cache(s) successfully.", "success")
 
     except Exception as e:
         current_app.logger.exception("Error clearing LRU caches")
@@ -754,21 +733,6 @@ def admin_clear_all_caches():
         if hasattr(type(mdb()).get_term_batch, "cache_clear"):
             type(mdb()).get_term_batch.cache_clear()
             cleared_lru += 1
-        if hasattr(type(mdb()).get_model_pvs_synonyms, "cache_clear"):
-            type(mdb()).get_model_pvs_synonyms.cache_clear()
-            cleared_lru += 1
-        if hasattr(type(mdb()).get_cde_pvs_by_id, "cache_clear"):
-            type(mdb()).get_cde_pvs_by_id.cache_clear()
-            cleared_lru += 1
-        if hasattr(type(mdb()).get_term_nanoid_by_origin, "cache_clear"):
-            type(mdb()).get_term_nanoid_by_origin.cache_clear()
-            cleared_lru += 1
-        if hasattr(type(mdb()).get_cde_pvs_and_synonyms_by_id, "cache_clear"):
-            type(mdb()).get_cde_pvs_and_synonyms_by_id.cache_clear()
-            cleared_lru += 1
-        if hasattr(type(mdb()).get_all_pvs_and_synonyms, "cache_clear"):
-            type(mdb()).get_all_pvs_and_synonyms.cache_clear()
-            cleared_lru += 1
 
         type(mdb()).term_values = None
 
@@ -814,7 +778,7 @@ def admin_clear_all_caches():
 
         model_count = len(current_app.config["MODEL_LIST"]) - 1
         flash(
-            f"All caches cleared successfully! Refreshed {cleared_lru} LRU caches, "
+            f"All caches cleared successfully! Refreshed {cleared_lru} LRU cache(s), "
             f"MDB instance (with indexes), and {model_count} models.",
             "success",
         )
