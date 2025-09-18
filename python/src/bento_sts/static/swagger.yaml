@@ -726,6 +726,14 @@ paths:
       summary: "Get all PVs and synonyms for all models and CDEs"
       operationId: "all_pvs_get"
       parameters:
+        - name: "model"
+          in: "query"
+          description: "Filter by model name(s). Can be specified multiple times to filter for multiple models."
+          required: false
+          type: "array"
+          items:
+            type: "string"
+          collectionFormat: "multi"
         - name: "skip"
           in: "query"
           description: "Pagination - number of items to skip\n"
