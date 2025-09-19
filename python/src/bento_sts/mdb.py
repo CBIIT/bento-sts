@@ -464,9 +464,11 @@ class mdb:
     # CDE PVs & Synonyms
     # ####################################################################### #
 
-    @functools.lru_cache
-    @staticmethod
-    def get_model_pvs_synonyms(model: str | None = None, version: str | None = None):
+    def get_model_pvs_synonyms(
+        self,
+        model: str | None = None,
+        version: str | None = None,
+    ):
         qry = (
             "MATCH (n {model: $dataCommons, version: $version})-[:has_property]->"
             "(p:property) "
@@ -512,11 +514,9 @@ class mdb:
 
         parms = {"dataCommons": model, "version": version}
 
-        return mdb.mdb_.get_with_statement(qry, parms)
+        return self.mdb.get_with_statement(qry, parms)
 
-    @functools.lru_cache
-    @staticmethod
-    def get_cde_pvs_by_id(id: str | None = None, version: str | None = None):
+    def get_cde_pvs_by_id(self, id: str | None = None, version: str | None = None):
         """Get CDE PVs and synonyms for a given CDE id and optional version."""
         qry = (
             "MATCH (cde:term {origin_id: $cde_id}) "
@@ -549,11 +549,10 @@ class mdb:
         )
         parms = {"cde_id": id, "cde_version": version}
 
-        return mdb.mdb_.get_with_statement(qry, parms)
+        return self.mdb.get_with_statement(qry, parms)
 
-    @functools.lru_cache
-    @staticmethod
     def get_term_nanoid_by_origin(
+        self,
         origin_name: str | None = None,
         origin_id: str | None = None,
         origin_version: str | None = None,
@@ -572,11 +571,10 @@ class mdb:
             "origin_version": origin_version,
         }
 
-        return mdb.mdb_.get_with_statement(qry, parms)
+        return self.mdb.get_with_statement(qry, parms)
 
-    @functools.lru_cache
-    @staticmethod
     def get_cde_pvs_and_synonyms_by_id(
+        self,
         id: str | None = None,
         version: str | None = None,
     ):
@@ -591,17 +589,18 @@ class mdb:
         )
         parms = {"cde_id": id, "cde_version": version}
 
-        return mdb.mdb_.get_with_statement(qry, parms)
+        return self.mdb.get_with_statement(qry, parms)
 
-    @functools.lru_cache
-    @staticmethod
-    def get_all_pvs_and_synonyms():
+    def get_all_pvs_and_synonyms(self, model_filter: list[str] | None = None):
         """Get all CDE PVs and synonyms used by models in MDB."""
+        model_filter_clause = "AND p.model in $model_filter" if model_filter else ""
+
         qry = (
             "MATCH (cde:term) WHERE toLower(cde.origin_name) CONTAINS 'cadsr' WITH cde "
             "MATCH (ent)-[:has_property]->(p:property)-[:has_concept]->"
             "(:concept)<-[:represents]-(cde) WHERE p.model IS NOT NULL AND p.version "
-            "IS NOT NULL WITH cde,COLLECT(DISTINCT {model: p.model, version: p.version,"
+            f"IS NOT NULL {model_filter_clause} "
+            "WITH cde,COLLECT(DISTINCT {model: p.model, version: p.version,"
             " property: ent.handle + '.' + p.handle}) AS models "
             "WITH cde, models, cde.origin_id + '|' + COALESCE(cde.origin_version, '') "
             "AS cde_hdl "
@@ -634,4 +633,4 @@ class mdb:
             "RETURN cde.origin_id AS CDECode, cde.origin_version AS CDEVersion, "
             "cde.value AS CDEFullName, models, formatted_pvs AS permissibleValues "
         )
-        return mdb.mdb_.get_with_statement(qry, {})
+        return self.mdb.get_with_statement(qry, {"model_filter": model_filter})

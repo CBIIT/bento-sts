@@ -23,6 +23,59 @@ class MockMDB(Mock):
     def get_term_nanoid_by_origin(origin_name, origin_id, origin_version):
         return {}
 
+    @staticmethod
+    def get_all_pvs_and_synonyms(model_filter=None):
+        # Mock response for all-pvs endpoint
+        if not model_filter:
+            return [
+                {
+                    "CDECode": "12345",
+                    "CDEVersion": "1.0",
+                    "CDEFullName": "Test CDE",
+                    "models": [
+                        {"model": "ICDC", "version": "1.0"},
+                        {"model": "CDS", "version": "2.0"},
+                    ],
+                    "permissibleValues": [
+                        {
+                            "value": "Yes",
+                            "synonyms": ["True"],
+                            "ncit_concept_code": "C49488",
+                        },
+                    ],
+                },
+                {
+                    "CDECode": "67890",
+                    "CDEVersion": "1.0",
+                    "CDEFullName": "Another CDE",
+                    "models": [{"model": "CRDC", "version": "1.0"}],
+                    "permissibleValues": [
+                        {
+                            "value": "No",
+                            "synonyms": ["False"],
+                            "ncit_concept_code": "C49487",
+                        },
+                    ],
+                },
+            ]
+        if "ICDC" in model_filter:
+            return [
+                {
+                    "CDECode": "12345",
+                    "CDEVersion": "1.0",
+                    "CDEFullName": "Test CDE",
+                    "models": [{"model": "ICDC", "version": "1.0"}],
+                    "permissibleValues": [
+                        {
+                            "value": "Yes",
+                            "synonyms": ["True"],
+                            "ncit_concept_code": "C49488",
+                        },
+                    ],
+                },
+            ]
+        return []
+
 
 mdb = MockMDB()
 
@@ -129,3 +182,48 @@ def test_api_pv_paths(client):
 
     response = client.get("/v1/terms/all-pvs")
     assert response.status_code == 200
+
+
+def test_main_all_pvs_no_filter(client):
+    """Test main route /all-pvs without model filter - should return all results."""
+    response = client.get("/all-pvs?format=json")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 2  # Should return both CDEs
+    assert data[0]["CDECode"] == "12345"
+    assert data[1]["CDECode"] == "67890"
+
+
+def test_main_all_pvs_single_model_filter(client):
+    """Test main route /all-pvs with single model filter."""
+    response = client.get("/all-pvs?model=ICDC&format=json")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 1  # Should return only ICDC CDE
+    assert data[0]["CDECode"] == "12345"
+    assert data[0]["models"] == [{"model": "ICDC", "version": "1.0"}]
+
+
+def test_main_all_pvs_multiple_model_filters(client):
+    """Test main route /all-pvs with multiple model filters."""
+    response = client.get("/all-pvs?model=ICDC&model=CDS&format=json")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 1  # Should return ICDC CDE (which matches the filter)
+    assert data[0]["CDECode"] == "12345"
+
+
+def test_main_all_pvs_nonexistent_model_filter(client):
+    """Test main route /all-pvs with non-existent model filter."""
+    response = client.get("/all-pvs?model=NONEXISTENT&format=json")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 0  # Should return empty list
+
+
+def test_main_all_pvs_empty_model_filter(client):
+    """Test main route /all-pvs with empty model parameter."""
+    response = client.get("/all-pvs?model=&format=json")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 2  # Should behave like no filter
