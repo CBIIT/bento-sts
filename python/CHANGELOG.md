@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.20] - 2025-09-25
 
-### Added
+### Fixed
 - Fixed broken Swagger UI link on landing page About STS section
 
 ---
