@@ -67,7 +67,7 @@ You should be able to see the frontend on your machine at http://localhost:5000.
 
 ## API Docs
 
-The API is documented in an [OpenAPI (Swagger) schema](/swagger/swagger.yaml). 
+The API is documented in an [OpenAPI (Swagger) schema](/python/src/bento_sts/static/swagger.yaml). 
 
 Docker is probably the easiest way to run a local Swagger server. 
 This will bring up a Swagger server at port 6000:
