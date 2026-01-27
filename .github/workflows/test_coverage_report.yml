@@ -34,7 +34,6 @@ jobs:
           uv venv
           uv pip install -e ".[dev]"
           uv pip install pytest-cov
-          uv pip install "bento-meta==0.2.11"
 
       - name: Authenticate to registry and pull test MDB
         run: |
