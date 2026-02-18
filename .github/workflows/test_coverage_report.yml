@@ -10,6 +10,9 @@ on:
       - master
       - '*.*.*'
 
+permissions:
+  contents: read
+
 jobs:
   test-coverage:
     # Set up operating system
